@@ -230,15 +230,12 @@
   overflow: hidden;
   border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
   box-shadow: var(--shadow-inset-1);
-  /* A colourful stand-in for the wallpaper; the sample panel blurs/saturates
-     what is behind it, so the preset choice is visible without opening it. */
-  background: linear-gradient(
-    128deg,
-    hsl(262 52% 56%) 0%,
-    hsl(262 52% 56%) 34%,
-    hsl(var(--accent-h) var(--accent-s) 62%) 68%,
-    hsl(var(--accent-h) calc(var(--accent-s) + 4%) 50%) 100%
-  );
+  /* A quiet horizon-like sample keeps the preview legible while showing how
+     a real frosted surface separates from a saturated wallpaper. */
+  background:
+    radial-gradient(75% 140% at 92% 100%, rgb(226 105 76 / 0.78) 0%, rgb(226 105 76 / 0) 70%),
+    radial-gradient(80% 160% at 6% 0%, rgb(76 126 174 / 0.72) 0%, rgb(76 126 174 / 0) 72%),
+    linear-gradient(150deg, #102843 0%, #12606a 58%, #d2775e 100%);
 }
 
 .previewBlob {
@@ -252,7 +249,7 @@
   left: -22px;
   width: 130px;
   height: 130px;
-  background: radial-gradient(circle, hsl(46 96% 70% / 0.9) 0%, transparent 68%);
+  background: radial-gradient(circle, rgb(164 209 232 / 0.5) 0%, transparent 68%);
 }
 
 .previewBlobB {
@@ -260,7 +257,7 @@
   bottom: -40px;
   width: 150px;
   height: 150px;
-  background: radial-gradient(circle, hsl(186 88% 66% / 0.85) 0%, transparent 68%);
+  background: radial-gradient(circle, rgb(255 187 128 / 0.42) 0%, transparent 68%);
 }
 
 /* The sample panel mirrors a real glass surface: it reads the shared material

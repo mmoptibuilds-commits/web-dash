@@ -6,6 +6,41 @@ task list; this file records what changed, evidence, and open follow-ups.
 
 Branch: `build/v1-one-shot` (V2 continues on top of the V1 one-shot build).
 
+## 10 - Reference-led visual polish (done)
+
+The supplied macOS/iOS reference resources were used to tune the shell and
+mini-app surfaces while keeping Hearth's original, public-repo-safe visual
+language. No proprietary Apple asset, font, icon, or wallpaper was copied into
+the product.
+
+### What changed
+- **Default Home backdrop - `src/data/defaults.ts`, `src/lib/wallpapers.ts`** -
+  clean installs now open on a layered Lagoon gradient with a deep blue spatial
+  field and a restrained ember horizon.
+- **Home and dock - `src/features/home/home.module.css`,
+  `src/components/shell/dock.module.css`** - shortcut glyphs are larger and
+  optically balanced, labels are plain readable text over the wallpaper, tile
+  surfaces have a quiet hairline edge, and the seven-app phone dock keeps
+  larger touch targets while fitting narrow viewports.
+- **Shared surfaces - `src/styles/global.css`,
+  `src/features/dashboard/dashboard.module.css`,
+  `src/components/shell/windows.module.css`** - reduced pill-heavy controls,
+  tightened window/card radii, and fixed Dashboard hero contrast over dark
+  wallpapers.
+- **Settings preview - `src/features/settings/settings.module.css`** -
+  replaced the saturated sample with a calm blue-to-ember horizon that better
+  communicates the app's frosted material.
+- **Regression fixture - `src/features/settings/settingsRepo.test.ts`** -
+  updated the clean-install default assertion for Lagoon.
+
+### Evidence
+- `npm run check` - lint, typecheck, **126/126 Vitest tests**, and PWA build
+  pass.
+- `npx playwright test --project=desktop --project=mobile` - **81 passed /
+  23 skipped / 0 failed** against the fresh production build.
+- Playwright screenshots were reviewed at desktop and phone sizes for Home,
+  Dashboard, Notes, Tasks, Calendar, Links, Calculator, and Settings against
+  the supplied local reference resources.
 ## 9 — PWA/offline and interaction accessibility hardening (done)
 
 Closed the remaining §8 follow-ups with evidence-bound browser checks. The

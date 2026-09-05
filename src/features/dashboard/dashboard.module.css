@@ -19,28 +19,10 @@
   color: #fff;
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
 }
-@media (prefers-color-scheme: light) {
-  :global(:root:not([data-theme='dark'])) .overviewTitle {
-    color: #0f1116;
-    text-shadow: 0 1px 0 rgb(255 255 255 / 0.5);
-  }
-}
-:global(:root[data-theme='light']) .overviewTitle {
-  color: #0f1116;
-  text-shadow: 0 1px 0 rgb(255 255 255 / 0.5);
-}
 .overviewSub {
   margin-top: var(--sp-1);
   font-size: var(--fs-sm);
   color: rgb(255 255 255 / 0.82);
-}
-@media (prefers-color-scheme: light) {
-  :global(:root:not([data-theme='dark'])) .overviewSub {
-    color: rgb(15 17 22 / 0.72);
-  }
-}
-:global(:root[data-theme='light']) .overviewSub {
-  color: rgb(15 17 22 / 0.72);
 }
 
 .grid {
@@ -57,7 +39,7 @@
   gap: var(--sp-4);
   width: 100%;
   padding: var(--sp-3) var(--sp-4);
-  border-radius: var(--r-lg);
+  border-radius: var(--r-md);
   border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
   background: rgb(var(--glass-1) / var(--glass-a-1));
   box-shadow: var(--shadow-1), var(--shadow-inset-1);
@@ -82,7 +64,7 @@
   height: 52px;
   display: grid;
   place-items: center;
-  border-radius: var(--r-md);
+  border-radius: var(--r-squircle);
   color: #fff;
   text-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
   box-shadow: var(--shadow-glyph);

@@ -301,11 +301,12 @@
      widths. */
   .bar {
     max-width: calc(100vw - 2 * var(--sp-3));
-    gap: clamp(var(--sp-1), 1.6vw, var(--sp-2));
+    gap: clamp(3px, 1.2vw, var(--sp-1));
+    padding-inline: 8px;
   }
   .tileWrap {
-    flex: 0 1 50px;
-    min-width: 34px;
+    flex: 0 1 44px;
+    min-width: 38px;
   }
   .tile {
     width: 100%;
@@ -313,8 +314,8 @@
     aspect-ratio: 1 / 1;
   }
   .addChip {
-    flex: 0 1 50px;
-    min-width: 34px;
+    flex: 0 1 44px;
+    min-width: 38px;
     width: auto;
     height: auto;
     aspect-ratio: 1 / 1;

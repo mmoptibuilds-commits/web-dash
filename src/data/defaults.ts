@@ -5,7 +5,7 @@ import { now } from '@/types/domain'
 export const SETTINGS_ID = 'main' as const
 
 /** Home wallpaper used on a clean install. */
-export const DEFAULT_WALLPAPER: WallpaperRef = { kind: 'builtin', id: 'ember' }
+export const DEFAULT_WALLPAPER: WallpaperRef = { kind: 'builtin', id: 'lagoon' }
 
 /** The single currency-rates row id. */
 export const CURRENCY_RATES_ID = 'default' as const

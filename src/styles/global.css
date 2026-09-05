@@ -104,7 +104,7 @@ h4 {
   gap: var(--sp-2);
   height: var(--ctrl-h);
   padding: 0 var(--sp-4);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-sm);
   font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
   letter-spacing: var(--tracking-tight);

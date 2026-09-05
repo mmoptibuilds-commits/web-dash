@@ -24,7 +24,7 @@ describe('settings persistence', () => {
     expect(settings.reducedEffects).toBe(false)
     expect(settings.glass).toBe('standard')
     expect(settings.glassTranslucency).toBe(0.5)
-    expect(settings.wallpaper).toEqual({ kind: 'builtin', id: 'ember' })
+    expect(settings.wallpaper).toEqual({ kind: 'builtin', id: 'lagoon' })
   })
 
   it('backfills a missing field on a legacy settings row', async () => {

@@ -31,7 +31,7 @@ export const BUILTIN_WALLPAPERS: BuiltinWallpaper[] = [
     id: 'lagoon',
     name: 'Lagoon',
     light: false,
-    css: 'radial-gradient(130% 120% at 20% 100%, #02131a 0%, #08303b 45%, #0e5a63 82%, #1a8686 100%)',
+    css: 'radial-gradient(80% 58% at 82% 100%, rgb(202 89 66 / 0.7) 0%, rgb(202 89 66 / 0) 68%), radial-gradient(72% 70% at 7% 2%, #244b76 0%, rgb(36 75 118 / 0) 74%), linear-gradient(160deg, #081728 0%, #0d2c4a 46%, #0b596a 100%)',
   },
   {
     id: 'meadow',
