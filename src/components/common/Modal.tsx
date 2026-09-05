@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import { focusLayer, restoreFocus, trapTab } from '@/lib/focus'
 import styles from './Modal.module.css'
@@ -16,10 +16,28 @@ interface ModalProps {
 export function Modal({ open, onClose, title, width = 400, children }: ModalProps) {
   const titleId = useId()
   const cardRef = useRef<HTMLDivElement>(null)
+  // Element to return focus to on close (WCAG 2.4.3). A dialog child with native
+  // autoFocus (ConfirmDialog's Confirm button, the Add-shortcut Name field)
+  // claims focus during React's commit — before any effect could read
+  // document.activeElement — so the opener must be snapshotted during the render
+  // that opens the dialog, while focus is still on its trigger. The open
+  // transition is tracked in state via React's "adjusting state when a prop
+  // changes" pattern, whose immediate re-render carries the snapshot into the
+  // committed effect (a ref write or DOM read in an effect would both run too
+  // late, after autofocus has already moved focus).
+  const [restoreTarget, setRestoreTarget] = useState<Element | null>(null)
+  const [prevOpen, setPrevOpen] = useState(open)
+  if (open !== prevOpen) {
+    setPrevOpen(open)
+    if (open) {
+      setRestoreTarget(
+        document.activeElement instanceof Element ? document.activeElement : null,
+      )
+    }
+  }
 
   useEffect(() => {
     if (!open) return
-    const prevFocus = document.activeElement
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.stopPropagation()
@@ -40,9 +58,9 @@ export function Modal({ open, onClose, title, width = 400, children }: ModalProp
       window.removeEventListener('keydown', onKey, true)
       document.body.style.overflow = prevOverflow
       window.cancelAnimationFrame(raf)
-      restoreFocus(prevFocus instanceof Element ? prevFocus : null)
+      restoreFocus(restoreTarget)
     }
-  }, [open, onClose])
+  }, [open, onClose, restoreTarget])
 
   if (!open) return null
 

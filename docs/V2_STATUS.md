@@ -6,6 +6,66 @@ task list; this file records what changed, evidence, and open follow-ups.
 
 Branch: `build/v1-one-shot` (V2 continues on top of the V1 one-shot build).
 
+## 7 — A11y + motion + performance sweep (done)
+
+Keyboard/focus/semantics (axe-free programmatic), reduced-motion &
+reduced-effects, and a lean-bundle/clean-runtime performance pass — plus one
+real WCAG 2.4.3 defect found and fixed in the shared modal.
+
+### What changed
+- **Modal focus-restore defect (WCAG 2.4.3) — `src/components/common/Modal.tsx`**.
+  A dialog whose first control carries native `autoFocus` (ConfirmDialog's
+  Confirm button, the Add-shortcut Name field) claims focus during React's
+  commit — **before** a passive effect can read `document.activeElement` — so an
+  effect-time capture read the dialog's own control. Restoring to it no-ops once
+  it disconnects on close, stranding focus on `<body>`. The opener is now
+  snapshotted during the render that opens the dialog (pre-commit) via React's
+  "adjusting state when a prop changes" pattern (a `useState` transition guard,
+  not a render-phase ref write, so the `react-hooks/refs` / `purity` rules stay
+  satisfied). Verified discriminating: against a true pre-fix rebuild of dist
+  the new test **fails** (focus stranded); with the fix it passes.
+- **`e2e/a11y.spec.ts`** (new, desktop project):
+  - **33a** — a 24-press Tab sweep over Home; every keyboard-focused control
+    must show a real focus treatment (the global 2px `--accent` outline or the
+    dock's `0 0 0 3px` `--focus-ring` shadow), text-entry fields exempt as
+    "visible via caret"; asserts ≥ 3 distinct controls reached.
+  - **33b** — the WAI-ARIA dialog contract on the Add-widget picker: focus moves
+    into the card on open, 12 Tabs + a Shift+Tab never escape it (trapTab),
+    Escape closes and returns focus to the keyboard-activated opener.
+  - **33d** — the regression above: Escape returns focus to the opener even when
+    the dialog autofocuses its Name field (would strand focus on `<body>`).
+  - **33c** — a semantic scan over Home boot, the opened modal, and the
+    Dashboard overview: no unnamed interactive control, no focusable under
+    `aria-hidden`, no duplicate ids; the modal carries `aria-modal` +
+    `aria-labelledby` resolving to its title.
+- **`e2e/motion.spec.ts`** (new, desktop-asserted; 33.3 samples the Notes pulse
+  on both projects):
+  - **33.1** — OS `prefers-reduced-motion` collapses `--dur-fast` to ~1ms and
+    time-squashes the modal's `pop-in` (duration ≤ 6ms) while keeping the name.
+  - **33.2** — the in-app "Reduced effects" switch sets `data-effects=reduced` +
+    `data-glass=off`, pins glass alphas (0.9/0.88) solid, zeroes `--blur-md`,
+    squashes the real Add-shortcut card to a single ≤6ms iteration with
+    `blur(0px)`, and is reversible back to the default tokens.
+  - **33.3** — at rest no element runs an infinite animation on either project;
+    while a Notes autosave is pending the single deliberate `.savingDot` pulse is
+    the only one and runs on `--dur-slow` (≥ 300ms); under OS reduce it is
+    squashed to a single ≤6ms iteration.
+- **`e2e/perf.spec.ts`** (new, desktop project) — Resource-Timing budget
+  (largest JS < 560 kB, total JS < 620 kB, ≤ 8 JS assets, CSS < 120 kB) and a
+  scripted Home → Notes → Settings → Dashboard journey wired to
+  console/pageerror/ResizeObserver listeners before boot, asserting zero errors.
+
+### Evidence
+- `npm run check` green (lint + typecheck + 75 unit tests + production build).
+- Full E2E suite green on a fresh production build: **65 passed / 23 skipped /
+  0 failed** desktop + mobile (the +9/+9 over §6 are the new a11y 4, motion 3
+  and perf 2 tests, each with its mobile skip counterpart).
+
+### Follow-ups
+- **E2E expansion + reviews (#34)** — cross-lens review of the whole overhaul,
+  adversarial verification, and the final verification gates before the release
+  commit.
+
 ## 6 — Full responsiveness + widget container-query + per-breakpoint persistence (done)
 
 Locked down the three responsiveness pillars with a programmatic guarantee each:
