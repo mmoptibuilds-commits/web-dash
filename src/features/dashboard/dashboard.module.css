@@ -128,6 +128,7 @@
   border-top-right-radius: var(--r-xl);
   box-shadow: var(--shadow-4);
   overflow: hidden;
+  overscroll-behavior: contain;
   /* Pull-to-dismiss follows the pointer (transition removed while dragging) and
      springs back on release — reduced motion collapses --dur-* to ~1ms. */
   transition: transform var(--dur-slower) var(--ease-out);

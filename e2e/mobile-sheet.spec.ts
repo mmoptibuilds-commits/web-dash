@@ -67,6 +67,20 @@ test('31a. the sheet grab handle and Back both close the sheet to the overview',
 
   // Tap the grab handle → the sheet closes and the Dashboard overview returns.
   const tapped = await openNotes(page)
+  // Establish keyboard modality before focusing programmatically; Chromium
+  // otherwise treats locator.focus() as a pointer-style focus and suppresses
+  // the :focus-visible replacement ring.
+  await page.keyboard.press('Tab')
+  await tapped.handle.focus()
+  await expect(tapped.handle).toBeFocused()
+  await expect(tapped.handle).toHaveAttribute('aria-label', 'Close Notes sheet')
+  await expect(tapped.sheet).toHaveCSS('overscroll-behavior-y', 'contain')
+  const focusTreatment = await tapped.handle.locator('span').evaluate((pill) => ({
+    boxShadow: getComputedStyle(pill).boxShadow,
+    visible: getComputedStyle(pill).backgroundColor !== 'rgba(0, 0, 0, 0)',
+  }))
+  expect(focusTreatment.boxShadow).toMatch(/0px 0px 0px 3px/)
+  expect(focusTreatment.visible).toBe(true)
   await tapped.handle.click()
   await expect(tapped.sheet).toHaveCount(0)
   await expect(overview(page)).toBeVisible()

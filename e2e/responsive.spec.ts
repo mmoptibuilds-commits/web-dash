@@ -241,6 +241,19 @@ test('32c. compact-grid tiles drive container queries on the phone too', async (
   expect(med.width).toBeLessThan(240)
   await expect(page.getByTestId('calendar-weekdays')).toBeHidden()
 
+  const hiddenA11y = await page.getByTestId('calendar-weekdays').evaluate((el) => ({
+    ariaHidden: el.getAttribute('aria-hidden'),
+    display: getComputedStyle(el).display,
+    focusableNode: [el, ...Array.from(el.querySelectorAll<HTMLElement>('*'))].some(
+      (node) => node instanceof HTMLElement && node.tabIndex >= 0 && !node.hasAttribute('disabled'),
+    ),
+  }))
+  expect(hiddenA11y).toEqual({
+    ariaHidden: 'true',
+    display: 'none',
+    focusableNode: false,
+  })
+
   // Size Large spans the full 4-column row (> 240px) → the header row returns.
   await cell.getByRole('button', { name: 'Size Large' }).click()
   await page.waitForTimeout(350)

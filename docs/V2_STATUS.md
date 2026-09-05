@@ -6,6 +6,41 @@ task list; this file records what changed, evidence, and open follow-ups.
 
 Branch: `build/v1-one-shot` (V2 continues on top of the V1 one-shot build).
 
+## 9 — PWA/offline and interaction accessibility hardening (done)
+
+Closed the remaining §8 follow-ups with evidence-bound browser checks. The
+pointer-events sweep found no additional live-surface defects: every
+`pointer-events: none` declaration is an inert overlay, a deliberately hidden
+control, or a container whose interactive descendants explicitly opt back in.
+
+### What changed
+- **PWA offline proof — `e2e/pwa.spec.ts`** — worker checks now wait on
+  `navigator.serviceWorker.ready`, require an activated registration and page
+  controller, then confirm a same-origin Vite asset is present in CacheStorage
+  and resolves online before the network is disabled for the reload assertion.
+- **Hidden Calendar content — `e2e/responsive.spec.ts`** — the compact Calendar
+  widget check now confirms the container-query-hidden weekday row has
+  `aria-hidden="true"`, computed `display: none`, and no focusable descendants.
+- **Mobile sheet handle — `e2e/mobile-sheet.spec.ts`** — keyboard modality now
+  verifies the grab handle's accessible close label, focus state, and visible
+  accent replacement ring before the equivalent tap dismissal.
+- **Sheet scroll containment — `src/features/dashboard/dashboard.module.css`** —
+  the fixed mobile sheet contains overscroll so pull-to-dismiss and inner app
+  scrolling do not chain into the underlying Dashboard page.
+
+### Evidence
+- `npm run check` — lint, typecheck, **126/126 Vitest tests**, and PWA build
+  pass.
+- `npm run build` — production bundle generated with 16 precache entries.
+- `npx playwright test --project=desktop --project=mobile` — **73 passed / 23
+  skipped / 0 failed** against a fresh production build.
+- `agent-browser` was unavailable on this host; the repository's Playwright
+  preview runner provided the browser verification path instead.
+
+### Follow-ups
+- Human acceptance remains the saved screenshot sweep and the two visual states
+  listed in `docs/QA_CHECKLIST.md`.
+
 ## 8 — Calculator mini-app + widget, engineering-review pass, and the verification gate (done)
 
 A three-mode Calculator (Basic / Dates / Currency) as a dock app in a desktop

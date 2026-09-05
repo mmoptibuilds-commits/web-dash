@@ -7,11 +7,11 @@ machine-verified says so, and a short "human acceptance" section at the end
 lists what still needs eyes on it.
 
 **Final evidence run (2026-09-05, branch `build/v1-one-shot`):**
-`npm run check` → lint 0 · typecheck 0 · **50/50 vitest** · build + PWA OK.
-`npx playwright test` (vite preview) → **35 passed / 3 intentional skips** —
-desktop project 19/19; mobile project 16/16 (+ 3 skips: drag-reorder on touch,
-width sweep which runs once on desktop, JSON import/export which is
-desktop-only by design).
+`npm run check` → lint 0 · typecheck 0 · **126/126 vitest** · build + PWA OK.
+`npx playwright test --project=desktop --project=mobile` (vite preview) →
+**73 passed / 23 intentional skips / 0 failed** across the two projects. Skips
+are by design: mobile-inapplicable desktop checks, desktop-only width sweep and
+backup flow, and touch-inapplicable freeform drag checks.
 
 ## Functional
 - [x] Clean first launch → starter layout (seed content present) — `shell.spec #1`
