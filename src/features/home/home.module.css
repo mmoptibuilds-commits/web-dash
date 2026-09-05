@@ -23,6 +23,7 @@
 }
 
 .navBtn {
+  position: relative;
   display: grid;
   place-items: center;
   width: 30px;
@@ -943,12 +944,14 @@
    (and stray cursor) don't have to be pixel-precise. Visual stays the same.
    (Dots opt out of the bleed below — see the .dot comment above.) */
 .dot,
-.resizeChip {
+.resizeChip,
+.navBtn {
   position: relative;
 }
 .resizeChip::before,
 .remove::before,
-.folderItemRemove::before {
+.folderItemRemove::before,
+.navBtn::before {
   content: '';
   position: absolute;
   inset: -5px;
@@ -961,5 +964,17 @@
   .folderItemRemove {
     opacity: 1;
     pointer-events: auto;
+  }
+}
+
+/* Coarse pointers: the Home edit toolbar floats above the dock and is the
+   phone's Add-shortcut/folder/widget surface — give its buttons a real touch
+   target. (Hit height only; width/padding are left to the labels.) */
+@media (hover: none) {
+  .editBar {
+    gap: var(--sp-2);
+  }
+  .editBar :global(.btn) {
+    min-height: var(--touch-min);
   }
 }

@@ -1,4 +1,5 @@
-import { ChevronLeft } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { ChevronDown, ChevronLeft } from 'lucide-react'
 import { windowApps } from '@/types/apps'
 import { useUi } from '@/state/ui'
 import { useIsDesktop } from '@/hooks/useMedia'
@@ -48,19 +49,134 @@ function Overview() {
   )
 }
 
+const DISMISS_PX = 96 // pull the sheet past this to close it (≈ 20% of a phone)
+const SNUB_PX = 8 // pointer travel above this counts as a drag, not a tap
+
+/**
+ * A Dashboard mini-app on a phone: an iOS-style bottom sheet — rounded top,
+ * grab handle, and pull-down-to-dismiss that springs back unless dragged past
+ * the threshold. Tapping the handle (or Back / Escape) also closes it, so the
+ * gesture is a bonus, never the only path. Focus returns to the opener.
+ */
 function MobileSheet({ appId }: { appId: BuiltinAppId }) {
   const openMobile = useUi((s) => s.openMobile)
   const app = windowApps().find((a) => a.id === appId)
+  const sheetRef = useRef<HTMLDivElement>(null)
+  const handleRef = useRef<HTMLButtonElement>(null)
+  const openerRef = useRef<HTMLElement | null>(null)
+  const dragRef = useRef<{ id: number; startY: number } | null>(null)
+  const movedRef = useRef(false) // travelled far enough that the next click is a drag artifact
+  const [grabbing, setGrabbing] = useState(false)
+
+  // Move focus into the sheet on open and hand it back on close (the sheet is a
+  // full-screen layer; focus must not stay behind it on the covered dock).
+  useEffect(() => {
+    openerRef.current = document.activeElement as HTMLElement | null
+    const id = window.requestAnimationFrame(() => handleRef.current?.focus())
+    return () => {
+      window.cancelAnimationFrame(id)
+      openerRef.current?.focus?.()
+    }
+  }, [])
+
   if (!app) return null
   const Icon = app.icon
+  const close = () => openMobile(null)
+  // Close on Escape — unless a text field is being edited inside the sheet.
+  const onSheetKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'Escape') return
+    const t = e.target as HTMLElement
+    if (t.closest('input, textarea, [contenteditable="true"]')) return
+    close()
+  }
+
+  const applyPull = (dy: number) => {
+    const sheet = sheetRef.current
+    if (!sheet) return
+    const cap = window.innerHeight * 0.4 // rubber-band past 40% so a fling can't fly off
+    const offset = dy > cap ? cap + (dy - cap) * 0.3 : dy
+    sheet.style.transition = 'none'
+    sheet.style.transform = `translateY(${offset.toFixed(1)}px)`
+  }
+  const springBack = () => {
+    const sheet = sheetRef.current
+    if (!sheet) return
+    sheet.style.transition = ''
+    sheet.style.transform = '' // the stylesheet's transform transition animates it home
+  }
+
+  const onHandlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (e.button !== 0) return
+    dragRef.current = { id: e.pointerId, startY: e.clientY }
+    movedRef.current = false
+    setGrabbing(true)
+    // Guarded: synthetic/test pointers (and edge platforms) may not be capturable.
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId)
+    } catch {
+      /* pointer capture is an optimisation — the sheet still follows */
+    }
+  }
+  const onHandlePointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const d = dragRef.current
+    if (!d || d.id !== e.pointerId) return
+    const dy = Math.max(0, e.clientY - d.startY)
+    if (dy > SNUB_PX) movedRef.current = true
+    applyPull(dy)
+  }
+  const onHandlePointerEnd = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const d = dragRef.current
+    if (!d || d.id !== e.pointerId) return
+    dragRef.current = null
+    setGrabbing(false)
+    const dy = Math.max(0, e.clientY - d.startY)
+    if (movedRef.current && dy >= DISMISS_PX) {
+      close()
+    } else {
+      springBack()
+    }
+  }
+  const onHandlePointerCancel = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (dragRef.current?.id !== e.pointerId) return
+    dragRef.current = null
+    setGrabbing(false)
+    springBack()
+  }
+  const onHandleClick = () => {
+    if (movedRef.current) {
+      movedRef.current = false // a drag's trailing click — ignore it
+      return
+    }
+    close()
+  }
+
   return (
-    <div className={`${styles.sheet} anim-slide-up`} role="dialog" aria-label={`${app.name} sheet`}>
+    <div
+      ref={sheetRef}
+      className={`${styles.sheet} anim-slide-up`}
+      role="dialog"
+      aria-label={`${app.name} sheet`}
+      onKeyDown={onSheetKeyDown}
+    >
+      <button
+        ref={handleRef}
+        type="button"
+        className={`${styles.sheetHandle}${grabbing ? ` ${styles.sheetGrabbing}` : ''}`}
+        aria-label={`Close ${app.name} sheet`}
+        onPointerDown={onHandlePointerDown}
+        onPointerMove={onHandlePointerMove}
+        onPointerUp={onHandlePointerEnd}
+        onPointerCancel={onHandlePointerCancel}
+        onClick={onHandleClick}
+      >
+        <span className={styles.sheetHandlePill} aria-hidden />
+      </button>
       <div className={styles.sheetTop}>
         <button
           type="button"
           className={styles.sheetBack}
           aria-label="Back to dashboard"
-          onClick={() => openMobile(null)}
+          onClick={close}
         >
           <ChevronLeft size={20} aria-hidden />
           <span>Dashboard</span>
@@ -69,7 +185,9 @@ function MobileSheet({ appId }: { appId: BuiltinAppId }) {
           <Icon size={16} aria-hidden />
           {app.name}
         </span>
-        <span className={styles.sheetPad} aria-hidden />
+        <span className={styles.sheetAside} aria-hidden>
+          <ChevronDown size={18} />
+        </span>
       </div>
       <div className={styles.sheetBody}>
         <AppContent appId={appId} />

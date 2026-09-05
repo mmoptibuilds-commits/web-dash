@@ -6,6 +6,54 @@ task list; this file records what changed, evidence, and open follow-ups.
 
 Branch: `build/v1-one-shot` (V2 continues on top of the V1 one-shot build).
 
+## 5 — iOS-like phone interaction model + safe areas (done)
+
+The phone already rendered Dashboard mini-apps as bottom sheets; this workstream
+gave them the real iOS gesture language and made the mobile surface respect
+safe areas and touch-target sizes.
+
+### What changed
+- **Grab-handle pull-to-dismiss on Dashboard sheets** (`DashboardMode.tsx`,
+  `dashboard.module.css`) — every `MobileSheet` now has a grab handle across its
+  top. Pull it down and the sheet follows the pointer (transform with the
+  transition removed mid-drag; `touch-action:none` so the page can't scroll
+  instead); release short of the threshold and it springs back on the sheet's
+  own transform transition; pull past 96px — rubber-banded beyond 40% of the
+  viewport so a fling can't fly off-screen — and it dismisses. Tap the handle,
+  Back, or Escape dismiss it too, so the gesture is a bonus, never the only
+  path. Escape is ignored while a text field inside the sheet is being edited.
+- **Focus management** — opening a sheet moves focus to the grab handle and
+  closing returns it to the opener (the dock tile / app card that the
+  full-screen sheet covers), so keyboard and assistive-tech users never land on
+  a hidden element.
+- **Safe areas** — `.sheetBody` now pads its bottom by `--safe-bottom`, keeping
+  the last row clear of the iOS home indicator in standalone/PWA mode (the
+  `.sheet` top already cleared the menu bar + `--safe-top`).
+- **Home mobile touch targets** (`home.module.css`) — the Home paging
+  `navBtn` dots grew the same invisible 5px hit-area recipe as folder dots and
+  resize chips, and under `@media (hover:none)` the Edit-Mode toolbar buttons —
+  the phone's Add-shortcut/folder/widget surface, floating above the dock — now
+  meet `--touch-min` height.
+- **New E2E** `e2e/mobile-sheet.spec.ts` (mobile project): 31a tap-handle and
+  Back both close the sheet to the overview; 31b Escape closes it, a 44px pull
+  springs back (sheet stays), a 180px pull dismisses it. Drags are dispatched
+  as synthetic trusted `PointerEvent`s on the handle, so the whole gesture path
+  is asserted without pixel vision.
+
+### Evidence
+- `npm run check` green (lint + typecheck + 75 unit tests + production build).
+- Full E2E suite green on a production build: **53 passed / 11 skipped / 0
+  failed** desktop + mobile (the two new sheet tests run mobile-only; two
+  desktop-project skips added). One mid-gate run flaked at `pwa.spec` 15
+  (offline reload serves the cached shell) purely under suite load — it passes
+  in isolation and in the clean re-run, and the #31 changes to that path are
+  CSS-only.
+
+### Follow-ups
+- **A11y sweep (#33)** — confirm the sheet handle's focus ring reads as a
+  visible affordance for keyboard users and that Escape-from-sheet focus
+  restoration is covered by an axe/keyboard pass.
+
 ## 4 — Desktop shell + dock macOS coherence + continuous Transparency (done)
 
 Closed the macOS-coherence loop on the desktop shell and made translucency a
