@@ -6,6 +6,59 @@ task list; this file records what changed, evidence, and open follow-ups.
 
 Branch: `build/v1-one-shot` (V2 continues on top of the V1 one-shot build).
 
+## 6 — Full responsiveness + widget container-query + per-breakpoint persistence (done)
+
+Locked down the three responsiveness pillars with a programmatic guarantee each:
+the shell never overflows or cuts content at any width, a widget adapts to its
+**tile** width (not the window), and desktop freeform geometry and the compact
+phone grid stay independent.
+
+### What changed
+- **One source edit** — the Calendar widget's weekday header row now carries
+  `data-testid="calendar-weekdays"`, making the container-query boundary
+  assertable.
+- **`e2e/responsive.spec.ts` restored + extended** (the Phase-5 width sweep had
+  been deleted from the working tree; restored verbatim from HEAD so its shell
+  coverage survives, then extended):
+  - **32a** — a *data-rich* Home (Notes + Calendar widgets added in edit mode)
+    is swept across 320/390/430/768/1024/1200/1440. At each width the document
+    must not require horizontal scroll, and a purpose-built defect scan walks
+    every `[data-page-id]` element with `overflow-x: hidden|clip` and fails if
+    any in-flow block child extends past its clip edge (a tile row/grid that
+    got cut). Text-ellipsis truncation and fixed full-viewport layers are
+    filtered as benign, so only real cut content trips it.
+  - **32b (desktop, freeform)** — Calendar lands at its Medium canonical box
+    (> 240px) and the weekday row is visible; dragging the resize handle down
+    to the tile minimum (< 240px) hides the row **while the 1440px window
+    never changes**, proving the `.panel` `container-type: inline-size` query
+    fires off tile width, not viewport width; the Size Large preset (> 600px)
+    brings the row back.
+  - **32c (mobile, compact grid)** — on the 390px phone grid a Medium Calendar
+    spans 2 of the 4 columns (~169px < 240) and the weekday row is hidden;
+    Size Large spans the full row (> 300px) and it returns — the same
+    container query drives compact-grid tiles on a touch surface.
+- **Per-breakpoint independence** (unchanged structurally, now re-asserted) —
+  `home.spec` #7 covers freeform full-overlap drag + z-order + reload/viewport
+  round-trip non-corruption; the mobile-only compact reorder test covers the
+  phone grid. The layout invariant guarantees it: compact order writes only
+  `order`, freeform only `x/y/w/h/z`; the two never touch.
+- **Hardened `pwa.spec` 15** (offline reload, previously flaky only under
+  suite load) — after the online reload it now waits for
+  `navigator.serviceWorker.controller` before cutting the network, so the
+  offline reload is guaranteed to be served from the precache instead of
+  racing the worker's first client handoff.
+
+### Evidence
+- `npm run check` green (lint + typecheck + 75 unit tests + production build).
+- Full E2E suite green on a fresh production build: **56 passed / 14 skipped /
+  0 failed** desktop + mobile — the once-flaky offline-reload test passes and
+  no longer flakes; the three #32 tests account for the +3/+3 over §5.
+
+### Follow-ups
+- **A11y sweep (#33)** — confirm container-query-hidden content (the weekday
+  row is `aria-hidden`, so inert to screen readers) has no visible-focus or
+  tab-order counterpart, then run the keyboard/semantics/motion pass.
+
 ## 5 — iOS-like phone interaction model + safe areas (done)
 
 The phone already rendered Dashboard mini-apps as bottom sheets; this workstream

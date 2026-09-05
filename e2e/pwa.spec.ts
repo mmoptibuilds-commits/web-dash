@@ -33,6 +33,7 @@ test('15. reloading while offline serves the cached app shell with local data', 
 
   // Reload once online so the active worker controls the page.
   await page.reload()
+  await expectControlled(page)
   await expect(page.getByRole('button', { name: 'Open Google' })).toBeVisible()
 
   // Cut the network: the precached shell and IndexedDB data still load.
@@ -46,5 +47,15 @@ async function expectActiveWorker(page: Page): Promise<void> {
     if (!('serviceWorker' in navigator)) return false
     const reg = await navigator.serviceWorker.getRegistration()
     return Boolean(reg && reg.active)
+  })
+}
+
+/** The page must be under the worker's control before an offline reload can
+ *  be served from the precache — without this the check below races the SW's
+ *  first client handoff and flakes under full-suite load. */
+async function expectControlled(page: Page): Promise<void> {
+  await page.waitForFunction(() => {
+    if (!('serviceWorker' in navigator)) return false
+    return Boolean(navigator.serviceWorker.controller)
   })
 }

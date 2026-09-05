@@ -23,7 +23,7 @@ export function CalendarWidget(_props: WidgetComponentProps) {
   return (
     <div className={styles.panel}>
       <div className={styles.wTitle}>{title}</div>
-      <div className={styles.wWeekdays} aria-hidden="true">
+      <div className={styles.wWeekdays} aria-hidden="true" data-testid="calendar-weekdays">
         {dayNames.map((name, i) => (
           <span key={name + i} className={styles.wWeekday}>
             {name}
