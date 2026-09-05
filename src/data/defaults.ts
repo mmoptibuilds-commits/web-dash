@@ -12,6 +12,7 @@ export function defaultSettings(): AppSettings {
     id: SETTINGS_ID,
     theme: 'auto',
     reducedEffects: false,
+    glass: 'standard',
     defaultSearchEngine: 'google',
     iconSize: 'regular',
     showLabels: true,

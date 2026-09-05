@@ -256,6 +256,35 @@
   --shadow-inset-1: inset 0 1px 0 rgb(255 255 255 / 0.8);
 }
 
+/* ============================ Glass presets ============================ */
+/* Settings → Appearance → Glass. Each preset restyles the shared material
+   tokens uniformly — every surface already reads var(--glass-sat) (with its
+   own tuned fallback), the --blur-* scale and the --glass-a-* translucency
+   alphas — so picking one re-glasses the whole shell at once. 'standard' is
+   the default and needs no block: surfaces keep their tuned defaults. The
+   reduced-effects rules below come later in the file, so data-effects='reduced'
+   wins over a data-glass preset if both were ever present. */
+:root[data-glass='subtle'] {
+  --glass-sat: 1.2;
+  --blur-xs: 6px;
+  --blur-sm: 10px;
+  --blur-md: 16px;
+  --blur-lg: 26px;
+  --glass-a-1: 0.78;
+  --glass-a-2: 0.74;
+  --glass-a-3: 0.7;
+}
+:root[data-glass='vibrant'] {
+  --glass-sat: 2;
+  --blur-xs: 12px;
+  --blur-sm: 22px;
+  --blur-md: 30px;
+  --blur-lg: 48px;
+  --glass-a-1: 0.56;
+  --glass-a-2: 0.52;
+  --glass-a-3: 0.48;
+}
+
 /* ---- Reduced effects: replace blur with solid, high-opacity fills ---- */
 @media (prefers-reduced-motion: reduce) {
   :root {

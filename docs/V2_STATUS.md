@@ -6,6 +6,51 @@ task list; this file records what changed, evidence, and open follow-ups.
 
 Branch: `build/v1-one-shot` (V2 continues on top of the V1 one-shot build).
 
+## 3 — Appearance/Glass presets with live preview (done)
+
+A user-facing translucency setting that re-glasses the whole shell at once,
+built directly on §2's centralized material tokens.
+
+### What changed
+- **New domain field `AppSettings.glass: GlassPreset`** (`subtle | standard |
+  vibrant`, default `standard`). `getSettings()` now merges persisted rows over
+  the defaults, so a settings row written by an older build (which predates
+  `glass`) still resolves it — backward compatible, no DB version bump.
+- **`src/styles/tokens.css` `:root[data-glass]` preset blocks** — `subtle`
+  (sat 1.2, tighter blur, higher fill opacity → calm/crisp) and `vibrant`
+  (sat 2, wider blur, lower fill opacity → deep colour) restyle the shared
+  `--glass-sat`/`--blur-*`/`--glass-a-*` tokens uniformly, so every surface
+  that reads them re-glasses simultaneously. `standard` needs no block. The
+  blocks sit *before* the reduced-effects rules so `data-effects='reduced'`
+  always wins when both are present.
+- **`src/app/theme.ts`** — `applyThemeAttributes` now also sets `data-glass`.
+  The attribute reflects what is *rendered*: `'off'` while Reduced Effects is
+  on (that mode replaces glass with a solid surface), else the chosen preset.
+  Wired through the pre-paint apply (`main.tsx`) and the session `ThemeSync`
+  (`App.tsx`).
+- **Settings → Appearance → Glass** — a `GlassSetting` control: three preset
+  chips plus a **live sample panel** (`settings.module.css`) that is a real
+  translucent tile over a colourful gradient, reading the same material tokens
+  so the pick re-styles it in place. Because the settings window, dock, menu
+  bar and any windows behind it read the same tokens, the whole surface
+  re-glasses live as you pick.
+- **Backup validator** tolerates `glass` (checked only when present) so v1-era
+  backups still import; new exports carry it.
+- **`e2e/glass.spec.ts`** — 29a: preset applies `html[data-glass]` + material
+  tokens live, persists across reload, stays checked. 29b: Reduced Effects →
+  `data-glass="off"` + `data-effects="reduced"` (no material override), and
+  turning it back off restores the stored preset. Desktop + mobile.
+
+### Evidence
+- `npm run typecheck` / `eslint` clean; settings unit suite green (6 tests,
+  incl. new "legacy row backfills `glass`" and "persists a glass preset").
+- `npm run build` succeeds. E2E `glass.spec` + `settings.spec` regression:
+  **9 passed / 1 skipped / 0 failed** across desktop + mobile.
+
+### Follow-ups
+- **Control Center (§30/§33)** could host a quick Glass/Reduced-effects toggle
+  mirroring Settings — currently Settings-only by design.
+
 ## 2 — Design tokens + typography + icon + surface normalization (done)
 
 Centralized the surface language and removed the "AI-generated" look via

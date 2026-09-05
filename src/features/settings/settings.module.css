@@ -221,6 +221,91 @@
   transform: translateX(16px);
 }
 
+/* ---------- Glass preset preview ---------- */
+
+.glassPreview {
+  position: relative;
+  height: 96px;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  box-shadow: var(--shadow-inset-1);
+  /* A colourful stand-in for the wallpaper; the sample panel blurs/saturates
+     what is behind it, so the preset choice is visible without opening it. */
+  background: linear-gradient(
+    128deg,
+    hsl(262 52% 56%) 0%,
+    hsl(262 52% 56%) 34%,
+    hsl(var(--accent-h) var(--accent-s) 62%) 68%,
+    hsl(var(--accent-h) calc(var(--accent-s) + 4%) 50%) 100%
+  );
+}
+
+.previewBlob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(2px);
+}
+
+.previewBlobA {
+  top: -34px;
+  left: -22px;
+  width: 130px;
+  height: 130px;
+  background: radial-gradient(circle, hsl(46 96% 70% / 0.9) 0%, transparent 68%);
+}
+
+.previewBlobB {
+  right: -26px;
+  bottom: -40px;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, hsl(186 88% 66% / 0.85) 0%, transparent 68%);
+}
+
+/* The sample panel mirrors a real glass surface: it reads the shared material
+   tokens, so swapping the preset re-styles it in place. */
+.glassSample {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: 112px;
+  height: 64px;
+  border-radius: var(--r-xl);
+  background: rgb(var(--glass-1) / var(--glass-a-1));
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  box-shadow: var(--shadow-2), var(--shadow-inset-1);
+  -webkit-backdrop-filter: blur(var(--blur-md)) saturate(var(--glass-sat, 1.5));
+  backdrop-filter: blur(var(--blur-md)) saturate(var(--glass-sat, 1.5));
+}
+
+.glassSampleBars {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 52px;
+}
+
+.glassSampleBars i {
+  display: block;
+  height: 5px;
+  border-radius: var(--r-pill);
+  background: rgb(var(--ink-1) / 0.8);
+}
+
+.glassSampleBars i:nth-child(2) {
+  width: 70%;
+  opacity: 0.6;
+}
+
+.glassSampleBars i:nth-child(3) {
+  width: 45%;
+  opacity: 0.4;
+}
+
 /* ---------- Wallpaper swatches ---------- */
 
 .swatchGrid {

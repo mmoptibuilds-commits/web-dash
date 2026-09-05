@@ -5,10 +5,16 @@ import type { AppSettings } from '@/types/domain'
 /** Read settings, creating defaults on first access. */
 export async function getSettings(): Promise<AppSettings> {
   const existing = await db.settings.get(SETTINGS_ID)
-  if (existing) return existing
-  const fresh = defaultSettings()
-  await db.settings.put(fresh)
-  return fresh
+  if (!existing) {
+    const fresh = defaultSettings()
+    await db.settings.put(fresh)
+    return fresh
+  }
+  // Merge over the defaults so a settings row written by an older build (which
+  // predates a newer optional field such as `glass`) still resolves it. Spread
+  // order keeps the stored row's id/timestamps and any real value, letting the
+  // default fill only what the row lacks.
+  return { ...defaultSettings(), ...existing }
 }
 
 /** Merge a partial patch into persisted settings. */

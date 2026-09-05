@@ -18,6 +18,13 @@ export type SearchEngineId = 'google' | 'bing' | 'duckduckgo'
 export type IconSizePreset = 'small' | 'regular' | 'large'
 
 /**
+ * Translucency / blur strength of the glass material. Presets restyle the
+ * shared material tokens uniformly (see tokens.css `[data-glass]` blocks).
+ * `reducedEffects` overrides any preset with a solid surface.
+ */
+export type GlassPreset = 'subtle' | 'standard' | 'vibrant'
+
+/**
  * Reference to whichever wallpaper is active for the current surface.
  * `builtin` points at a preset shipped in code (gradients); `user` points at
  * a media row in the `wallpapers` table (image / video / animated).
@@ -32,6 +39,8 @@ export interface AppSettings {
   theme: ThemePreference
   /** Reduced Effects — disables blur, heavy translucency. */
   reducedEffects: boolean
+  /** Glass material preset (see GlassPreset). 'standard' is the tuned default. */
+  glass: GlassPreset
   defaultSearchEngine: SearchEngineId
   iconSize: IconSizePreset
   /** Whether shortcut labels render on home pages. */

@@ -6,6 +6,7 @@ import { settingsRepo } from '@/data/repositories'
 import { useSettings } from '@/hooks/data'
 import type {
   AppSettings,
+  GlassPreset,
   IconSizePreset,
   SearchEngineId,
   ThemePreference,
@@ -54,6 +55,74 @@ const SIZE_OPTIONS: ReadonlyArray<{ value: IconSizePreset; label: string }> = [
   { value: 'large', label: 'Large' },
 ]
 
+const GLASS_OPTIONS: ReadonlyArray<{ value: GlassPreset; label: string }> = [
+  { value: 'subtle', label: 'Subtle' },
+  { value: 'standard', label: 'Standard' },
+  { value: 'vibrant', label: 'Vibrant' },
+]
+
+const GLASS_DESCRIPTION: Record<GlassPreset, string> = {
+  subtle: 'Calm translucency with a light blur.',
+  standard: 'The balanced, tuned default.',
+  vibrant: 'Rich color and a deep, smooth blur.',
+}
+
+/**
+ * Glass preset picker with a live sample. The sample is a real translucent
+ * panel built from the shared material tokens, so picking a preset restyles it
+ * in place — and because every chrome surface reads the same tokens, the whole
+ * shell behind the settings window re-glasses live too.
+ */
+function GlassSetting({
+  value,
+  onChange,
+}: {
+  value: GlassPreset
+  onChange: (glass: GlassPreset) => void
+}) {
+  return (
+    <div className={styles.settingBlock}>
+      <div className={styles.settingText}>
+        <span className={styles.settingTitle}>Glass</span>
+        <span className={styles.settingDesc}>
+          Translucency and blur behind windows and panels. {GLASS_DESCRIPTION[value]} Reduced
+          Effects turns glass fully off.
+        </span>
+      </div>
+
+      <div className={styles.glassPreview} aria-hidden="true">
+        <span className={`${styles.previewBlob} ${styles.previewBlobA}`} />
+        <span className={`${styles.previewBlob} ${styles.previewBlobB}`} />
+        <span className={styles.glassSample}>
+          <span className={styles.glassSampleBars}>
+            <i />
+            <i />
+            <i />
+          </span>
+        </span>
+      </div>
+
+      <div className={styles.chipRow} role="radiogroup" aria-label="Glass">
+        {GLASS_OPTIONS.map((option) => {
+          const active = option.value === value
+          return (
+            <button
+              key={option.value}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              className={active ? `${styles.chip} ${styles.chipActive}` : styles.chip}
+              onClick={() => onChange(option.value)}
+            >
+              <span>{option.label}</span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function SimpleSettings({ settings, persist }: { settings: AppSettings; persist: PersistFn }) {
   return (
     <>
@@ -64,6 +133,10 @@ function SimpleSettings({ settings, persist }: { settings: AppSettings; persist:
           value={settings.theme}
           options={themeOptions()}
           onChange={(theme) => persist({ theme })}
+        />
+        <GlassSetting
+          value={settings.glass ?? 'standard'}
+          onChange={(glass) => persist({ glass })}
         />
         <ToggleSetting
           title="Reduced effects"

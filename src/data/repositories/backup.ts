@@ -147,6 +147,7 @@ const inValues =
     isStr(v) && values.has(v)
 
 const THEME_VALUES = new Set(['auto', 'light', 'dark'])
+const GLASS_VALUES = new Set(['subtle', 'standard', 'vibrant'])
 const SEARCH_ENGINE_VALUES = new Set(['google', 'bing', 'duckduckgo'])
 const ICON_SIZE_VALUES = new Set(['small', 'regular', 'large'])
 const LAYOUT_KIND_VALUES = new Set(['shortcut', 'folder', 'widget'])
@@ -172,6 +173,8 @@ const ROW_VALIDATORS: Record<string, (row: unknown) => string | null> = {
     if (row.id !== 'main') return 'id must be "main"'
     if (!inValues(THEME_VALUES)(row.theme)) return 'theme is not auto/light/dark'
     if (!isBool(row.reducedEffects)) return 'reducedEffects is not a boolean'
+    if (row.glass !== undefined && !inValues(GLASS_VALUES)(row.glass))
+      return 'glass is not subtle/standard/vibrant' // optional: older backups lack it
     if (!inValues(SEARCH_ENGINE_VALUES)(row.defaultSearchEngine))
       return 'defaultSearchEngine is not google/bing/duckduckgo'
     if (!inValues(ICON_SIZE_VALUES)(row.iconSize)) return 'iconSize is not small/regular/large'

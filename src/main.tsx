@@ -35,6 +35,7 @@ async function boot() {
   applyThemeAttributes(
     resolveTheme(settings?.theme ?? 'auto', prefersDark),
     settings?.reducedEffects ?? false,
+    settings?.glass ?? 'standard',
   )
 
   // PWA service worker (autoUpdate; no-op in dev).

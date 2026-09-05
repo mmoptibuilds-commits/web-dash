@@ -12,16 +12,21 @@ import { DashboardMode } from '@/features/dashboard/DashboardMode'
 import { SearchOverlay } from '@/features/search/SearchOverlay'
 
 /**
- * Keeps <html data-theme / data-effects> in sync with Settings and the OS
- * (auto). Runs for the whole session; the pre-paint apply happens in main.
+ * Keeps <html data-theme / data-effects / data-glass> in sync with Settings and
+ * the OS (auto). Runs for the whole session; the pre-paint apply happens in main.
  */
 function ThemeSync() {
   const themePref = useSettings()?.theme
   const reduced = useSettings()?.reducedEffects
+  const glass = useSettings()?.glass
   const prefersDark = usePrefersDark()
   useEffect(() => {
-    applyThemeAttributes(resolveTheme(themePref ?? 'auto', prefersDark), reduced ?? false)
-  }, [themePref, reduced, prefersDark])
+    applyThemeAttributes(
+      resolveTheme(themePref ?? 'auto', prefersDark),
+      reduced ?? false,
+      glass ?? 'standard',
+    )
+  }, [themePref, reduced, glass, prefersDark])
   return null
 }
 
