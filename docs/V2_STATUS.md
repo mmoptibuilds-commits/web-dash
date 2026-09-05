@@ -6,6 +6,84 @@ task list; this file records what changed, evidence, and open follow-ups.
 
 Branch: `build/v1-one-shot` (V2 continues on top of the V1 one-shot build).
 
+## 8 — Calculator mini-app + widget, engineering-review pass, and the verification gate (done)
+
+A three-mode Calculator (Basic / Dates / Currency) as a dock app in a desktop
+window / mobile sheet **and** a Home widget that shares the same engine; the
+Currency mode converts offline against a user-editable, locally persisted rate
+table. This section also logs the #38–#41 engineering-review pass over the
+whole V2 and the final full-suite verification gate that shipped it.
+
+### What changed
+- **Calculator feature (`src/features/calculator/`)** — a dock app
+  (`CalculatorMiniApp`) and a Home widget (`CalculatorWidget`, a compact
+  keypad with an "Open Calculator" footer that launches the full app). Three
+  mode tabs (Basic / Dates / Currency) stay mounted so switching never loses an
+  in-progress entry. Both surfaces share pure, React-free engines, fully unit
+  tested:
+  - **`calc.ts`** — immediate-execution basic arithmetic (left to right, no
+    precedence — `2 + 3 × 4 = 20`, like iOS): operator chaining/replacement,
+    contextual `%` (`100 + 10 % = 110`), divide-by-zero → an `Error` sentinel
+    that any digit clears. A single reducer drives the app and the widget, so
+    behaviour is identical and tested once.
+  - **`age.ts`** — age between two calendar dates as whole years/months/days
+    via the "anchor" method (step whole years, then whole months, then days),
+    UTC-midnight so it is timezone-free, month lengths clamped from the
+    **original** birth day-of-month at every boundary (a 29-Feb birthday lands
+    on 28-Feb in a non-leap year; a Jan-31 birthday never drifts to the 28th
+    across a short month). Also exact total days, "X years" (÷365.2425), and a
+    next-birthday countdown.
+  - **`currency.ts`** — USD-anchored conversion (`amount × rate(to) /
+    rate(from)`), code-shipped baseline for 12 currencies with human names.
+- **Offline, user-editable rates** — `src/data/repositories/currencyRates.ts`
+  over a single-row Dexie store (`currencyRates`, id `default`) added as **DB
+  v3**. `get` only reads and returns a transient baseline when no row exists
+  yet (safe from a live query); Save persists and stamps `editedAt` so the UI
+  can show a "manual" chip; Reset restores the shipped baseline. The first
+  manual edit creates the real row; seed ships the baseline from first boot.
+  Rates are wired into the Settings export/restore model (`backup.ts`) with a
+  row validator (id `default`, base pinned to `USD`, 3-letter codes, positive
+  finite rates).
+- **Wiring** — `calculator` registered as a typed dock app
+  (`components/shell/appContent.tsx`) and a coordinator-owned typed widget in
+  `features/widgets/registry.tsx`; domain `CurrencyRates` type; seed adds the
+  Calculator launcher (7 dock apps) and the widget surface.
+- **Engineering-review pass (#38–#41)** folded into this gate — geometry + data
+  layer (backup backfill of freeform geometry for imported V1 rows via a shared
+  `planFreeformGeometry` packer, resize anchor, `MIN_BOX`, size-aware
+  `addItemToPage`, Alt+arrow lattice, freeform gate); Home interactions (page
+  rename revert, drag threshold, chip drag, pointer-only resize-handle keyboard
+  model, destructive-action focus); dashboard/sheet (openMobile window wipe,
+  minimize focus, sheet pull animation, notes back button, MobileSheet focus);
+  theme/glass/dead-code (Reduced Effects solidifies glass **and** drops the
+  backdrop, broader glass fallback, dead setting removed).
+- **Gate regressions the full suite caught (all fixed)** — (1) the freeform
+  resize handle became pointer-only/aria-hidden (#39), so E2E retargets it by
+  `data-testid=resize-handle` (keyboard resize = Alt+Arrows on the focused
+  tile); (2) adding the Calculator to the dock (7 apps) overflowed 360px, so
+  the dock bar now shrink-to-fits (flex-basis + min-width) with every tile
+  inside the viewport; (3) Reduced Effects zeroes the `--blur-*` tokens at the
+  source (the build minifier can drop an unprefixed `backdrop-filter:none`
+  sweep, and Blink honours the standard spelling over the `-webkit-` alias),
+  while `--glass-sat` is deliberately untouched — Reduced Effects owns no
+  material override.
+
+### Evidence
+- Unit: **126 passed / 18 files** — the 48 Calculator tests (23 calc engine,
+  12 age, 7 currency, 4 mini-app, 2 widget) plus the geometry/data review
+  tests.
+- `e2e/calculator.spec.ts` (calc.1–calc.4, both projects): the widget solves a
+  sum and opens the full app; app arithmetic + clear + `Error` recovery; the
+  age anchor (2023-01-31 → 2023-04-30 is exactly 3 months, 0 days — a
+  regression test for the fresh-clamp month-end fix); currency baseline
+  (100 USD → 92 EUR), an edit to parity persists across reload and shows
+  "manual", and Reset restores 92.
+- Full E2E on a fresh production build, desktop + mobile: **73 passed / 23
+  skipped / 0 failed** (the +8 over §7 are calc.1–4 × two projects). One
+  pwa.spec offline-reload flake observed once under parallel load reproduced
+  green in isolation and on rerun — not a regression.
+- `npm run lint` / `npm run typecheck` clean.
+
 ## 7 — A11y + motion + performance sweep (done)
 
 Keyboard/focus/semantics (axe-free programmatic), reduced-motion &
