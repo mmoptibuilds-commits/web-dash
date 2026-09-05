@@ -84,41 +84,97 @@ test('6. create a second Home page, rename it and navigate between pages', async
   await expect(page.getByText('This page is empty.')).toBeVisible()
 })
 
-test('7. reorder a Home item in Edit Mode and keep the order after reload', async ({ page }) => {
-  test.skip(!(await isDesktop(page)), 'Drag reorder covered on desktop viewport')
+test('7. reposition a tile on the desktop freeform canvas and keep it after reload', async ({
+  page,
+}) => {
+  test.skip(!(await isDesktop(page)), 'Freeform drag is exercised on the desktop viewport')
+  await boot(page)
+  await enterEdit(page)
+
+  const src = tile(page, 'Google')
+  const dst = tile(page, 'Gmail')
+  const sB = await src.boundingBox()
+  const dB = await dst.boundingBox()
+  if (!sB || !dB) throw new Error('Missing tile geometry')
+
+  // Drag src's centre onto dst's centre → identical boxes (full overlap), with
+  // src raised to the front. Freeform means no neighbour reflows to make room.
+  await page.mouse.move(sB.x + sB.width / 2, sB.y + sB.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(dB.x + dB.width / 2, dB.y + dB.height / 2, { steps: 24 })
+  await page.mouse.up()
+  await page.waitForTimeout(400)
+
+  const after = await src.boundingBox()
+  if (!after) throw new Error('Missing tile geometry after drag')
+  expect(after.x).toBeCloseTo(dB.x, 0)
+  expect(after.y).toBeCloseTo(dB.y, 0)
+  // Google now stacks above Gmail (bring-to-front on drag engage).
+  expect(await zIndex(cellOf(src))).toBeGreaterThan(await zIndex(cellOf(dst)))
+
+  // Geometry persists across reload — the freeform position is real data.
+  await page.reload()
+  await expect(src).toBeVisible()
+  const persisted = await src.boundingBox()
+  if (!persisted) throw new Error('Missing tile geometry after reload')
+  expect(persisted.x).toBeCloseTo(dB.x, 0)
+  expect(persisted.y).toBeCloseTo(dB.y, 0)
+  expect(await zIndex(cellOf(src))).toBeGreaterThan(await zIndex(cellOf(dst)))
+
+  // Per-breakpoint independence: on the compact grid the same items keep their
+  // grid flow (no corruption from the desktop overlap), and shrinking back to
+  // desktop restores the dragged geometry untouched.
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect(src).toBeVisible()
+  await expect(dst).toBeVisible()
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await expect(src).toBeVisible()
+  const back = await src.boundingBox()
+  if (!back) throw new Error('Missing tile geometry back on desktop')
+  expect(back.x).toBeCloseTo(dB.x, 0)
+  expect(back.y).toBeCloseTo(dB.y, 0)
+})
+
+test('reorder an item on the compact grid and keep the order after reload', async ({ page }) => {
+  test.skip(await isDesktop(page), 'Drag-band reorder is exercised on the mobile grid')
   await boot(page)
 
-  // Wikipedia sits on row 2 of the starter grid; Google is on row 1.
+  // Pick whichever of the two tiles sits lower so the drag always moves upward.
   const wiki = tile(page, 'Wikipedia')
-  const before = await wiki.boundingBox()
+  const google = tile(page, 'Google')
+  const wikiB = await wiki.boundingBox()
+  const googleB = await google.boundingBox()
+  if (!wikiB || !googleB) throw new Error('Missing tile geometry')
+  const low = wikiB.y > googleB.y ? wiki : google
+  const high = low === wiki ? google : wiki
+  const lowBefore = await low.boundingBox()
+  if (!lowBefore) throw new Error('Missing tile geometry')
 
   await enterEdit(page)
-  const handle = cellOf(wiki).getByRole('button', { name: 'Drag to rearrange' })
-  const target = tile(page, 'Google')
-  const targetBox = await target.boundingBox()
+  const handle = cellOf(low).getByRole('button', { name: 'Drag to rearrange' })
+  const highBox = await high.boundingBox()
   const start = await handle.boundingBox()
-  if (!before || !targetBox || !start) throw new Error('Missing tile geometry')
+  if (!highBox || !start) throw new Error('Missing tile geometry')
 
   await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2)
   await page.mouse.down()
-  await page.mouse.move(targetBox.x + targetBox.width / 2, targetBox.y + targetBox.height / 2, {
-    steps: 20,
+  await page.mouse.move(highBox.x + highBox.width / 2, highBox.y + highBox.height / 2, {
+    steps: 18,
   })
   await page.mouse.up()
-  // Let the dnd transform settle before measuring the new position.
   await page.waitForTimeout(500)
   await exitEdit(page)
 
-  const after = await wiki.boundingBox()
-  if (!after) throw new Error('Missing tile geometry')
-  expect(after.y).toBeLessThan(before.y - 5)
+  const lowAfter = await low.boundingBox()
+  if (!lowAfter) throw new Error('Missing tile geometry after drag')
+  expect(lowAfter.y).toBeLessThan(lowBefore.y - 5)
 
-  // Order is persisted (data), so a reload keeps Wikipedia on row 1.
+  // The new order is persisted (data), so a reload keeps the item on its row.
   await page.reload()
-  await expect(wiki).toBeVisible()
-  const persisted = await wiki.boundingBox()
-  if (!persisted) throw new Error('Missing tile geometry')
-  expect(persisted.y).toBeLessThan(before.y - 5)
+  await expect(low).toBeVisible()
+  const persisted = await low.boundingBox()
+  if (!persisted) throw new Error('Missing tile geometry after reload')
+  expect(persisted.y).toBeLessThan(lowBefore.y - 5)
 })
 
 test('8. open/close a folder and open a contained shortcut from a folder', async ({ page }) => {
@@ -158,4 +214,10 @@ test('8. open/close a folder and open a contained shortcut from a folder', async
 async function isDesktop(page: Page): Promise<boolean> {
   const vp = page.viewportSize()
   return vp ? vp.width >= 1024 : false
+}
+
+/** Computed stacking order of a tile wrapper (the freeform canvas z value). */
+async function zIndex(locator: Locator): Promise<number> {
+  const v = await locator.evaluate((el) => Number(getComputedStyle(el as HTMLElement).zIndex))
+  return v
 }

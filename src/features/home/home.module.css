@@ -362,6 +362,114 @@
   pointer-events: none;
 }
 
+/* ---------- Freeform canvas (desktop >= 1024px) ---------- */
+
+.freeCanvas {
+  position: relative;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  /* Drag/resize must win over page scroll on the canvas surface. */
+  touch-action: none;
+  isolation: isolate; /* guide lines + tiles stack only within the canvas */
+}
+
+.freeTile {
+  position: absolute;
+  min-width: 0;
+  min-height: 0;
+  border-radius: var(--r-lg);
+  touch-action: none;
+}
+.freeTileEdit {
+  cursor: grab;
+}
+.freeTileEdit:active {
+  cursor: grabbing;
+}
+.freeTileEdit:focus-visible {
+  outline: none;
+}
+.freeTileEdit:focus .freeRing,
+.freeTileEdit:focus-within .freeRing {
+  opacity: 1;
+}
+
+.freeRing {
+  position: absolute;
+  inset: -3px;
+  z-index: 6;
+  border-radius: calc(var(--r-lg) + 3px);
+  border: 1.5px solid rgb(var(--accent-h) var(--accent-s) var(--accent-l) / 0.65);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.35);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+.freeRingOn {
+  opacity: 1;
+}
+
+.freeHandle {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  z-index: 7;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-xs);
+  background: rgb(var(--glass-1) / 0.88);
+  color: rgb(var(--ink-2));
+  box-shadow: var(--shadow-1);
+  cursor: nwse-resize;
+  touch-action: none;
+}
+.freeHandle span {
+  width: 7px;
+  height: 7px;
+  margin-bottom: 2px;
+  border-right: 1.6px solid currentColor;
+  border-bottom: 1.6px solid currentColor;
+}
+.freeHandle:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.guideV,
+.guideH {
+  position: absolute;
+  z-index: 1000000; /* above every tile z — canvas is its own stacking context */
+  pointer-events: none;
+  background: rgb(var(--accent-h) var(--accent-s) var(--accent-l) / 0.85);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.55);
+}
+.guideV {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+.guideH {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+/* In edit mode a selected tile needs to read as selectable even over the
+   wallpaper — a soft accent wash keeps it distinct without a heavy border. */
+.freeTileEdit .widgetHost,
+.freeTileEdit > .tile {
+  border-radius: var(--r-lg);
+}
+.freeRingOn ~ .widgetHost {
+  box-shadow: inset 0 0 0 1px rgb(var(--accent-h) var(--accent-s) var(--accent-l) / 0.35);
+}
+
+
 /* Empty page */
 
 .emptyPage {

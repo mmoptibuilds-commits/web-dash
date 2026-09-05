@@ -22,7 +22,7 @@ import type {
  */
 
 /** Current schema version. Bump + add an upgrade block for any change. */
-export const DB_VERSION = 1
+export const DB_VERSION = 2
 
 class HearthDatabase extends Dexie {
   settings!: EntityTable<AppSettings, 'id'>
@@ -53,6 +53,25 @@ class HearthDatabase extends Dexie {
       wallpapers: 'id,kind',
       dockItems: 'id,order,appId,shortcutId',
     })
+
+    // v2 adds optional freeform x/y/w/h/z to layoutItems (no index change —
+    // same stores). Existing rows are backfilled with deterministic canonical
+    // placement so desktop freeform has real geometry from day one.
+    this.version(2)
+      .stores({
+        settings: 'id',
+        homePages: 'id,index',
+        layoutItems: 'id,pageId,order,refId',
+        shortcuts: 'id',
+        folders: 'id',
+        widgetInstances: 'id,type',
+        notes: 'id,updatedAt',
+        tasks: 'id,updatedAt,done',
+        history: 'id,kind,lastUsedAt',
+        wallpapers: 'id,kind',
+        dockItems: 'id,order,appId,shortcutId',
+      })
+      .upgrade((tx) => import('../migrations/v2Freeform').then((m) => m.upgradeToFreeform(tx)))
 
     // Fail loudly (surfaced by callers as a recoverable message) rather than
     // leaving the app half-initialized.

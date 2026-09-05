@@ -57,12 +57,23 @@ export interface HomePage {
 export type LayoutItemKind = 'shortcut' | 'folder' | 'widget'
 
 /**
- * A single placement on a home page. Home layout is an *ordered* grid:
- * `order` decides flow (top-to-bottom, left-to-right, wrapping at the
- * column count); grid span is derived from the referenced payload
- * (shortcuts/folders are 1×1, widgets use their size preset). This keeps
- * placement trivial to persist, reorder and migrate while remaining a
- * strict snap-to-grid.
+ * A single placement on a home page.
+ *
+ * Home supports two coordinated layout models, selected by viewport width and
+ * stored independently on the SAME row so neither corrupts the other:
+ *
+ * - Desktop (>= 1024px) is a genuine freeform canvas: each item carries an
+ *   explicit `x`/`y`/`w`/`h`/`z` box (CSS px, canvas capped at 1120 wide),
+ *   is absolutely positioned, never auto-reflows around neighbours, and may
+ *   overlap (z = bring-to-front). See src/data/layout/geometry.ts.
+ *
+ * - Compact widths (< 1024px) keep the ordered grid: `order` flows row-major
+ *   and grid span derives from the payload (shortcuts/folders are 1×1,
+ *   widgets use their size preset). Freeform edits never rewrite `order`, so a
+ *   desktop arrangement cannot corrupt the phone's grid and vice-versa.
+ *
+ * All geometry fields are optional so rows written by earlier versions remain
+ * valid; the DB upgrade and every write path fill them in.
  */
 export interface LayoutItem {
   id: EntityId
@@ -70,7 +81,16 @@ export interface LayoutItem {
   kind: LayoutItemKind
   /** Points at a Shortcut / Folder / WidgetInstance row. */
   refId: EntityId
+  /** Ordered-grid flow order (compact widths). Also the phone auto-flow. */
   order: number
+  /** Freeform canvas box — top/left in px within the page canvas. */
+  x?: number
+  y?: number
+  /** Freeform canvas box — width/height in px. */
+  w?: number
+  h?: number
+  /** Stack order on the freeform canvas (bring-to-front). */
+  z?: number
 }
 
 /* ------------------------------------------------------------------ */

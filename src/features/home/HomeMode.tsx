@@ -1,4 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type {
+  KeyboardEvent as ReactKeyboardEvent,
+  MutableRefObject,
+  PointerEvent as ReactPointerEvent,
+  ReactNode,
+} from 'react'
 import { Plus, FolderPlus, LayoutGrid, ChevronLeft, ChevronRight, X, GripVertical } from 'lucide-react'
 import {
   DndContext,
@@ -16,16 +22,33 @@ import {
   useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useHomePages, usePageItems, useSettings, useShortcuts, useFolders } from '@/hooks/data'
-import { useWidgetInstancesOf } from '@/hooks/data'
+import {
+  useHomePages,
+  usePageItems,
+  useSettings,
+  useShortcuts,
+  useFolders,
+  useWidgetInstancesOf,
+} from '@/hooks/data'
+import { useIsDesktop } from '@/hooks/useMedia'
 import { getWidgetDef } from '@/features/widgets/registry'
 import { WIDGET_SIZE_LABELS } from '@/types/widgets'
 import { useUi } from '@/state/ui'
 import { recordAndOpen } from '@/lib/nav'
 import { deleteShortcut } from '@/data/repositories/shortcuts'
 import { deleteFolderCascade } from '@/data/repositories/folders'
-import { reorderPageItems } from '@/data/repositories/layout'
+import { reorderPageItems, setItemBox } from '@/data/repositories/layout'
 import { deleteWidgetInstanceCascade, updateWidgetInstance } from '@/data/repositories/widgets'
+import {
+  FREE_CANVAS_W,
+  canonicalBoxForWidget,
+  clampBoxX,
+  itemBox,
+  MIN_BOX,
+  resolveMove,
+  resolveResize,
+  type Box,
+} from '@/data/layout/geometry'
 import { ConfirmDialog } from '@/components/common/Modal'
 import { ShortcutTile, FolderTile } from './homeItems'
 import { ShortcutDialog, NewFolderDialog, WidgetPickerDialog, PagesManagerDialog } from './HomeDialogs'
@@ -54,18 +77,74 @@ type DialogState =
   | { type: 'pages' }
   | null
 
-interface ModeProps {
-  page: HomePage
-  isActive: boolean
-  index: number
-  editMode: boolean
+interface PayloadCtx {
+  shortcut?: Shortcut
+  folder?: Folder
+  widget?: WidgetInstance
+  interactive: boolean
   showLabels: boolean
   iconScale: 'small' | 'regular' | 'large'
-  shortcutById: Map<string, Shortcut>
-  folderById: Map<string, Folder>
   onEditShortcut: (s: Shortcut) => void
-  onRemoveRequest: (item: LayoutItem) => void
+  onOpenFolder: (id: string) => void
 }
+
+/** Inner content for a tile — shared by the compact grid and the freeform
+ *  canvas so the two renderers cannot drift on payload markup. */
+function payloadNode(
+  item: LayoutItem,
+  ctx: PayloadCtx,
+): { node: ReactNode; isWidget: boolean } {
+  if (item.kind === 'shortcut' && ctx.shortcut) {
+    return {
+      isWidget: false,
+      node: (
+        <ShortcutTile
+          shortcut={ctx.shortcut}
+          showLabel={ctx.showLabels}
+          scale={ctx.iconScale}
+          onClick={() => {
+            if (ctx.interactive) ctx.onEditShortcut(ctx.shortcut!)
+            else recordAndOpen(ctx.shortcut!.label, ctx.shortcut!.url)
+          }}
+        />
+      ),
+    }
+  }
+  if (item.kind === 'folder' && ctx.folder) {
+    return {
+      isWidget: false,
+      node: (
+        <FolderTile
+          folder={ctx.folder}
+          count={ctx.folder.shortcutIds.length}
+          showLabel={ctx.showLabels}
+          scale={ctx.iconScale}
+          onClick={() => ctx.onOpenFolder(ctx.folder!.id)}
+        />
+      ),
+    }
+  }
+  if (item.kind === 'widget') {
+    const def = ctx.widget ? getWidgetDef(ctx.widget.type) : undefined
+    if (def && ctx.widget) {
+      const Comp = def.component
+      return {
+        isWidget: true,
+        node: (
+          <div className={styles.widgetHost}>
+            <Comp instance={ctx.widget} editMode={ctx.interactive} />
+          </div>
+        ),
+      }
+    }
+    return { isWidget: false, node: <div className={styles.tile} /> }
+  }
+  return { isWidget: false, node: null }
+}
+
+/* ------------------------------------------------------------------ */
+/* Compact ordered-grid tile (unchanged V1 behaviour, < 1024px)        */
+/* ------------------------------------------------------------------ */
 
 function PayloadTile({
   item,
@@ -74,6 +153,7 @@ function PayloadTile({
   widgetInstances,
   onEditShortcut,
   onRemoveRequest,
+  onOpenFolder,
   editMode,
   isActive,
   showLabels,
@@ -85,62 +165,35 @@ function PayloadTile({
   widgetInstances: WidgetInstance[]
   onEditShortcut: (s: Shortcut) => void
   onRemoveRequest: (item: LayoutItem) => void
+  onOpenFolder: (id: string) => void
   editMode: boolean
   isActive: boolean
   showLabels: boolean
   iconScale: 'small' | 'regular' | 'large'
 }) {
-  const setOpenFolderId = useUi((s) => s.setOpenFolderId)
   const interactive = editMode && isActive
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
     disabled: !interactive,
   })
 
-  let spanClass = styles.spanSmall
-  let content: React.ReactNode = null
+  const shortcut = item.kind === 'shortcut' ? shortcuts.get(item.refId) : undefined
+  const folder = item.kind === 'folder' ? folders.get(item.refId) : undefined
+  const widget =
+    item.kind === 'widget' ? widgetInstances.find((w) => w.id === item.refId) : undefined
 
-  if (item.kind === 'shortcut') {
-    const shortcut = shortcuts.get(item.refId)
-    if (!shortcut) return null
-    content = (
-      <ShortcutTile
-        shortcut={shortcut}
-        showLabel={showLabels}
-        scale={iconScale}
-        onClick={() => {
-          if (interactive) onEditShortcut(shortcut)
-          else recordAndOpen(shortcut.label, shortcut.url)
-        }}
-      />
-    )
-  } else if (item.kind === 'folder') {
-    const folder = folders.get(item.refId)
-    if (!folder) return null
-    content = (
-      <FolderTile
-        folder={folder}
-        count={folder.shortcutIds.length}
-        showLabel={showLabels}
-        scale={iconScale}
-        onClick={() => setOpenFolderId(folder.id)}
-      />
-    )
-  } else {
-    const widget = widgetInstances.find((w) => w.id === item.refId)
-    const def = widget ? getWidgetDef(widget.type) : undefined
-    spanClass = widget ? SPAN[widget.size] : styles.spanMedium
-    if (def && widget) {
-      const Comp = def.component
-      content = (
-        <div className={styles.widgetHost}>
-          <Comp instance={widget} editMode={interactive} />
-        </div>
-      )
-    } else {
-      content = <div className={styles.tile}>{/* unknown widget type */}</div>
-    }
-  }
+  let spanClass = styles.spanSmall
+  if (widget) spanClass = SPAN[widget.size] ?? styles.spanMedium
+  const { node } = payloadNode(item, {
+    shortcut,
+    folder,
+    widget,
+    interactive,
+    showLabels,
+    iconScale,
+    onEditShortcut,
+    onOpenFolder,
+  })
 
   return (
     <div
@@ -170,9 +223,9 @@ function PayloadTile({
         </button>
       )}
 
-      {content}
+      {node}
 
-      {item.kind === 'widget' && interactive && widgetInstances.find((w) => w.id === item.refId) && (
+      {item.kind === 'widget' && interactive && widget && (
         <div className={styles.resizeRow}>
           {(['small', 'medium', 'large'] as WidgetSizeId[]).map((s) => (
             <button
@@ -194,9 +247,175 @@ function PayloadTile({
 }
 
 /* ------------------------------------------------------------------ */
+/* Freeform tile (>= 1024px)                                           */
+/* ------------------------------------------------------------------ */
 
-function PagePane(props: ModeProps) {
-  const { page, isActive, editMode } = props
+interface FreeTileProps {
+  item: LayoutItem
+  ctx: PayloadCtx
+  box: Box
+  label: string
+  selected: boolean
+  interactive: boolean
+  onRemoveRequest: (item: LayoutItem) => void
+  onResizePreset: (item: LayoutItem, s: WidgetSizeId) => void
+  onStartMove: (e: ReactPointerEvent, item: LayoutItem) => void
+  onStartResize: (e: ReactPointerEvent, item: LayoutItem) => void
+  onKeyAction: (e: ReactKeyboardEvent, item: LayoutItem) => void
+  onToggleSelect: (id: string | null) => void
+  suppressClickRef: MutableRefObject<boolean>
+  zIndex: number
+}
+
+function FreeTile(props: FreeTileProps) {
+  const {
+    item,
+    ctx,
+    box,
+    label,
+    selected,
+    interactive,
+    zIndex,
+    onRemoveRequest,
+    onResizePreset,
+    onStartMove,
+    onStartResize,
+    onKeyAction,
+    onToggleSelect,
+    suppressClickRef,
+  } = props
+
+  const isWidget = item.kind === 'widget' && Boolean(ctx.widget)
+  const handle = (e: ReactPointerEvent) => {
+    // A plain click selects; a drag is only claimed once the pointer travels.
+    e.stopPropagation()
+    onToggleSelect(item.id)
+    onStartMove(e, item)
+  }
+
+  const ring = interactive ? (
+    <span
+      className={`${styles.freeRing} ${selected ? styles.freeRingOn : ''}`}
+      aria-hidden
+    />
+  ) : null
+
+  return (
+    <div
+      className={`${styles.freeTile} ${interactive ? styles.freeTileEdit : ''}`}
+      data-tile-id={item.id}
+      style={{ left: box.x, top: box.y, width: box.w, height: box.h, zIndex }}
+      role={interactive ? 'group' : undefined}
+      aria-label={interactive ? `${label} tile` : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      onPointerDown={interactive ? handle : undefined}
+      onKeyDown={interactive ? (e) => onKeyAction(e, item) : undefined}
+      onClickCapture={
+        interactive
+          ? (e) => {
+              // A drag release lands as a click; swallow it so the tile doesn't
+              // "open" whatever the pointer happened to release over.
+              if (suppressClickRef.current) {
+                e.preventDefault()
+                e.stopPropagation()
+                suppressClickRef.current = false
+              }
+            }
+          : undefined
+      }
+    >
+      {ring}
+      {interactive && (
+        <button
+          type="button"
+          className={styles.remove}
+          aria-label="Remove from page"
+          onClick={() => onRemoveRequest(item)}
+        >
+          <X size={13} aria-hidden />
+        </button>
+      )}
+
+      {payloadNode(item, ctx).node}
+
+      {interactive && isWidget && ctx.widget && (
+        <div className={styles.resizeRow}>
+          {(['small', 'medium', 'large'] as WidgetSizeId[]).map((s) => (
+            <button
+              key={s}
+              type="button"
+              className={styles.resizeChip}
+              aria-label={`Size ${WIDGET_SIZE_LABELS[s]}`}
+              onClick={() => onResizePreset(item, s)}
+            >
+              {WIDGET_SIZE_LABELS[s][0]}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {interactive && (
+        <button
+          type="button"
+          className={styles.freeHandle}
+          aria-label={`Resize ${label}`}
+          onPointerDown={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            onStartResize(e, item)
+          }}
+        >
+          <span aria-hidden />
+        </button>
+      )}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+
+type GuideLine = { axis: 'x' | 'y'; at: number }
+type Interaction =
+  | { id: string; mode: 'move'; box: Box; guides: GuideLine[] }
+  | { id: string; mode: 'resize'; box: Box }
+
+interface Gesture {
+  id: string
+  kind: LayoutItem['kind']
+  mode: 'move' | 'resize'
+  originCX: number
+  originCY: number
+  base: Box
+  others: Box[]
+  /** Highest stored z among the other tiles when the gesture began. */
+  maxZ: number
+  moved: boolean
+}
+
+interface PageProps {
+  page: HomePage
+  isActive: boolean
+  index: number
+  editMode: boolean
+  freeform: boolean
+  showLabels: boolean
+  iconScale: 'small' | 'regular' | 'large'
+  shortcutById: Map<string, Shortcut>
+  folderById: Map<string, Folder>
+  onEditShortcut: (s: Shortcut) => void
+  onRemoveRequest: (item: LayoutItem) => void
+}
+
+/** Non-form-control target — the rest of a tile is a move surface. */
+function isFormTarget(t: EventTarget | null): boolean {
+  return (
+    t instanceof Element &&
+    Boolean(t.closest('input, textarea, select, [contenteditable], .freeHandle, .remove'))
+  )
+}
+
+function PagePane(props: PageProps) {
+  const { page, isActive, editMode, freeform } = props
   const items = usePageItems(page.id)
   const ids = useMemo(
     () => (items ?? []).filter((i) => i.kind === 'widget').map((i) => i.refId),
@@ -209,10 +428,249 @@ function PagePane(props: ModeProps) {
   )
   const setActivePageId = useUi((s) => s.setActivePageId)
   const toggleEditMode = useUi((s) => s.toggleEditMode)
+  const setOpenFolderId = useUi((s) => s.setOpenFolderId)
+
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [interaction, setInteraction] = useState<Interaction | null>(null)
+  const [cw, setCw] = useState(FREE_CANVAS_W)
+  const canvasRef = useRef<HTMLDivElement>(null)
+  const gestureRef = useRef<Gesture | null>(null)
+  const interactionRef = useRef<Interaction | null>(null)
+  const suppressClickRef = useRef(false)
+
+  const interactive = editMode && isActive
+  const itemsLoaded = items !== undefined
+
+  // Track the rendered freeform canvas width (page padding + 1120 cap) so
+  // drags/resizes clamp to it and never push tiles off the right edge.
+  useEffect(() => {
+    const el = canvasRef.current
+    if (!el) return
+    const measure = () => {
+      const w = el.offsetWidth
+      if (w > 0) setCw(w)
+    }
+    measure()
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null
+    ro?.observe(el)
+    return () => ro?.disconnect()
+  }, [page.id, freeform, itemsLoaded])
+
+  const sizeById = useMemo(() => {
+    const m = new Map<string, WidgetSizeId>()
+    for (const w of widgetInstances ?? []) if (w) m.set(w.id, w.size)
+    return m
+  }, [widgetInstances])
+
+  const boxOf = (item: LayoutItem): Box =>
+    clampBoxX(itemBox(item, sizeById.get(item.refId)), cw)
+
+  // A tile's *live* box: the transient drag/resize box while interacting.
+  const liveBoxOf = (item: LayoutItem): Box =>
+    interaction && interaction.id === item.id ? interaction.box : boxOf(item)
+
+  const setLive = (next: Interaction) => {
+    interactionRef.current = next
+    setInteraction(next)
+  }
+
+  const endGesture = (released: PointerEvent | null) => {
+    const g = gestureRef.current
+    const int = interactionRef.current
+    gestureRef.current = null
+    interactionRef.current = null
+    setInteraction(null)
+    if (!g || !int) return
+    const box = int.box
+    void setItemBox(g.id, { x: box.x, y: box.y, w: box.w, h: box.h })
+    // A real drag that ends on its own tile must not then "click" the tile's
+    // inner control (open shortcut/folder/widget button).
+    if (g.mode === 'move' && g.moved && released) {
+      const t = released.target as Element | null
+      if (t?.closest?.(`[data-tile-id="${g.id}"]`)) suppressClickRef.current = true
+    }
+  }
+
+  const onWinMove = (e: PointerEvent) => {
+    const g = gestureRef.current
+    const canvas = canvasRef.current
+    if (!g || !canvas) return
+    // Autoscroll the page while dragging near its top/bottom edge so tiles can
+    // be dropped below the fold (pointer stays put, content advances).
+    if (g.moved) {
+      const scroller = canvas.parentElement
+      if (scroller) {
+        const s = scroller.getBoundingClientRect()
+        if (e.clientY < s.top + 56) scroller.scrollTop -= 12
+        else if (e.clientY > s.bottom - 56) scroller.scrollTop += 12
+      }
+    }
+    const rect = canvas.getBoundingClientRect()
+    const dx = e.clientX - rect.left - g.originCX
+    const dy = e.clientY - rect.top - g.originCY
+
+    if (g.mode === 'move') {
+      if (!g.moved && Math.hypot(dx, dy) < 4) return
+      if (!g.moved) {
+        g.moved = true
+        // Bring-to-front: persist a z above every other tile the moment the
+        // drag engages, so the tile rides above tiles it moves across.
+        void setItemBox(g.id, { z: g.maxZ + 1 })
+      }
+      const proposed: Box = {
+        x: g.base.x + dx,
+        y: g.base.y + dy,
+        w: g.base.w,
+        h: g.base.h,
+      }
+      const res = resolveMove(proposed, g.others, cw)
+      setLive({ id: g.id, mode: 'move', box: res.box, guides: res.guides })
+    } else {
+      const proposed: Box = {
+        x: g.base.x,
+        y: g.base.y,
+        w: g.base.w + dx,
+        h: g.base.h + dy,
+      }
+      const min = MIN_BOX[g.kind]
+      const box = resolveResize(proposed, min, cw)
+      setLive({ id: g.id, mode: 'resize', box })
+    }
+  }
+
+  const onWinUp = (e: PointerEvent) => {
+    window.removeEventListener('pointermove', onWinMove)
+    window.removeEventListener('pointerup', onWinUp)
+    window.removeEventListener('pointercancel', onWinUp)
+    endGesture(e)
+  }
+
+  const startMove = (e: ReactPointerEvent, item: LayoutItem) => {
+    if (!interactive || e.button !== 0) return
+    if (isFormTarget(e.target)) return
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const rect = canvas.getBoundingClientRect()
+    const base = boxOf(item)
+    const others = (items ?? [])
+      .filter((i) => i.id !== item.id)
+      .map((i) => boxOf(i))
+      .filter((b) => b.w > 0 && b.h > 0)
+    const maxZ = (items ?? []).reduce((m, i) => Math.max(m, i.z ?? 0), 0)
+    gestureRef.current = {
+      id: item.id,
+      kind: item.kind,
+      mode: 'move',
+      originCX: e.clientX - rect.left,
+      originCY: e.clientY - rect.top,
+      base,
+      others,
+      maxZ,
+      moved: false,
+    }
+    window.addEventListener('pointermove', onWinMove)
+    window.addEventListener('pointerup', onWinUp)
+    window.addEventListener('pointercancel', onWinUp)
+  }
+
+  const startResize = (e: ReactPointerEvent, item: LayoutItem) => {
+    if (!interactive) return
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const rect = canvas.getBoundingClientRect()
+    const base = boxOf(item)
+    const maxZ = (items ?? []).reduce((m, i) => Math.max(m, i.z ?? 0), 0)
+    gestureRef.current = {
+      id: item.id,
+      kind: item.kind,
+      mode: 'resize',
+      originCX: e.clientX - rect.left,
+      originCY: e.clientY - rect.top,
+      base,
+      others: [],
+      maxZ,
+      moved: true,
+    }
+    window.addEventListener('pointermove', onWinMove)
+    window.addEventListener('pointerup', onWinUp)
+    window.addEventListener('pointercancel', onWinUp)
+  }
+
+  const applyPreset = (item: LayoutItem, s: WidgetSizeId) => {
+    const box = boxOf(item)
+    const { w, h } = canonicalBoxForWidget(s)
+    void setItemBox(item.id, { x: box.x, y: box.y, w, h })
+    void updateWidgetInstance(item.refId, { size: s })
+  }
+
+  const keyAction = (e: ReactKeyboardEvent, item: LayoutItem) => {
+    const t = e.target as Element
+    // Never hijack typing/selection inside form controls (widget text fields,
+    // selects) — the rest of a tile (including its own buttons) is a move
+    // surface, so arrows there nudge the tile.
+    if (isFormTarget(t)) return
+    const step = e.shiftKey ? 8 : 1 // plain arrows = 1px fine nudge; Shift = 8px
+    const alt = e.altKey
+    const k = e.key
+    const isX = k === 'ArrowLeft' || k === 'ArrowRight'
+    const isY = k === 'ArrowUp' || k === 'ArrowDown'
+    if (!isX && !isY) return
+    e.preventDefault()
+    const sign = k === 'ArrowLeft' || k === 'ArrowUp' ? -1 : 1
+    const box = boxOf(item)
+    const delta = sign * step
+    if (alt) {
+      const min = MIN_BOX[item.kind]
+      const next: Box = {
+        x: box.x,
+        y: box.y,
+        w: isX ? box.w + delta : box.w,
+        h: isY ? box.h + delta : box.h,
+      }
+      void setItemBox(item.id, resolveResize(next, min, cw))
+      return
+    }
+    // Precise nudges deliberately bypass the magnetic grid/guides (a 1px push
+    // through resolveMove would re-snap back onto the 8px lattice). Clamp only.
+    const next: Box = {
+      x: Math.max(0, isX ? box.x + delta : box.x),
+      y: Math.max(0, isY ? box.y + delta : box.y),
+      w: box.w,
+      h: box.h,
+    }
+    void setItemBox(item.id, { ...clampBoxX(next, cw), y: Math.max(0, next.y) })
+  }
+
+  const payloadCtxFor = (item: LayoutItem): PayloadCtx | null => {
+    const shortcut = item.kind === 'shortcut' ? props.shortcutById.get(item.refId) : undefined
+    const folder = item.kind === 'folder' ? props.folderById.get(item.refId) : undefined
+    const widget =
+      item.kind === 'widget' ? (widgetInstances ?? []).find((w) => w?.id === item.refId) : undefined
+    if (item.kind === 'shortcut' && !shortcut) return null
+    if (item.kind === 'folder' && !folder) return null
+    if (item.kind === 'widget' && !widget) return null
+    return {
+      shortcut,
+      folder,
+      widget,
+      interactive,
+      showLabels: props.showLabels,
+      iconScale: props.iconScale,
+      onEditShortcut: props.onEditShortcut,
+      onOpenFolder: (id) => setOpenFolderId(id),
+    }
+  }
+
+  const labelOf = (item: LayoutItem): string => {
+    if (item.kind === 'shortcut') return props.shortcutById.get(item.refId)?.label ?? 'item'
+    if (item.kind === 'folder') return props.folderById.get(item.refId)?.name ?? 'folder'
+    const w = (widgetInstances ?? []).find((x) => x?.id === item.refId)
+    return (w && getWidgetDef(w.type)?.name) || 'widget'
+  }
 
   if (!items) return <section className={styles.page} data-page-id={page.id} />
 
-  const onDragEnd = (e: DragEndEvent) => {
+  const onGridDragEnd = (e: DragEndEvent) => {
     const { active, over } = e
     if (!over || active.id === over.id) return
     const ordered = items.map((i) => i.id)
@@ -221,6 +679,68 @@ function PagePane(props: ModeProps) {
     if (from < 0 || to < 0) return
     void reorderPageItems(page.id, arrayMove(ordered, from, to))
   }
+
+  if (!freeform) {
+    return (
+      <section className={styles.page} data-page-id={page.id}>
+        {items.length === 0 && !editMode ? (
+          <div className={styles.emptyPage}>
+            <p>This page is empty.</p>
+            <div className={styles.emptyActions}>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => {
+                  setActivePageId(page.id)
+                  if (!editMode) toggleEditMode()
+                }}
+              >
+                <Plus size={15} aria-hidden />
+                Add content
+              </button>
+            </div>
+          </div>
+        ) : (
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onGridDragEnd}>
+            <SortableContext items={items.map((i) => i.id)} strategy={rectSortingStrategy}>
+              <div className={styles.canvas}>
+                {items.map((item) => {
+                  const ctx = payloadCtxFor(item)
+                  if (!ctx) return null
+                  return (
+                    <PayloadTile
+                      key={item.id}
+                      item={item}
+                      shortcuts={props.shortcutById}
+                      folders={props.folderById}
+                      widgetInstances={(widgetInstances ?? []).filter(
+                        (w): w is WidgetInstance => Boolean(w),
+                      )}
+                      onEditShortcut={props.onEditShortcut}
+                      onRemoveRequest={props.onRemoveRequest}
+                      onOpenFolder={(id) => setOpenFolderId(id)}
+                      editMode={editMode}
+                      isActive={isActive}
+                      showLabels={props.showLabels}
+                      iconScale={props.iconScale}
+                    />
+                  )
+                })}
+              </div>
+            </SortableContext>
+          </DndContext>
+        )}
+      </section>
+    )
+  }
+
+  // Freeform canvas height = tallest tile bottom + a little breathing room.
+  const maxBottom = items.reduce((m, it) => Math.max(m, liveBoxOf(it).y + liveBoxOf(it).h), 0)
+  const canvasH = items.length === 0 ? 320 : Math.max(maxBottom + 16, 200)
+  const guides = interaction && interaction.mode === 'move' ? interaction.guides : []
+  // The tile currently being dragged is drawn above every stored z so it rides
+  // over tiles it crosses; the persisted z bump lands at drag-engage.
+  const topZ = items.reduce((m, it) => Math.max(m, it.z ?? 0), 0)
 
   return (
     <section className={styles.page} data-page-id={page.id}>
@@ -232,8 +752,6 @@ function PagePane(props: ModeProps) {
               type="button"
               className="btn btn-ghost"
               onClick={() => {
-                // Bring this page to the front and open the editor so the
-                // "Shortcut / Folder / Widget" toolbar is immediately visible.
                 setActivePageId(page.id)
                 if (!editMode) toggleEditMode()
               }}
@@ -244,29 +762,49 @@ function PagePane(props: ModeProps) {
           </div>
         </div>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-          <SortableContext items={items.map((i) => i.id)} strategy={rectSortingStrategy}>
-            <div className={styles.canvas}>
-              {items.map((item) => (
-                <PayloadTile
-                  key={item.id}
-                  item={item}
-                  shortcuts={props.shortcutById}
-                  folders={props.folderById}
-                  widgetInstances={(widgetInstances ?? []).filter(
-                    (w): w is WidgetInstance => Boolean(w),
-                  )}
-                  onEditShortcut={props.onEditShortcut}
-                  onRemoveRequest={props.onRemoveRequest}
-                  editMode={editMode}
-                  isActive={isActive}
-                  showLabels={props.showLabels}
-                  iconScale={props.iconScale}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+        <div
+          ref={canvasRef}
+          className={styles.freeCanvas}
+          style={{ height: canvasH }}
+          onPointerDown={(e) => {
+            if (e.target === e.currentTarget) setSelectedId(null)
+          }}
+        >
+          {guides.map((g, i) => (
+            <span
+              key={i}
+              className={g.axis === 'x' ? styles.guideV : styles.guideH}
+              style={g.axis === 'x' ? { left: g.at } : { top: g.at }}
+              aria-hidden
+            />
+          ))}
+          {items.map((item) => {
+            const ctx = payloadCtxFor(item)
+            if (!ctx) return null
+            const box = liveBoxOf(item)
+            const zIndex =
+              interaction && interaction.id === item.id ? topZ + 1 : item.z ?? 0
+            return (
+              <FreeTile
+                key={item.id}
+                item={item}
+                ctx={ctx}
+                box={box}
+                label={labelOf(item)}
+                selected={selectedId === item.id}
+                interactive={interactive}
+                zIndex={zIndex}
+                onRemoveRequest={props.onRemoveRequest}
+                onResizePreset={applyPreset}
+                onStartMove={startMove}
+                onStartResize={startResize}
+                onKeyAction={keyAction}
+                onToggleSelect={(id) => setSelectedId(id)}
+                suppressClickRef={suppressClickRef}
+              />
+            )
+          })}
+        </div>
       )}
     </section>
   )
@@ -286,6 +824,7 @@ export function HomeMode() {
   const [dialog, setDialog] = useState<DialogState>(null)
   const [pendingRemove, setPendingRemove] = useState<LayoutItem | null>(null)
   const [removeLabel, setRemoveLabel] = useState('this item')
+  const freeform = useIsDesktop()
 
   const showLabels = settings?.showLabels ?? true
   const iconScale = settings?.iconSize ?? 'regular'
@@ -452,6 +991,7 @@ export function HomeMode() {
             isActive={p.id === activePageId}
             index={i}
             editMode={editMode}
+            freeform={freeform}
             showLabels={showLabels}
             iconScale={iconScale}
             shortcutById={shortcutById}
