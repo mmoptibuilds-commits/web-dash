@@ -5,9 +5,9 @@
 spec (`Web-dashboard-One-Shot-Claude-Code-Prompt.md`).
 
 ## Current phase
-Phase 3 (integration) committed. Next: Phase 4 — functional E2E in a real
-browser (Playwright), then responsive/visual QA, harsh critique, engineering
-review, release readiness.
+Phase 4 (functional E2E) committed. Next: Phase 5 — responsive + visual QA
+(viewport sweeps + screenshots), then harsh critique, engineering review,
+release readiness.
 
 ## Completed milestones (git)
 - Phase 0/1 committed (`2c28da0`, `ab1b76b`): docs/contracts, Vite 8 + React 19
@@ -27,6 +27,10 @@ review, release readiness.
   embed); interim panel removed. PWA icon set generated (flame mark,
   192/512/maskable-512/apple-180/favicon). `npm run check` green:
   lint 0, typecheck 0, 12 files / 45 tests, build + PWA (15 precache entries).
+- Phase 4 E2E committed (`<pending hash>`): Playwright config (msedge channel,
+  desktop 1440×900 + mobile 390×844 projects, runs against `vite preview` so the
+  PWA/SW is exercised), shared helpers, 8 spec files covering all 16 spec flows
+  incl. reload-persistence and PWA manifest/offline. `e2e`/`test:e2e` scripts.
 
 ## Lane worktrees
 - `D:\web-dash-lanes\{notes-tasks,calendar-bookmarks,settings}` —
@@ -35,7 +39,11 @@ review, release readiness.
 
 ## Verification status
 - lint: PASS (0) · typecheck: PASS · test: 45 PASS · build: PASS (+PWA)
-- Not yet run: real-browser E2E, responsive + visual QA, screenshots.
+- Playwright E2E (Phase 4): PASS — desktop 18/18, mobile 16/16 + 2 desktop-only
+  skips (drag-reorder #7, JSON import/export #16). PWA flows 14/15 pass on both
+  projects. Screenshots captured as test artifacts on failure only.
+- Not yet run: responsive + visual QA sweep, harsh critique, engineering
+  review, release-readiness gates.
 
 ## Known integration notes
 - Dexie schema indexes added to v1 (unreleased): `layoutItems.refId`,
@@ -45,9 +53,15 @@ review, release readiness.
   excluded from export; backdrop falls back to the builtin gradient if the
   referenced wallpaper row is absent.
 - Version string lives in Settings (`1.0.0`, mirrors package.json).
+- E2E: `SearchOverlay` resolves `defaultSearchEngine` one render after mount
+  (settings load async); tests wait on the engine hint before submitting. On
+  phone widths the menu-bar Home/Dashboard tabs are hidden — mobile switches
+  mode via the brand (Home) and the dock "Dashboard" launcher. Fresh IndexedDB
+  per test (new context) seeds the starter layout via `ensureBootData`.
 
 ## Next action
-1. Phase 4: Playwright E2E over the 16 spec flows (desktop + mobile,
-   reload-persistence), capture screenshots.
-2. Phase 5–8: responsive/visual QA, harsh critique, engineering review,
-   release readiness (public icons present, no secrets, dist clean).
+1. Phase 5: responsive + visual QA — viewport sweeps at key widths, capture
+   screenshots (desktop + mobile), fix visual defects.
+2. Phase 6–8: harsh critique loop, engineering review (lint/typecheck/tests/
+   build, code/security/simplification review, secrets check), release
+   readiness (PWA manifest/SW verify, README, CHANGELOG, QA checklist).
