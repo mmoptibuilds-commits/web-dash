@@ -185,7 +185,8 @@ export function BookmarksMiniApp() {
           <div className={styles.empty}>
             <span className={styles.emptyTitle}>No links yet</span>
             <span className={styles.emptyHint}>
-              Add your first link — it will appear on Home and in the dock too.
+              Add your first link — it lives here in Links. To show it on Home,
+              switch Home to Edit and add a Shortcut.
             </span>
           </div>
         )}

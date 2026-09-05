@@ -223,7 +223,6 @@ export const builtinWallpaperIds = [
   'dusk',
   'lagoon',
   'meadow',
-  'mono-dark',
   'mono-light',
   'sakura',
   'slate',

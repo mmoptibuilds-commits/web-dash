@@ -45,3 +45,6 @@ coverage/
 .worktrees/
 .shots/
 scripts/capture.mjs
+
+# Impeccable skill cache (local only)
+.impeccable/

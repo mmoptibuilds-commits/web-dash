@@ -147,17 +147,17 @@ function PayloadTile({
       ref={setNodeRef}
       className={`${styles.cell} ${spanClass}`}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      {...(interactive ? attributes : {})}
     >
       {interactive && (
-        <div
+        <button
+          type="button"
           className={styles.dragBand}
+          {...attributes}
           {...listeners}
-          role="button"
           aria-label="Drag to rearrange"
         >
           <GripVertical size={14} aria-hidden />
-        </div>
+        </button>
       )}
       {interactive && (
         <button
@@ -208,6 +208,7 @@ function PagePane(props: ModeProps) {
     useSensor(KeyboardSensor),
   )
   const setActivePageId = useUi((s) => s.setActivePageId)
+  const toggleEditMode = useUi((s) => s.toggleEditMode)
 
   if (!items) return <section className={styles.page} data-page-id={page.id} />
 
@@ -227,7 +228,16 @@ function PagePane(props: ModeProps) {
         <div className={styles.emptyPage}>
           <p>This page is empty.</p>
           <div className={styles.emptyActions}>
-            <button type="button" className="btn btn-ghost" onClick={() => setActivePageId(page.id)}>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => {
+                // Bring this page to the front and open the editor so the
+                // "Shortcut / Folder / Widget" toolbar is immediately visible.
+                setActivePageId(page.id)
+                if (!editMode) toggleEditMode()
+              }}
+            >
               <Plus size={15} aria-hidden />
               Add content
             </button>
@@ -280,29 +290,54 @@ export function HomeMode() {
   const showLabels = settings?.showLabels ?? true
   const iconScale = settings?.iconSize ?? 'regular'
 
-  // Ensure a valid active page once pages load.
+  // Keep the active page valid. Pick the first page once it's needed (null
+  // after boot or when the active page is removed). Crucially, do NOT snap back
+  // when the active id is simply not in the list yet: right after "Add page"
+  // the live query can still be stale while the store already points at the new
+  // page, and resetting there would swallow the freshly created page's focus.
+  const prevPageIds = useRef<Set<string> | null>(null)
   useEffect(() => {
     if (!pages || pages.length === 0) return
-    if (!pages.some((p) => p.id === activePageId)) {
+    const ids = new Set(pages.map((p) => p.id))
+    const prev = prevPageIds.current
+    prevPageIds.current = ids
+    if (activePageId == null) {
       setActivePageId(pages[0].id)
+      return
     }
+    if (ids.has(activePageId)) return
+    // Active page is missing AND a prior list contained it → it was deleted,
+    // so fall back to the first page. A brand-new id is left alone until its
+    // page arrives in the list.
+    if (prev && prev.has(activePageId)) setActivePageId(pages[0].id)
   }, [pages, activePageId, setActivePageId])
 
-  // Scroll the strip so the active page is centered/left-aligned.
+  // Bring the active page into view. This is an *instant* jump on purpose:
+  // a smooth scroll animates through intermediate positions, and reading those
+  // back in onScrollSync would fight the activation (see onScrollSync). Manual
+  // swipes on the strip are still smooth — they scroll the element directly and
+  // onScrollSync follows.
   useEffect(() => {
     const el = stripRef.current
     if (!el || !pages || !activePageId) return
     const idx = pages.findIndex((p) => p.id === activePageId)
-    if (idx >= 0) {
-      el.scrollTo({ left: idx * el.clientWidth, behavior: 'smooth' })
-    }
+    if (idx < 0) return
+    const left = idx * el.clientWidth
+    if (Math.abs(el.scrollLeft - left) < 2) return
+    el.scrollTo({ left, behavior: 'auto' })
   }, [activePageId, pages])
 
   const onScrollSync = () => {
     const el = stripRef.current
     if (!el || el.clientWidth === 0) return
+    // While the active id is not in the live page list (e.g. right after "Add
+    // page", when the Dexie query is one render behind the store) the scroll
+    // position is stale relative to it — any scroll event then would read as
+    // "back on Home" and swallow the fresh page's activation. Hold off until
+    // the id materializes and the strip has been scrolled to it.
+    if (!pages || !pages.some((p) => p.id === activePageId)) return
     const idx = Math.round(el.scrollLeft / el.clientWidth)
-    const current = pages?.[idx]
+    const current = pages[idx]
     if (current && current.id !== activePageId) setActivePageId(current.id)
   }
 
@@ -391,13 +426,14 @@ export function HomeMode() {
           <ChevronRight size={18} aria-hidden />
         </button>
 
-        <span className={styles.dots} role="tablist" aria-label="Pages">
+        <span className={styles.dots} role="group" aria-label="Pages">
           {pages.map((p, i) => (
             <button
               key={p.id}
               type="button"
               className={`${styles.dot} ${i === activeIndex ? styles.dotOn : ''}`}
               aria-label={`Page ${i + 1}: ${p.name}`}
+              aria-current={i === activeIndex ? 'true' : undefined}
               onClick={() => goTo(i)}
             />
           ))}

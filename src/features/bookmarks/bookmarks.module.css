@@ -125,10 +125,10 @@
   margin: 0 var(--sp-4) var(--sp-2);
   padding: var(--sp-2) var(--sp-3);
   border-radius: var(--r-md);
-  background: rgb(220 60 60 / 0.1);
-  border: 1px solid rgb(220 60 60 / 0.22);
+  background: var(--danger-soft);
+  border: 1px solid var(--danger-border);
   font-size: var(--fs-sm);
-  color: hsl(4 82% 55%);
+  color: var(--danger);
 }
 
 .formActions {
@@ -177,13 +177,13 @@
 }
 
 .btnDanger {
-  color: hsl(4 82% 55%);
-  background: rgb(220 60 60 / 0.12);
-  border-color: rgb(220 60 60 / 0.22);
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-color: var(--danger-border);
 }
 
 .btnDanger:hover {
-  background: rgb(220 60 60 / 0.18);
+  background: var(--danger-border);
 }
 
 .confirmBar {
@@ -311,8 +311,8 @@
 }
 
 .iconBtn:hover {
-  background: rgb(220 60 60 / 0.12);
-  color: hsl(4 82% 55%);
+  background: var(--danger-soft);
+  color: var(--danger);
 }
 
 .iconBtn:active {

@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { Maximize2, X } from 'lucide-react'
 import { useUi } from '@/state/ui'
 import { BUILTIN_APPS } from '@/types/apps'
@@ -34,6 +34,18 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
   const toggleMaximize = useUi((s) => s.toggleMaximize)
   const moveWindow = useUi((s) => s.moveWindow)
   const drag = useRef<DragRef | null>(null)
+  const frameRef = useRef<HTMLElement>(null)
+
+  /** A freshly opened window is appended frontmost — move keyboard focus to it. */
+  useEffect(() => {
+    frameRef.current?.focus()
+  }, [])
+
+  /** Raise the window when any part of it receives keyboard focus (macOS model). */
+  const raiseIfBehind = () => {
+    const st = useUi.getState()
+    if (st.focusOrder[st.focusOrder.length - 1] !== appId) focusApp(appId)
+  }
 
   if (!win) return null
   const app = BUILTIN_APPS[appId]
@@ -101,11 +113,15 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
 
   return (
     <section
+      ref={frameRef}
       className={`${styles.window} ${maximized ? styles.maximized : ''}`}
       role="dialog"
       aria-label={`${app.name} window`}
+      tabIndex={-1}
       style={{ ...geometry, zIndex }}
       data-front={focusOrder[focusOrder.length - 1] === appId}
+      onFocus={raiseIfBehind}
+      onPointerDown={raiseIfBehind}
     >
       <header
         className={styles.titlebar}
@@ -152,7 +168,7 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
 export function WindowsHost() {
   const focusOrder = useUi((s) => s.focusOrder)
   return (
-    <div className={styles.stage} aria-live="polite">
+    <div className={styles.stage}>
       {focusOrder.map((id) => (
         <WindowFrame key={id} appId={id} />
       ))}

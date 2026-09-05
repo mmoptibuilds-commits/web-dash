@@ -221,12 +221,12 @@
   border-radius: var(--r-pill);
   font-size: var(--fs-xs);
   font-weight: 550;
-  color: hsl(4 82% 55%);
+  color: var(--danger);
   transition: background var(--dur-fast) var(--ease-out);
 }
 
 .clearBtn:hover {
-  background: rgb(220 60 60 / 0.14);
+  background: var(--danger-soft);
 }
 
 /* ---------- Shared buttons ---------- */
@@ -295,12 +295,12 @@
 }
 
 .dangerBtn {
-  color: hsl(4 82% 55%);
+  color: var(--danger);
 }
 
 .dangerBtn:hover {
-  background: rgb(220 60 60 / 0.14);
-  color: hsl(4 82% 55%);
+  background: var(--danger-soft);
+  color: var(--danger);
 }
 
 /* ============================================================

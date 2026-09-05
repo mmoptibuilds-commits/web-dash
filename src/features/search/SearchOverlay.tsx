@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { ArrowUpRight, CornerDownLeft, Search as SearchIcon } from 'lucide-react'
 import type { HistoryEntry } from '@/types/domain'
 import { useSettings } from '@/hooks/data'
@@ -29,6 +29,8 @@ export function SearchOverlay() {
   const [error, setError] = useState<string | null>(null)
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
+  const listId = useId()
+  const activeId = active >= 0 && active < suggestions.length ? `${listId}-o-${active}` : undefined
 
   // The overlay is mounted on open, so state starts fresh; just focus the box.
   useEffect(() => {
@@ -144,6 +146,11 @@ export function SearchOverlay() {
             onKeyDown={onKeyDown}
             placeholder="Search the web or open a link…"
             aria-label="Search the web or open a URL"
+            role="combobox"
+            aria-expanded={showList}
+            aria-controls={showList ? listId : undefined}
+            aria-activedescendant={activeId}
+            aria-autocomplete="list"
             autoComplete="off"
             spellCheck={false}
             enterKeyHint="go"
@@ -165,25 +172,30 @@ export function SearchOverlay() {
         )}
 
         {showList && (
-          <ul className={styles.list} role="listbox" aria-label="Suggestions">
+          <ul id={listId} className={styles.list} role="listbox" aria-label="Suggestions">
             {suggestions.map((s, i) => (
-              <li key={`${s.kind}:${s.entry.text}`} role="option" aria-selected={i === active}>
-                <button
-                  type="button"
-                  className={`${styles.item} ${i === active ? styles.itemActive : ''}`}
-                  onMouseDown={(ev) => {
-                    ev.preventDefault()
-                    pick(s)
-                  }}
-                >
-                  {s.kind === 'launch' ? (
-                    <ArrowUpRight size={15} aria-hidden />
-                  ) : (
-                    <SearchIcon size={15} aria-hidden />
-                  )}
-                  <span className={styles.itemText}>{s.entry.text}</span>
-                  <span className={styles.itemMeta}>{suggestionMeta(s, engineDef.label)}</span>
-                </button>
+              <li
+                key={`${s.kind}:${s.entry.text}`}
+                id={`${listId}-o-${i}`}
+                role="option"
+                aria-selected={i === active}
+                className={`${styles.item} ${i === active ? styles.itemActive : ''}`}
+                onMouseDown={(ev) => {
+                  // Keep focus in the box; this press picks the suggestion.
+                  ev.preventDefault()
+                  pick(s)
+                }}
+                onPointerMove={() => {
+                  if (active !== i) setActive(i)
+                }}
+              >
+                {s.kind === 'launch' ? (
+                  <ArrowUpRight size={15} aria-hidden />
+                ) : (
+                  <SearchIcon size={15} aria-hidden />
+                )}
+                <span className={styles.itemText}>{s.entry.text}</span>
+                <span className={styles.itemMeta}>{suggestionMeta(s, engineDef.label)}</span>
               </li>
             ))}
           </ul>

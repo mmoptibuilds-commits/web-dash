@@ -134,14 +134,14 @@
 .ccScrim {
   position: fixed;
   inset: 0;
-  z-index: calc(var(--z-popover) - 1);
+  z-index: var(--z-command);
 }
 
 .ccPanel {
   position: fixed;
   top: calc(var(--menu-h) + var(--safe-top) + 10px);
   right: var(--sp-3);
-  z-index: var(--z-popover);
+  z-index: var(--z-command);
   width: min(340px, calc(100vw - var(--sp-6)));
   display: flex;
   flex-direction: column;

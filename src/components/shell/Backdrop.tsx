@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSettings, useWallpapers } from '@/hooks/data'
 import { getBuiltinWallpaper } from '@/lib/wallpapers'
 import type { Wallpaper } from '@/types/domain'
@@ -41,13 +41,50 @@ export function Backdrop() {
   const isVideo =
     userWall != null &&
     (userWall.kind === 'video' || (userWall.kind === 'animated' && userWall.mime.startsWith('video')))
+  const reduced = settings?.reducedEffects ?? false
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  // Respect "Reduce motion & blur": don't autoplay a wallpaper video, and if
+  // the toggle flips while one is showing, stop it.
+  useEffect(() => {
+    const v = videoRef.current
+    if (!v || !isVideo) return
+    if (reduced || document.hidden) {
+      v.pause()
+      return
+    }
+    v.play().catch(() => {
+      /* autoplay may be blocked until interaction; leave paused */
+    })
+  }, [reduced, isVideo])
+
+  // Pause looping wallpapers while the tab is hidden (battery/CPU courtesy).
+  useEffect(() => {
+    if (!isVideo || reduced) return
+    const onVis = () => {
+      const v = videoRef.current
+      if (!v) return
+      if (document.hidden) v.pause()
+      else v.play().catch(() => {})
+    }
+    document.addEventListener('visibilitychange', onVis)
+    return () => document.removeEventListener('visibilitychange', onVis)
+  }, [isVideo, reduced])
 
   let media: React.ReactNode
   if (builtin) {
     media = <div className={styles.paint} style={{ backgroundImage: builtin.css }} />
   } else if (userWall && url) {
     media = isVideo ? (
-      <video className={styles.paint} src={url} autoPlay muted loop playsInline />
+      <video
+        ref={videoRef}
+        className={styles.paint}
+        src={url}
+        autoPlay={!reduced}
+        muted
+        loop
+        playsInline
+      />
     ) : (
       <img className={styles.paint} src={url} alt="" draggable={false} />
     )

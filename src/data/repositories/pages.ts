@@ -2,6 +2,9 @@ import { db } from '@/data/db/db'
 import type { HomePage } from '@/types/domain'
 import { now } from '@/types/domain'
 import { uid } from '@/lib/id'
+import { deleteShortcut } from './shortcuts'
+import { deleteFolderCascade } from './folders'
+import { deleteWidgetInstanceCascade } from './widgets'
 
 export async function listPages(): Promise<HomePage[]> {
   const pages = await db.homePages.toArray()
@@ -31,23 +34,30 @@ export async function renamePage(id: string, name: string): Promise<void> {
   await db.homePages.update(id, { name: name.trim().slice(0, 30) || 'Page', updatedAt: now() })
 }
 
-/** Delete a page and its layout items. Never leaves the app page-less. */
+/** Delete a page plus everything it owned — its layout items and the
+ *  shortcuts/folders/widgets those items referenced — so deleting from the
+ *  Pages manager never strands invisible orphan payloads (the confirm copy
+ *  says "…and its items?"). Mirrors per-item removal semantics. Never leaves
+ *  the app page-less; the UI prevents deleting the last page. */
 export async function deletePage(id: string): Promise<void> {
+  const items = await db.layoutItems.where('pageId').equals(id).toArray()
   const remaining = await db.homePages.count()
-  if (remaining <= 1) {
-    // Keep at least one page: clear instead.
-    const items = await db.layoutItems.where('pageId').equals(id).toArray()
-    await db.layoutItems.bulkDelete(items.map((i) => i.id))
-    return
+
+  for (const item of items) {
+    if (item.kind === 'shortcut') await deleteShortcut(item.refId)
+    else if (item.kind === 'folder') await deleteFolderCascade(item.refId)
+    else await deleteWidgetInstanceCascade(item.refId)
   }
-  await db.transaction('rw', db.homePages, db.layoutItems, async () => {
-    const items = await db.layoutItems.where('pageId').equals(id).toArray()
-    await db.layoutItems.bulkDelete(items.map((i) => i.id))
+  // The cascades key off refId; drop any remaining rows (unknown refs) here.
+  const leftover = await db.layoutItems.where('pageId').equals(id).toArray()
+  await db.layoutItems.bulkDelete(leftover.map((i) => i.id))
+
+  if (remaining > 1) {
     await db.homePages.delete(id)
-  })
-  // Re-normalize indexes after removal.
-  const pages = await listPages()
-  await Promise.all(pages.map((p, i) => db.homePages.update(p.id, { index: i })))
+    // Re-normalize indexes after removal.
+    const pages = await listPages()
+    await Promise.all(pages.map((p, i) => db.homePages.update(p.id, { index: i })))
+  }
 }
 
 /** Move a page to `toIndex` among the current ordered page list. */

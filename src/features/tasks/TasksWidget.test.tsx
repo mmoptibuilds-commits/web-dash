@@ -52,6 +52,9 @@ describe('TasksWidget', () => {
   })
 
   it('shows an all-done empty state when there are no open tasks', async () => {
+    const done = await taskRepo.createTask('Old done')
+    await taskRepo.setTaskDone(done.id, true)
+
     renderWidget()
     expect(await screen.findByText('All done')).toBeInTheDocument()
     expect(screen.getByText('Open Tasks')).toBeInTheDocument()

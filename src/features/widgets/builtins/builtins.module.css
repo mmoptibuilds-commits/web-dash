@@ -129,7 +129,7 @@
 }
 
 .searchError {
-  color: hsl(4 82% 56%);
+  color: var(--danger);
 }
 
 .suggestions {
@@ -367,7 +367,7 @@
 
 .embedErr {
   font-size: var(--fs-2xs);
-  color: hsl(4 82% 56%);
+  color: var(--danger);
 }
 
 .embedHelp {

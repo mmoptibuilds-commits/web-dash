@@ -38,8 +38,11 @@ export async function deleteTask(id: string): Promise<void> {
   await db.tasks.delete(id)
 }
 
+/** Delete every completed task. Boolean `done` can't be an index key, so
+ *  resolve the ids with a filter first, then bulk-delete. */
 export async function clearCompleted(): Promise<void> {
-  await db.tasks.where('done').equals(1).delete()
+  const done = await db.tasks.filter((t) => t.done).toArray()
+  await db.tasks.bulkDelete(done.map((t) => t.id))
 }
 
 export async function countOpenTasks(): Promise<number> {

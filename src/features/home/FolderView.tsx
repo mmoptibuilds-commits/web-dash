@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, Pencil, Plus, Trash2, X, Check } from 'lucide-react'
 import { useFolders, useShortcuts } from '@/hooks/data'
 import { useUi } from '@/state/ui'
@@ -8,6 +8,7 @@ import {
   deleteFolderCascade,
 } from '@/data/repositories/folders'
 import { recordAndOpen } from '@/lib/nav'
+import { focusLayer, restoreFocus, trapTab } from '@/lib/focus'
 import { ShortcutTile } from './homeItems'
 import { ShortcutDialog } from './HomeDialogs'
 import styles from './home.module.css'
@@ -21,6 +22,27 @@ export function FolderView() {
   const [adding, setAdding] = useState(false)
   const [renaming, setRenaming] = useState(false)
   const [name, setName] = useState('')
+  const overlayRef = useRef<HTMLDivElement>(null)
+
+  // Dialog pattern: move focus into the folder on open, trap Tab, restore on
+  // close — the layer is full-screen, so focus must not linger behind it.
+  const open = Boolean(openId)
+  useEffect(() => {
+    if (!open) return
+    const opener = document.activeElement
+    const raf = window.requestAnimationFrame(() => {
+      if (overlayRef.current) focusLayer(overlayRef.current)
+    })
+    const onKey = (e: KeyboardEvent) => {
+      if (overlayRef.current) trapTab(e, overlayRef.current)
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => {
+      window.cancelAnimationFrame(raf)
+      window.removeEventListener('keydown', onKey, true)
+      restoreFocus(opener)
+    }
+  }, [open])
 
   if (!openId || !folders || !shortcuts) return null
   const folder = folders.find((f) => f.id === openId)
@@ -45,7 +67,14 @@ export function FolderView() {
   }
 
   return (
-    <div className={styles.folderOverlay} role="dialog" aria-label={`Folder ${folder.name}`}>
+    <div
+      ref={overlayRef}
+      className={styles.folderOverlay}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Folder ${folder.name}`}
+      tabIndex={-1}
+    >
       <div className={styles.folderInner}>
         <header className={styles.folderHeader}>
           <button
@@ -67,6 +96,7 @@ export function FolderView() {
                   className={styles.folderRenameInput}
                   value={name}
                   autoFocus
+                  maxLength={40}
                   onChange={(e) => setName(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') void commitRename()

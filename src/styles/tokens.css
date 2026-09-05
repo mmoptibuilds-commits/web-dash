@@ -18,6 +18,12 @@
   --accent-soft: hsl(var(--accent-h) var(--accent-s) var(--accent-l) / 0.16);
   --on-accent: hsl(24 40% 12%);
 
+  /* ---- Destructive / danger ---- */
+  --danger: hsl(4 82% 55%);
+  --danger-strong: hsl(4 82% 45%);
+  --danger-soft: rgb(220 60 60 / 0.12);
+  --danger-border: rgb(220 60 60 / 0.22);
+
   /* ---- Neutral ink / paper (theme-able, set per theme below) ---- */
   --ink-1: 20 22 27; /* primary text */
   --ink-2: 60 64 72; /* secondary text */
@@ -129,6 +135,7 @@
   --z-modal: 70; /* dialogs, folders */
   --z-window: 80; /* desktop app windows */
   --z-sheet: 90; /* mobile sheets */
+  --z-command: 95; /* search overlay + control-center popover: above windows/sheets */
   --z-toast: 100;
 }
 
@@ -234,6 +241,24 @@ html[data-effects='reduced'] {
   --blur-sm: 0px;
   --blur-md: 0px;
   --blur-lg: 0px;
+}
+
+/* The in-app "Reduce motion & blur" setting must also stop motion (not just
+   blur). Duration tokens drive almost every animation/transition, so zeroing
+   them collapses the easing; the sweep below catches any hard-coded duration
+   (e.g. a keyframe written in ms) the tokens do not reach. */
+html[data-effects='reduced'] {
+  --dur-fast: 1ms;
+  --dur-base: 1ms;
+  --dur-slow: 1ms;
+  --dur-slower: 1ms;
+}
+html[data-effects='reduced'] *,
+html[data-effects='reduced'] *::before,
+html[data-effects='reduced'] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
 }
 
 /* ============================ Breakpoints ============================ */

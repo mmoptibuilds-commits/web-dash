@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { Home, LayoutDashboard, Moon, Pencil, Search, Sun } from 'lucide-react'
 import { useUi } from '@/state/ui'
 import { goHome, goDashboard } from '@/state/nav'
@@ -6,29 +7,53 @@ import type { Mode } from '@/state/ui'
 import { ControlCenterMenu } from './ControlCenter'
 import styles from './menubar.module.css'
 
+const MODES: Array<{ m: Mode; label: string; icon: typeof Home }> = [
+  { m: 'home', label: 'Home', icon: Home },
+  { m: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+]
+
 function ModeSwitch() {
   const mode = useUi((s) => s.mode)
-  const pick = (m: Mode) => (m === 'home' ? goHome() : goDashboard())
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const go = (i: number, dir: number) => {
+    const next = (i + dir + MODES.length) % MODES.length
+    const target = MODES[next]
+    if (target.m === 'home') goHome()
+    else goDashboard()
+    tabRefs.current[next]?.focus()
+  }
+  const onKey = (i: number) => (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowRight') {
+      e.preventDefault()
+      go(i, 1)
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault()
+      go(i, -1)
+    }
+  }
   return (
-    <div className={styles.switch} role="tablist" aria-label="Mode">
-      {(
-        [
-          { m: 'home' as Mode, label: 'Home', icon: Home },
-          { m: 'dashboard' as Mode, label: 'Dashboard', icon: LayoutDashboard },
-        ]
-      ).map(({ m, label, icon: Icon }) => (
-        <button
-          key={m}
-          type="button"
-          role="tab"
-          aria-selected={mode === m}
-          className={`${styles.switchBtn} ${mode === m ? styles.switchBtnActive : ''}`}
-          onClick={() => pick(m)}
-        >
-          <Icon size={15} aria-hidden />
-          <span>{label}</span>
-        </button>
-      ))}
+    <div className={styles.switch} role="radiogroup" aria-label="Mode">
+      {MODES.map(({ m, label, icon: Icon }, i) => {
+        const selected = mode === m
+        return (
+          <button
+            key={m}
+            ref={(el) => {
+              tabRefs.current[i] = el
+            }}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            tabIndex={selected ? 0 : -1}
+            className={`${styles.switchBtn} ${selected ? styles.switchBtnActive : ''}`}
+            onClick={() => (m === 'home' ? goHome() : goDashboard())}
+            onKeyDown={onKey(i)}
+          >
+            <Icon size={15} aria-hidden />
+            <span>{label}</span>
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -105,6 +130,8 @@ export function MenuBar() {
           className={`icon-btn ${controlCenterOpen ? 'is-active' : ''}`}
           aria-pressed={controlCenterOpen}
           aria-label="Control Center"
+          aria-haspopup="dialog"
+          aria-expanded={controlCenterOpen}
           title="Control Center"
           onClick={() => setControlCenter(!controlCenterOpen)}
         >

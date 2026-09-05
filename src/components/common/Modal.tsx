@@ -1,5 +1,6 @@
-import { useEffect, useId, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { X } from 'lucide-react'
+import { focusLayer, restoreFocus, trapTab } from '@/lib/focus'
 import styles from './Modal.module.css'
 
 interface ModalProps {
@@ -14,18 +15,32 @@ interface ModalProps {
 /** Lightweight, accessible modal used by every dialog/sheet in the shell. */
 export function Modal({ open, onClose, title, width = 400, children }: ModalProps) {
   const titleId = useId()
+  const cardRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!open) return
+    const prevFocus = document.activeElement
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        e.stopPropagation()
+        onClose()
+        return
+      }
+      if (cardRef.current) trapTab(e, cardRef.current)
     }
-    window.addEventListener('keydown', onKey)
+    window.addEventListener('keydown', onKey, true)
     const prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+    // Children may carry native autofocus (applied at commit); focus falls back
+    // to the first focusable control once the dialog is on screen.
+    const raf = window.requestAnimationFrame(() => {
+      if (cardRef.current) focusLayer(cardRef.current)
+    })
     return () => {
-      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('keydown', onKey, true)
       document.body.style.overflow = prevOverflow
+      window.cancelAnimationFrame(raf)
+      restoreFocus(prevFocus instanceof Element ? prevFocus : null)
     }
   }, [open, onClose])
 
@@ -39,6 +54,7 @@ export function Modal({ open, onClose, title, width = 400, children }: ModalProp
       }}
     >
       <div
+        ref={cardRef}
         className={`${styles.card} anim-pop`}
         role="dialog"
         aria-modal="true"

@@ -71,22 +71,35 @@
 .dots {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
   margin-left: var(--sp-1);
   padding: var(--sp-1) var(--sp-2);
 }
+/* Each dot is a fixed transparent hit-cell; the visible pill is drawn on
+   ::after and centered inside it. Hit boxes therefore tile without overlap —
+   the old -10px ::before bleed let an 18px active pill swallow the dot to its
+   left (tap on the previous page went to the current one). */
 .dot {
-  width: 6px;
-  height: 6px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 22px;
   padding: 0;
   border: 0;
   border-radius: var(--r-pill);
+  background: transparent;
+  cursor: pointer;
+}
+.dot::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
   background: rgb(255 255 255 / 0.5);
   box-shadow: 0 0 0 1px rgb(0 0 0 / 0.14);
-  cursor: pointer;
   transition: width var(--dur-base) var(--ease-out), background var(--dur-base) var(--ease-out);
 }
-.dotOn {
+.dotOn::after {
   width: 18px;
   background: #fff;
 }
@@ -277,6 +290,13 @@
   cursor: grab;
   touch-action: none;
 }
+.dragBand:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.dragBand:active {
+  cursor: grabbing;
+}
 
 .remove {
   position: absolute;
@@ -296,7 +316,7 @@
   cursor: pointer;
 }
 .remove:hover {
-  background: #d64545;
+  background: var(--danger-strong);
 }
 
 .resizeRow {
@@ -397,7 +417,7 @@
 
 .formError {
   font-size: var(--fs-sm);
-  color: #d64545;
+  color: var(--danger);
 }
 
 .formActions {
@@ -484,7 +504,7 @@
 }
 .swatchNone {
   background:
-    linear-gradient(45deg, rgb(var(--glass-3)) 0 48%, #e05555 48% 52%, rgb(var(--glass-3)) 52%);
+    linear-gradient(45deg, rgb(var(--glass-3)) 0 48%, var(--danger) 48% 52%, rgb(var(--glass-3)) 52%);
 }
 
 .dialogHint {
@@ -562,16 +582,21 @@
   background: var(--accent-soft);
 }
 .pageSel {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  flex: 1;
-  min-width: 0;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
   border: 0;
+  border-radius: 50%;
   background: transparent;
   color: rgb(var(--ink-1));
-  text-align: left;
   cursor: pointer;
+}
+.pageSel:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 .pageIdx {
   flex: none;
@@ -743,15 +768,17 @@
   background: rgb(38 42 50 / 0.9);
   color: #fff;
   opacity: 0;
+  pointer-events: none; /* invisible = not clickable, until revealed */
   cursor: pointer;
   box-shadow: var(--shadow-1);
 }
 .folderItem:hover .folderItemRemove,
 .folderItemRemove:focus-visible {
   opacity: 1;
+  pointer-events: auto;
 }
 .folderItemRemove:hover {
-  background: #d64545;
+  background: var(--danger-strong);
 }
 
 .folderEmpty {
@@ -761,4 +788,74 @@
   gap: var(--sp-2);
   padding: var(--sp-10) 0;
   color: rgb(var(--ink-2));
+}
+
+/* ============================================================
+   Theme adaptation (wallpaper is full-bleed, so the header
+   chrome paints white text directly over it — flip to ink in
+   light themes) and touch-target enlargements.
+   ============================================================ */
+
+@media (prefers-color-scheme: light) {
+  :global(:root:not([data-theme='dark'])) .navBtn {
+    color: rgb(15 17 22 / 0.78);
+    text-shadow: none;
+  }
+  :global(:root:not([data-theme='dark'])) .navBtn:hover:not(:disabled) {
+    background: rgb(15 17 22 / 0.1);
+  }
+  :global(:root:not([data-theme='dark'])) .dot::after {
+    background: rgb(15 17 22 / 0.38);
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.5);
+  }
+  :global(:root:not([data-theme='dark'])) .dotOn::after {
+    background: rgb(15 17 22 / 0.85);
+  }
+  :global(:root:not([data-theme='dark'])) .emptyPage {
+    color: rgb(15 17 22 / 0.85);
+    text-shadow: none;
+  }
+}
+::global(:root[data-theme='light']) .navBtn {
+  color: rgb(15 17 22 / 0.78);
+  text-shadow: none;
+}
+::global(:root[data-theme='light']) .navBtn:hover:not(:disabled) {
+  background: rgb(15 17 22 / 0.1);
+}
+::global(:root[data-theme='light']) .dot::after {
+  background: rgb(15 17 22 / 0.38);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.5);
+}
+::global(:root[data-theme='light']) .dotOn::after {
+  background: rgb(15 17 22 / 0.85);
+}
+::global(:root[data-theme='light']) .emptyPage {
+  color: rgb(15 17 22 / 0.85);
+  text-shadow: none;
+}
+
+/* Small paging/edit controls get invisible hit-area padding so fingers
+   (and stray cursor) don't have to be pixel-precise. Visual stays the same.
+   (Dots opt out of the bleed below — see the .dot comment above.) */
+.dot,
+.resizeChip {
+  position: relative;
+}
+.resizeChip::before,
+.remove::before,
+.folderItemRemove::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+}
+
+/* Folder remove control: hidden-but-tappable is a hazard on coarse pointers
+   (no hover to reveal it), so show it persistently there. */
+@media (hover: none) {
+  .folderItemRemove {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }

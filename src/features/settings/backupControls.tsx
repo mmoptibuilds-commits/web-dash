@@ -106,8 +106,9 @@ export function BackupControls() {
         <div className={styles.settingText}>
           <span className={styles.settingTitle}>Export backup</span>
           <span className={styles.settingDesc}>
-            Downloads a JSON copy of pages, shortcuts, notes, tasks, settings, history and dock.
-            Uploaded wallpaper media is excluded to keep the file lean.
+            Downloads a JSON copy of pages (with layout), shortcuts, folders, widgets, notes,
+            tasks, settings, history and dock. Uploaded wallpaper media is excluded to keep the
+            file lean.
           </span>
         </div>
         <div className={styles.buttonRow}>

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Maximize2, Monitor, Moon, Settings, Sun, X } from 'lucide-react'
 import { launchApp } from '@/state/nav'
 import { useSettings } from '@/hooks/data'
 import { updateSettings } from '@/data/repositories/settings'
 import { fullscreenSupported, toggleFullscreen } from '@/app/theme'
+import { focusLayer, restoreFocus, trapTab } from '@/lib/focus'
 import type { ThemePreference } from '@/types/domain'
 import styles from './menubar.module.css'
 
@@ -63,24 +64,38 @@ export function ControlCenterMenu({ onClose }: { onClose: () => void }) {
   const [fullscreen, setFullscreen] = useState(false)
   const reduced = settings?.reducedEffects ?? false
   const theme = settings?.theme ?? 'auto'
+  const panelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
+      if (panelRef.current) trapTab(e, panelRef.current)
     }
     const syncFs = () => setFullscreen(Boolean(document.fullscreenElement))
-    window.addEventListener('keydown', onKey)
+    const opener = document.activeElement
+    window.addEventListener('keydown', onKey, true)
     document.addEventListener('fullscreenchange', syncFs)
+    const raf = window.requestAnimationFrame(() => {
+      if (panelRef.current) focusLayer(panelRef.current)
+    })
     return () => {
-      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('keydown', onKey, true)
       document.removeEventListener('fullscreenchange', syncFs)
+      window.cancelAnimationFrame(raf)
+      restoreFocus(opener)
     }
   }, [onClose])
 
   return (
     <>
       <div className={styles.ccScrim} onClick={onClose} aria-hidden="true" />
-      <div className={`${styles.ccPanel} anim-rise`} role="menu" aria-label="Control Center">
+      <div
+        ref={panelRef}
+        className={`${styles.ccPanel} anim-rise`}
+        role="dialog"
+        aria-label="Control Center"
+        tabIndex={-1}
+      >
         <div className={styles.ccHead}>
           <span className={styles.ccTitle}>Control Center</span>
           <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>

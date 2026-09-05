@@ -90,15 +90,15 @@ function isDesktopView(page: Page): boolean {
 }
 
 /**
- * Switch to Dashboard mode via the platform's affordance: the menu-bar tab on
+ * Switch to Dashboard mode via the platform's affordance: the menu-bar radio on
  * desktop; the dock's "Dashboard" launcher on mobile (the tabs are hidden under
  * 639px). Home is reached from anywhere with `goHome`.
  */
 export async function goDashboard(page: Page): Promise<void> {
   if (isDesktopView(page)) {
-    await page.getByRole('tab', { name: 'Dashboard' }).click()
-    await expect(page.getByRole('tab', { name: 'Dashboard' })).toHaveAttribute(
-      'aria-selected',
+    await page.getByRole('radio', { name: 'Dashboard' }).click()
+    await expect(page.getByRole('radio', { name: 'Dashboard' })).toHaveAttribute(
+      'aria-checked',
       'true',
     )
   } else {

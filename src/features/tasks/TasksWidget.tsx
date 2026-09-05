@@ -1,6 +1,6 @@
 import { ArrowUpRight, ListTodo } from 'lucide-react'
 import type { WidgetComponentProps } from '@/features/widgets/registry'
-import { useUi } from '@/state/ui'
+import { launchApp } from '@/state/nav'
 import { useTasks } from '@/hooks/data'
 import { taskRepo } from '@/data/repositories'
 import type { TaskItem } from '@/types/domain'
@@ -11,7 +11,6 @@ const MAX_ROWS = 5
 /** Home widget: top open tasks with live checkboxes and an open affordance. */
 export function TasksWidget({ editMode }: WidgetComponentProps) {
   const tasks = useTasks()
-  const ui = useUi()
 
   const list = tasks ?? []
   const open = list.filter((t) => !t.done)
@@ -20,8 +19,7 @@ export function TasksWidget({ editMode }: WidgetComponentProps) {
 
   function openTasks() {
     if (editMode) return
-    ui.setMode('dashboard')
-    ui.openApp('tasks')
+    launchApp('tasks')
   }
 
   async function toggle(task: TaskItem) {
@@ -37,7 +35,7 @@ export function TasksWidget({ editMode }: WidgetComponentProps) {
 
       {shown.length === 0 ? (
         <div className={styles.widgetEmpty}>
-          <p>All done</p>
+          <p>{list.length === 0 ? 'No tasks yet' : 'All done'}</p>
         </div>
       ) : (
         <ul className={styles.widgetList}>

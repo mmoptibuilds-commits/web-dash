@@ -395,12 +395,12 @@
 }
 
 .dangerBtn {
-  color: hsl(4 82% 55%);
+  color: var(--danger);
 }
 
 .dangerBtn:hover {
-  background: rgb(220 60 60 / 0.14);
-  color: hsl(4 82% 55%);
+  background: var(--danger-soft);
+  color: var(--danger);
 }
 
 /* Confirm row revealed in place of the delete icon while armed */

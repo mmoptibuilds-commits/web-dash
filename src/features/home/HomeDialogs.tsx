@@ -122,6 +122,7 @@ export function ShortcutDialog({ open, onClose, pageId, initial, folderId }: Sho
         onChange={(e) => setLabel(e.target.value)}
         placeholder="Label (optional — uses host when blank)"
         autoFocus
+        maxLength={80}
       />
 
       <label className={styles.fieldLabel} htmlFor="sc-url">
@@ -167,6 +168,7 @@ export function ShortcutDialog({ open, onClose, pageId, initial, folderId }: Sho
               type="button"
               className={`${styles.emojiPick} ${em === emoji ? styles.emojiPickOn : ''}`}
               aria-label={`Icon ${em}`}
+              aria-pressed={em === emoji}
               onClick={() => setEmoji(em)}
             >
               {em}
@@ -197,6 +199,7 @@ export function ShortcutDialog({ open, onClose, pageId, initial, folderId }: Sho
           type="button"
           className={`${styles.swatch} ${bg === null ? styles.swatchOn : ''} ${styles.swatchNone}`}
           aria-label="No tint"
+          aria-pressed={bg === null}
           onClick={() => setBg(null)}
         />
         {BG_SWATCHES.filter((c): c is string => c !== null).map((c) => (
@@ -206,6 +209,7 @@ export function ShortcutDialog({ open, onClose, pageId, initial, folderId }: Sho
             className={`${styles.swatch} ${bg === c ? styles.swatchOn : ''}`}
             style={{ background: c }}
             aria-label={`Tint ${c}`}
+            aria-pressed={bg === c}
             onClick={() => setBg(c)}
           />
         ))}
@@ -262,6 +266,7 @@ export function NewFolderDialog({
         }}
         placeholder="Folder name"
         autoFocus
+        maxLength={40}
       />
       <div className={styles.formActions}>
         <button type="button" className="btn btn-ghost" onClick={onClose}>
@@ -365,29 +370,31 @@ export function PagesManagerDialog({
             <button
               type="button"
               className={styles.pageSel}
+              aria-label={`Go to page ${i + 1}`}
+              aria-current={p.id === activePageId ? 'page' : undefined}
+              title={p.id === activePageId ? 'Current page' : 'Go to page'}
               onClick={() => {
                 setActivePageId(p.id)
                 onClose()
               }}
-              aria-current={p.id === activePageId}
             >
               <span className={styles.pageIdx}>{i + 1}</span>
-              <input
-                className={styles.pageName}
-                value={names[p.id] ?? p.name}
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) => setNames((n) => ({ ...n, [p.id]: e.target.value }))}
-                onBlur={() => {
-                  const next = (names[p.id] ?? '').trim()
-                  if (next && next !== p.name) void renamePage(p.id, next)
-                  setNames((n) => ({ ...n, [p.id]: p.name }))
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
-                }}
-                aria-label="Page name"
-              />
             </button>
+            <input
+              className={styles.pageName}
+              value={names[p.id] ?? p.name}
+              onChange={(e) => setNames((n) => ({ ...n, [p.id]: e.target.value }))}
+              onBlur={() => {
+                const next = (names[p.id] ?? '').trim()
+                if (next && next !== p.name) void renamePage(p.id, next)
+                setNames((n) => ({ ...n, [p.id]: p.name }))
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+              }}
+              aria-label="Page name"
+              maxLength={30}
+            />
             <div className={styles.pageTools}>
               <button
                 type="button"

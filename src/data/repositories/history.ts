@@ -1,8 +1,18 @@
 import { db } from '@/data/db/db'
 import type { HistoryEntry, HistoryKind } from '@/types/domain'
 
-function entryId(kind: HistoryKind, text: string): string {
+function entryId(kind: HistoryKind, text: string, url: string | null): string {
   const key = text.trim().toLowerCase().slice(0, 200)
+  // Two shortcuts can share a label but point at different sites; scope
+  // launch rows by host so one doesn't overwrite the other's stored URL.
+  if (kind === 'launch' && url) {
+    try {
+      const host = new URL(url).hostname.replace(/^www\./, '')
+      if (host) return `launch:${host}:${key}`
+    } catch {
+      /* fall through to the unscoped key */
+    }
+  }
   return `${kind}:${key}`
 }
 
@@ -10,7 +20,7 @@ function entryId(kind: HistoryKind, text: string): string {
 export async function recordHistory(kind: HistoryKind, text: string, url: string | null): Promise<void> {
   const trimmed = text.trim()
   if (!trimmed) return
-  const id = entryId(kind, trimmed)
+  const id = entryId(kind, trimmed, url)
   const existing = await db.history.get(id)
   const t = Date.now()
   if (existing) {

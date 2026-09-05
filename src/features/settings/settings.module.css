@@ -192,7 +192,9 @@
   width: 52px;
   height: 36px;
   border-radius: var(--r-pill);
-  background: rgb(var(--glass-3));
+  /* Neutral track that keeps the white knob visible in both themes (mirrors
+     the Control Center toggle) instead of a near-white light-theme fill. */
+  background: rgb(var(--stroke-1) / 0.22);
   border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
   box-shadow: var(--shadow-inset-1);
   transition: background var(--dur-fast) var(--ease-out);
@@ -442,13 +444,13 @@
   font-size: var(--fs-sm);
   font-weight: 560;
   color: #fff;
-  background: hsl(4 76% 50%);
+  background: var(--danger);
   border: 1px solid transparent;
   box-shadow: var(--shadow-inset-1);
 }
 
 .btnDanger:hover {
-  background: hsl(4 76% 44%);
+  background: var(--danger-strong);
 }
 
 .confirmBox {
@@ -474,7 +476,7 @@
 
 .errorText {
   font-size: var(--fs-xs);
-  color: hsl(4 82% 56%);
+  color: var(--danger);
 }
 
 /* ---------- About ---------- */

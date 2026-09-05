@@ -79,10 +79,7 @@ export function TasksMiniApp() {
   async function handleClearCompleted() {
     // If the row being edited is a completed one, it is about to disappear.
     const editedDone = editingId ? list.find((t) => t.id === editingId)?.done : false
-    const doneIds = list.filter((t) => t.done).map((t) => t.id)
-    // NOTE: taskRepo.clearCompleted() is currently broken (queries an
-    // un-indexed `done` keyPath), so clear via per-row deletes for now.
-    await Promise.all(doneIds.map((id) => taskRepo.deleteTask(id)))
+    await taskRepo.clearCompleted()
     if (editedDone) {
       setEditingId(null)
       setDraft('')

@@ -1,6 +1,6 @@
 import { ArrowUpRight, Pin, StickyNote } from 'lucide-react'
 import type { WidgetComponentProps } from '@/features/widgets/registry'
-import { useUi } from '@/state/ui'
+import { launchApp } from '@/state/nav'
 import { useNotes } from '@/hooks/data'
 import { noteSnippet, noteTitle } from './noteText'
 import styles from './notes.module.css'
@@ -10,13 +10,11 @@ const MAX_ROWS = 3
 /** Home widget: the three most recent notes (pinned first) with an open affordance. */
 export function NotesWidget({ editMode }: WidgetComponentProps) {
   const notes = useNotes()
-  const ui = useUi()
   const recent = (notes ?? []).slice(0, MAX_ROWS)
 
   function openNotes() {
     if (editMode) return
-    ui.setMode('dashboard')
-    ui.openApp('notes')
+    launchApp('notes')
   }
 
   return (

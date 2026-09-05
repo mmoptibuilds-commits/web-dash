@@ -1,7 +1,7 @@
 .veil {
   position: fixed;
   inset: 0;
-  z-index: calc(var(--z-modal) - 1);
+  z-index: var(--z-command);
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -82,7 +82,7 @@
   color: rgb(var(--ink-3));
 }
 .error {
-  color: #d64545;
+  color: var(--danger);
 }
 
 .list {

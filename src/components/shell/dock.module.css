@@ -10,6 +10,13 @@
   pointer-events: none;
 }
 
+/* Anchor wrapper: the "add to dock" popover is absolutely positioned above
+   the bar but must not be clipped by the bar's horizontal scroll region. */
+.stack {
+  position: relative;
+  display: flex;
+}
+
 .bar {
   pointer-events: auto;
   display: flex;
@@ -97,7 +104,139 @@
   box-shadow: var(--shadow-1);
 }
 .unpin:hover {
-  background: #d33c3c;
+  background: var(--danger-strong);
+}
+
+/* ---------- Add-to-dock (Edit Mode) ---------- */
+
+.addChip {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border-radius: var(--r-md);
+  border: 1px dashed rgb(var(--stroke-1) / var(--stroke-alpha-2));
+  background: transparent;
+  color: rgb(var(--ink-2));
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.addChip:hover,
+.addChip[aria-expanded='true'] {
+  background: rgb(var(--glass-2) / 0.85);
+  border-color: rgb(var(--accent-h) var(--accent-s) var(--accent-l) / 0.55);
+  color: var(--accent);
+}
+.addChip:active {
+  transform: scale(0.96);
+}
+.addChip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.addPop {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  z-index: var(--z-command);
+  width: 288px;
+  max-width: 78vw;
+  display: flex;
+  flex-direction: column;
+  max-height: min(52vh, 360px);
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  background: rgb(var(--glass-1) / var(--glass-a-1));
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  box-shadow: var(--shadow-3), var(--shadow-inset-1);
+  -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(1.6);
+  backdrop-filter: blur(var(--blur-sm)) saturate(1.6);
+}
+
+.addList {
+  overflow-y: auto;
+  padding: var(--sp-1);
+}
+
+.addSection {
+  margin: var(--sp-1) var(--sp-2) 2px;
+  font-size: var(--fs-2xs);
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgb(var(--ink-3));
+}
+
+.addRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  min-width: 0;
+  padding: var(--sp-1) var(--sp-2);
+  border: 0;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: rgb(var(--ink-1));
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.addRow:hover,
+.addRow:focus-visible {
+  background: rgb(var(--glass-3) / 0.85);
+  outline: none;
+}
+
+.addRowIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-sm);
+  background: rgb(var(--glass-2) / 0.9);
+  color: rgb(var(--ink-1));
+  box-shadow: inset 0 0 0 1px rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
+}
+.addRowIcon img {
+  border-radius: 8px;
+}
+
+.addRowText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.addRowName {
+  font-size: var(--fs-sm);
+  font-weight: 560;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.addRowMeta {
+  font-size: var(--fs-2xs);
+  color: rgb(var(--ink-3));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.addEmpty {
+  margin: 0;
+  padding: var(--sp-4) var(--sp-3);
+  font-size: var(--fs-sm);
+  color: rgb(var(--ink-3));
+  text-align: center;
 }
 
 .indicator {
@@ -114,6 +253,10 @@
 
 @media (max-width: 639px) {
   .tile {
+    width: 50px;
+    height: 50px;
+  }
+  .addChip {
     width: 50px;
     height: 50px;
   }
