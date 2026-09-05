@@ -17,10 +17,12 @@ interface UiStore {
   mode: Mode
   activePageId: string | null
   editMode: boolean
-  /** One window per window-app; keyed by app id. */
+  /** One window per window-app; keyed by app id (desktop only). */
   windows: Partial<Record<BuiltinAppId, WindowState>>
   /** Focus order, last = frontmost. */
   focusOrder: BuiltinAppId[]
+  /** Full-screen sheet app id on non-desktop widths; null = dashboard overview. */
+  mobileAppId: BuiltinAppId | null
   controlCenterOpen: boolean
   searchOpen: boolean
   openFolderId: string | null
@@ -32,6 +34,8 @@ interface UiStore {
   toggleEditMode: () => void
 
   openApp: (appId: BuiltinAppId) => void
+  /** Open/close the full-screen app sheet on mobile (null = back to overview). */
+  openMobile: (appId: BuiltinAppId | null) => void
   closeApp: (appId: BuiltinAppId) => void
   focusApp: (appId: BuiltinAppId) => void
   toggleMaximize: (appId: BuiltinAppId) => void
@@ -60,6 +64,7 @@ export const useUi = create<UiStore>((set, get) => ({
   editMode: false,
   windows: {},
   focusOrder: [],
+  mobileAppId: null,
   controlCenterOpen: false,
   searchOpen: false,
   openFolderId: null,
@@ -67,7 +72,13 @@ export const useUi = create<UiStore>((set, get) => ({
 
   setMode: (mode) => {
     if (mode === get().mode) return
-    set({ mode, editMode: false, openFolderId: null, searchOpen: false })
+    set({
+      mode,
+      editMode: false,
+      mobileAppId: null,
+      openFolderId: null,
+      searchOpen: false,
+    })
   },
 
   setActivePageId: (id) => set({ activePageId: id }),
@@ -99,6 +110,17 @@ export const useUi = create<UiStore>((set, get) => ({
       windows: { ...state.windows, [appId]: win },
       focusOrder: [...state.focusOrder, appId],
       settingsSectionOpen: appId === 'settings',
+    })
+  },
+
+  openMobile: (appId) => {
+    set({
+      mobileAppId: appId,
+      windows: {},
+      focusOrder: [],
+      controlCenterOpen: false,
+      searchOpen: false,
+      openFolderId: null,
     })
   },
 

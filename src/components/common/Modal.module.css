@@ -1,0 +1,65 @@
+.veil {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: grid;
+  place-items: center;
+  padding: var(--sp-6);
+  background: rgb(8 10 14 / 0.4);
+  -webkit-backdrop-filter: blur(var(--blur-xs)) saturate(1.1);
+  backdrop-filter: blur(var(--blur-xs)) saturate(1.1);
+}
+
+.card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  max-height: min(84dvh, 720px);
+  border-radius: var(--r-xl);
+  background: rgb(var(--glass-1) / var(--glass-a-1));
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  box-shadow: var(--shadow-4), var(--shadow-inset-1);
+  -webkit-backdrop-filter: blur(var(--blur-md)) saturate(1.5);
+  backdrop-filter: blur(var(--blur-md)) saturate(1.5);
+  overflow: hidden;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: var(--sp-4) var(--sp-4) var(--sp-2);
+  flex: none;
+}
+
+.title {
+  font-size: var(--fs-lg);
+  font-weight: 620;
+  letter-spacing: var(--tracking-tight);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.body {
+  padding: var(--sp-2) var(--sp-4) var(--sp-5);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-height: 0;
+}
+
+.message {
+  font-size: var(--fs-sm);
+  color: rgb(var(--ink-2));
+  line-height: var(--lh-snug);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  margin-top: var(--sp-1);
+}

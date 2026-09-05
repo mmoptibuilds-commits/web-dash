@@ -1,0 +1,42 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-wallpaper);
+  overflow: hidden;
+  background: #0b0d12;
+}
+
+.paint {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background-position: center;
+  background-size: cover;
+  transform: scale(1.01); /* hide edge seams when scrolled */
+}
+
+/* Gentle edge scrim keeps floating chrome legible over any wallpaper. */
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, rgb(0 0 0 / 0.28), transparent 26%),
+    linear-gradient(to top, rgb(0 0 0 / 0.3), transparent 30%);
+}
+
+:global(:root[data-theme='light']) .vignette {
+  background:
+    linear-gradient(to bottom, rgb(0 0 0 / 0.14), transparent 26%),
+    linear-gradient(to top, rgb(0 0 0 / 0.16), transparent 30%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme='light'])) .vignette {
+    background:
+      linear-gradient(to bottom, rgb(0 0 0 / 0.36), transparent 26%),
+      linear-gradient(to top, rgb(0 0 0 / 0.38), transparent 30%);
+  }
+}

@@ -42,15 +42,16 @@ class HearthDatabase extends Dexie {
     this.version(1).stores({
       settings: 'id',
       homePages: 'id,index',
-      layoutItems: 'id,pageId,order',
+      // refId supports the cascade deletes (folder/widget/shortcut removal).
+      layoutItems: 'id,pageId,order,refId',
       shortcuts: 'id',
       folders: 'id',
       widgetInstances: 'id,type',
       notes: 'id,updatedAt',
-      tasks: 'id,updatedAt',
+      tasks: 'id,updatedAt,done',
       history: 'id,kind,lastUsedAt',
       wallpapers: 'id,kind',
-      dockItems: 'id,order',
+      dockItems: 'id,order,appId,shortcutId',
     })
 
     // Fail loudly (surfaced by callers as a recoverable message) rather than

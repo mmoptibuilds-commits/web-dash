@@ -1,0 +1,12 @@
+/* ============================================================
+   Hearth — application stylesheet (pure import hub).
+   Cascade order is explicit:
+     tokens (design variables) → glass (fill presets) →
+     global (base + shared primitives) → motion (animation classes).
+   Component styling lives in co-located *.module.css files.
+   ============================================================ */
+
+@import './styles/tokens.css';
+@import './styles/glass.css';
+@import './styles/global.css';
+@import './styles/motion.css';

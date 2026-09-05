@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { ExternalLink, Link2, Pencil, X } from 'lucide-react'
 import type { WidgetComponentProps } from '../registry'
 import { updateWidgetInstance } from '@/data/repositories/widgets'
@@ -12,14 +12,11 @@ const FRAME_SANDBOX = 'allow-scripts allow-same-origin allow-forms allow-popups'
 export function EmbedWidget({ instance, editMode }: WidgetComponentProps) {
   const data = (instance.settings ?? {}) as { url?: string }
   const storedUrl = data.url && isSafeUrl(data.url) ? normalizeHttpUrl(data.url) : ''
+  // The draft starts from the stored URL; edits stay local until applied, and
+  // cancelling (stopEditing) re-syncs from the stored value.
   const [draft, setDraft] = useState(storedUrl)
   const [editing, setEditing] = useState(!storedUrl)
   const [error, setError] = useState<string | null>(null)
-
-  // Keep the draft in sync if the stored URL changes from elsewhere.
-  useEffect(() => {
-    setDraft(storedUrl)
-  }, [storedUrl])
 
   function apply(ev: React.FormEvent) {
     ev.preventDefault()

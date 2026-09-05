@@ -1,5 +1,5 @@
 import { db } from '@/data/db/db'
-import { defaultSettings, SETTINGS_ID } from '@/data/defaults'
+import { defaultSettings } from '@/data/defaults'
 import { hasSettingsRow } from '@/data/repositories/settings'
 import { createPage } from '@/data/repositories/pages'
 import { createShortcut } from '@/data/repositories/shortcuts'
@@ -106,7 +106,8 @@ export async function wipeAllData(): Promise<void> {
       ])
     },
   )
-  // Seed defaults again; the app reloads from a clean slate.
-  await db.settings.put({ ...defaultSettings(), id: SETTINGS_ID })
+  // Seed the full first-run state again. ensureBootData() reserves the
+  // settings row itself as its "initialized" flag, so writing it here first
+  // would make the guard bail out early and leave Home/dock unseeded.
   await ensureBootData()
 }
