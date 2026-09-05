@@ -1,0 +1,247 @@
+/* ============ Calendar feature ============
+   MiniApp fills the window/sheet surface (no glass chrome here — the shell
+   supplies the window frame). The Widget is a self-contained glass panel that
+   adapts via container queries. */
+
+/* ---------------- MiniApp ---------------- */
+
+.app {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  color: rgb(var(--ink-1));
+  overflow: hidden;
+}
+
+.header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.navTitle {
+  margin: 0 var(--sp-1);
+  font-size: var(--fs-xl);
+  font-weight: 640;
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--lh-tight);
+  color: rgb(var(--ink-1));
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-pill);
+  color: rgb(var(--ink-2));
+  flex: none;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.iconBtn:hover {
+  background: rgb(var(--glass-3) / 0.85);
+  color: rgb(var(--ink-1));
+}
+
+.iconBtn:active {
+  transform: scale(0.92);
+}
+
+.todayBtn {
+  flex: none;
+  height: 34px;
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-pill);
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  background: rgb(var(--glass-1) / var(--glass-a-1));
+  box-shadow: var(--shadow-1), var(--shadow-inset-1);
+  font-size: var(--fs-xs);
+  font-weight: 620;
+  color: rgb(var(--ink-1));
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    filter var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.todayBtn:hover {
+  filter: brightness(1.05);
+  background: rgb(var(--glass-1) / 0.88);
+}
+
+.todayBtn:active {
+  transform: scale(0.97);
+}
+
+.cal {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.weekdays {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--sp-1);
+}
+
+.weekday {
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  font-size: var(--fs-2xs);
+  font-weight: 620;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgb(var(--ink-3));
+}
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--sp-1);
+}
+
+.cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 40px;
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+  color: rgb(var(--ink-1));
+  user-select: none;
+}
+
+.cellOutside {
+  color: rgb(var(--ink-3));
+  opacity: 0.55;
+}
+
+.cellToday {
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 680;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.18);
+}
+
+/* Slightly more compact in short windows so the whole month stays visible. */
+@media (max-height: 540px) {
+  .cell {
+    height: 32px;
+  }
+}
+
+/* ---------------- Widget (Home tile) ---------------- */
+
+.panel {
+  container-type: inline-size;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding: var(--sp-3);
+  gap: var(--sp-1);
+  border-radius: var(--r-lg);
+  background: rgb(var(--glass-2) / var(--glass-a-2));
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  box-shadow: var(--shadow-1), var(--shadow-inset-1);
+  -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(1.4);
+  backdrop-filter: blur(var(--blur-sm)) saturate(1.4);
+  color: rgb(var(--ink-1));
+}
+
+.wTitle {
+  font-size: var(--fs-sm);
+  font-weight: 640;
+  letter-spacing: var(--tracking-tight);
+  color: rgb(var(--ink-1));
+  padding: 0 var(--sp-1);
+  flex: none;
+}
+
+.wWeekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  flex: none;
+  padding: 0 var(--sp-1);
+}
+
+.wWeekday {
+  text-align: center;
+  font-size: 9px;
+  font-weight: 620;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgb(var(--ink-3));
+  height: 16px;
+  line-height: 16px;
+}
+
+@container (max-width: 240px) {
+  .wWeekdays {
+    display: none;
+  }
+}
+
+.wGrid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-auto-rows: minmax(18px, 1fr);
+  gap: 1px 2px;
+  padding: 0 var(--sp-1) var(--sp-1);
+}
+
+.wDay {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  border-radius: var(--r-xs);
+  font-size: clamp(10px, 5.2cqw, 13px);
+  font-variant-numeric: tabular-nums;
+  color: rgb(var(--ink-1));
+  line-height: 1;
+}
+
+.wToday {
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.16);
+}
