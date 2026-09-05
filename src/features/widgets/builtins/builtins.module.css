@@ -228,6 +228,7 @@
 /* ---------- Embed ---------- */
 .embed {
   composes: panel;
+  container-type: inline-size;
 }
 
 .embedFrame {
@@ -250,7 +251,7 @@
   padding: var(--sp-2) var(--sp-3);
   background: linear-gradient(to bottom, rgb(0 0 0 / 0.55), rgb(0 0 0 / 0) 100%);
   color: #fff;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .embedTop > * {
@@ -268,6 +269,13 @@
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.5);
 }
 
+.embedActions {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
 .embedOpenBtn {
   display: inline-flex;
   align-items: center;
@@ -277,6 +285,8 @@
   padding: 2px 8px;
   border-radius: var(--r-pill);
   background: rgb(255 255 255 / 0.18);
+  min-height: 28px;
+  white-space: nowrap;
 }
 
 .embedOpenBtn:hover {
@@ -310,6 +320,7 @@
 
 .embedFormRow {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--sp-2);
 }
 
@@ -344,4 +355,46 @@
 .embedHelp {
   font-size: var(--fs-2xs);
   color: rgb(var(--ink-3));
+}
+
+@container (max-width: 360px) {
+  .embedTop {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: var(--sp-1);
+    padding: var(--sp-2);
+  }
+
+  .embedHost {
+    flex-basis: 100%;
+  }
+
+  .embedActions {
+    width: 100%;
+  }
+
+  .embedOpenBtn {
+    flex: 1 1 0;
+    justify-content: center;
+  }
+
+  .embedNote {
+    max-width: calc(100% - var(--sp-4));
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .embedForm {
+    padding: var(--sp-3);
+  }
+
+  .embedFormRow {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .embedInput {
+    grid-column: 1 / -1;
+  }
 }

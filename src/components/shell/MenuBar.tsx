@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { Home, LayoutDashboard, Moon, Pencil, Search, Sun } from 'lucide-react'
 import { useUi } from '@/state/ui'
 import { goHome, goDashboard } from '@/state/nav'
-import { useIsDesktop, useNow } from '@/hooks/useMedia'
+import { useNow } from '@/hooks/useMedia'
 import type { Mode } from '@/state/ui'
 import { ControlCenterMenu } from './ControlCenter'
 import styles from './menubar.module.css'
@@ -44,6 +44,7 @@ function ModeSwitch() {
             type="button"
             role="radio"
             aria-checked={selected}
+            aria-label={label}
             tabIndex={selected ? 0 : -1}
             className={`${styles.switchBtn} ${selected ? styles.switchBtnActive : ''}`}
             onClick={() => (m === 'home' ? goHome() : goDashboard())}
@@ -63,7 +64,7 @@ function Clock() {
   const time = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
   const date = now.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })
   return (
-    <div className={styles.clock}>
+    <div className={styles.clock} data-testid="menu-clock" aria-label={`${time}, ${date}`}>
       <span className={styles.clockTime}>{time}</span>
       <span className={styles.clockDate}>{date}</span>
     </div>
@@ -78,8 +79,6 @@ export function MenuBar() {
   const searchOpen = useUi((s) => s.searchOpen)
   const setControlCenter = useUi((s) => s.setControlCenter)
   const setSearchOpen = useUi((s) => s.setSearchOpen)
-  const desktop = useIsDesktop()
-
   return (
     <header className={styles.bar} data-mode={mode}>
       <div className={styles.left}>
@@ -87,9 +86,6 @@ export function MenuBar() {
           <span className={styles.brandDot} aria-hidden />
           <span className={styles.brandText}>Hearth</span>
         </button>
-      </div>
-
-      <div className={styles.center}>
         <ModeSwitch />
       </div>
 
@@ -97,18 +93,20 @@ export function MenuBar() {
         {mode === 'home' && (
           <button
             type="button"
-            className={`btn btn-ghost btn-sm ${editMode ? 'is-active' : ''}`}
+            className={`${styles.editAction} btn btn-ghost btn-sm ${editMode ? 'is-active' : ''}`}
             onClick={toggleEditMode}
             aria-pressed={editMode}
+            aria-label={editMode ? 'Done' : 'Edit'}
+            title={editMode ? 'Done editing' : 'Edit Home'}
           >
             {editMode ? (
               <>
-                <span>Done</span>
+                <span className={styles.actionLabel}>Done</span>
               </>
             ) : (
               <>
                 <Pencil size={14} aria-hidden />
-                <span>Edit</span>
+                <span className={styles.actionLabel}>Edit</span>
               </>
             )}
           </button>
@@ -116,7 +114,7 @@ export function MenuBar() {
 
         <button
           type="button"
-          className={`icon-btn ${searchOpen ? 'is-active' : ''}`}
+          className={`${styles.action} icon-btn ${searchOpen ? 'is-active' : ''}`}
           aria-haspopup="dialog"
           aria-expanded={searchOpen}
           aria-label="Search"
@@ -128,7 +126,7 @@ export function MenuBar() {
 
         <button
           type="button"
-          className={`icon-btn ${controlCenterOpen ? 'is-active' : ''}`}
+          className={`${styles.action} icon-btn ${controlCenterOpen ? 'is-active' : ''}`}
           aria-haspopup="dialog"
           aria-expanded={controlCenterOpen}
           aria-label="Control Center"
@@ -141,12 +139,8 @@ export function MenuBar() {
           </span>
         </button>
 
-        {desktop && (
-          <>
-            <span className={styles.divider} aria-hidden />
-            <Clock />
-          </>
-        )}
+        <span className={styles.divider} aria-hidden />
+        <Clock />
       </div>
 
       {controlCenterOpen && <ControlCenterMenu onClose={() => setControlCenter(false)} />}

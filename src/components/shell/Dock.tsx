@@ -47,6 +47,7 @@ function AppGlyph({ appId, name }: { appId: BuiltinAppId; name: string }) {
   return (
     <span
       className={styles.glyph}
+      data-icon-family="hearth"
       style={{
         backgroundImage: `linear-gradient(150deg, hsl(${h} 52% 52%), hsl(${(h + 42) % 360} 56% 38%))`,
       }}
@@ -101,7 +102,7 @@ function DockTile({
         }}
       >
         {shortcut ? (
-          <span className={styles.glyphShell}>
+          <span className={styles.glyphShell} data-icon-family="hearth">
             <ShortcutGlyph icon={shortcut.icon} label={shortcut.label} url={shortcut.url} />
           </span>
         ) : (

@@ -320,6 +320,13 @@
   gap: var(--sp-3);
 }
 
+.transEndpoint {
+  flex: none;
+  font-size: var(--fs-2xs);
+  color: rgb(var(--ink-3));
+  white-space: nowrap;
+}
+
 .range {
   flex: 1;
   min-width: 0;

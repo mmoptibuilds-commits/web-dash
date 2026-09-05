@@ -14,7 +14,8 @@ function Monogram({ label }: { label: string }) {
   const h = hueFor(label || '?')
   return (
     <span
-      className={styles.mono}
+      className={`${styles.surface} ${styles.mono}`}
+      data-testid="shortcut-monogram"
       style={{
         backgroundImage: `linear-gradient(145deg, hsl(${h} 58% 46%), hsl(${(h + 38) % 360} 60% 34%))`,
       }}
@@ -39,14 +40,26 @@ export function ShortcutGlyph({
   url?: string
 }) {
   if (icon.type === 'emoji') {
+    const h = hueFor(icon.emoji)
     return (
-      <span className={styles.emoji} aria-hidden>
+      <span
+        className={`${styles.surface} ${styles.emoji}`}
+        data-testid="shortcut-glyph-surface"
+        style={{
+          backgroundImage: `linear-gradient(145deg, hsl(${h} 54% 56%), hsl(${(h + 38) % 360} 58% 38%))`,
+        }}
+        aria-hidden
+      >
         {icon.emoji}
       </span>
     )
   }
   if (icon.type === 'upload') {
-    return <img className={styles.img} src={icon.dataUrl} alt="" aria-hidden />
+    return (
+      <span className={styles.surface} data-testid="shortcut-glyph-surface" aria-hidden>
+        <img className={`${styles.img} ${styles.uploaded}`} src={icon.dataUrl} alt="" />
+      </span>
+    )
   }
   // auto — favicon with monogram fallback
   if (url) {
@@ -60,14 +73,15 @@ function Favicon({ src, label }: { src: string; label: string }) {
   const [failed, setFailed] = useState(false)
   if (failed) return <Monogram label={label} />
   return (
-    <img
-      className={styles.img}
-      src={src}
-      alt=""
-      aria-hidden
-      loading="lazy"
-      referrerPolicy="no-referrer"
-      onError={() => setFailed(true)}
-    />
+    <span className={styles.surface} data-testid="shortcut-glyph-surface" aria-hidden>
+      <img
+        className={`${styles.img} ${styles.favicon}`}
+        src={src}
+        alt=""
+        loading="lazy"
+        referrerPolicy="no-referrer"
+        onError={() => setFailed(true)}
+      />
+    </span>
   )
 }

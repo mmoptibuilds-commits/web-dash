@@ -49,7 +49,7 @@ export function EmbedWidget({ instance, editMode }: WidgetComponentProps) {
 
   if (editing) {
     return (
-      <div className={styles.embed}>
+      <div className={styles.embed} data-testid="embed-widget">
         <form className={styles.embedForm} onSubmit={apply}>
           <div className={styles.embedFormRow}>
             <input
@@ -90,7 +90,7 @@ export function EmbedWidget({ instance, editMode }: WidgetComponentProps) {
   }
 
   return (
-    <div className={styles.embed}>
+    <div className={styles.embed} data-testid="embed-widget">
       <iframe
         className={styles.embedFrame}
         src={storedUrl}
@@ -100,28 +100,31 @@ export function EmbedWidget({ instance, editMode }: WidgetComponentProps) {
         loading="lazy"
         allow="fullscreen"
       />
-      <div className={styles.embedTop}>
-        <span className={styles.embedHost}>
+      <div className={styles.embedTop} data-testid="embed-toolbar">
+        <span className={styles.embedHost} data-testid="embed-domain">
           <Link2 size={12} aria-hidden /> {hostOf(storedUrl)}
         </span>
-        {editMode && (
-          <button
-            type="button"
+        <span className={styles.embedActions}>
+          {editMode && (
+            <button
+              type="button"
+              className={styles.embedOpenBtn}
+              aria-label="Change embedded URL"
+              onClick={() => setEditing(true)}
+            >
+              <Pencil size={12} aria-hidden /> Change
+            </button>
+          )}
+          <a
             className={styles.embedOpenBtn}
-            onClick={() => setEditing(true)}
+            href={storedUrl}
+            target="_blank"
+            rel="noreferrer noopener"
+            title="Open in a new tab"
           >
-            <Pencil size={12} aria-hidden /> Change
-          </button>
-        )}
-        <a
-          className={styles.embedOpenBtn}
-          href={storedUrl}
-          target="_blank"
-          rel="noreferrer noopener"
-          title="Open in a new tab"
-        >
-          <ExternalLink size={12} aria-hidden /> Open
-        </a>
+            <ExternalLink size={12} aria-hidden /> Open
+          </a>
+        </span>
       </div>
       <span className={styles.embedNote}>If blank, the site blocks embedding</span>
     </div>

@@ -56,12 +56,19 @@ function applyGlassAlpha(root: HTMLElement, reducedEffects: boolean, translucenc
   if (reducedEffects) return
   if (Math.abs(translucency - 0.5) < 0.001) return
   const computed = getComputedStyle(root)
-  const scale = 1 + (0.5 - translucency) * 0.9
+  const value = Math.min(1, Math.max(0, translucency))
+  const solidAlpha = 0.95
+  const clearAlpha = 0.345
   for (const prop of GLASS_ALPHA_TOKENS) {
     const base = Number.parseFloat(computed.getPropertyValue(prop))
     if (!Number.isFinite(base)) continue
-    const alpha = Math.min(0.96, Math.max(0.32, base * scale))
-    root.style.setProperty(prop, alpha.toFixed(3))
+    // Keep each token's theme-specific baseline involved in the calculation so
+    // the slider changes the shared material without duplicating theme colors.
+    // The endpoints are intentionally far enough apart to read over wallpaper.
+    const target = value < 0.5 ? solidAlpha : clearAlpha
+    const distanceFromBaseline = Math.abs(value - 0.5) / 0.5
+    const alpha = base + (target - base) * distanceFromBaseline
+    root.style.setProperty(prop, String(Number(alpha.toFixed(3))))
   }
 }
 

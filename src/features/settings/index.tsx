@@ -15,6 +15,8 @@ import { BackupControls } from './backupControls'
 import { ChoiceSetting, Section, Segmented, ToggleSetting } from './controls'
 import { WallpaperSection } from './wallpaper'
 import type { PersistFn, SettingsPatch } from './model'
+import { applyThemeAttributes, resolveTheme } from '@/app/theme'
+import { usePrefersDark } from '@/hooks/useMedia'
 
 type Mode = 'simple' | 'advanced'
 
@@ -138,6 +140,7 @@ function GlassSetting({
           </span>
         </div>
         <div className={styles.transControl}>
+          <span className={styles.transEndpoint}>More solid</span>
           <input
             type="range"
             className={styles.range}
@@ -149,6 +152,7 @@ function GlassSetting({
             aria-valuetext={`${Math.round(translucency * 100)} percent transparent`}
             onChange={(e) => onTranslucency(Number(e.currentTarget.value))}
           />
+          <span className={styles.transEndpoint}>More see-through</span>
           <span className={styles.transValue} aria-hidden>
             {Math.round(translucency * 100)}%
           </span>
@@ -254,6 +258,7 @@ export function SettingsMiniApp() {
   const settings = useSettings()
   const [mode, setMode] = useState<Mode>('simple')
   const [saveError, setSaveError] = useState<string | null>(null)
+  const prefersDark = usePrefersDark()
 
   if (!settings) {
     return <div className={styles.root} aria-busy="true" />
@@ -264,6 +269,19 @@ export function SettingsMiniApp() {
       .updateSettings(patch)
       .then(() => setSaveError(null))
       .catch(() => setSaveError('Could not save that change.'))
+  }
+
+  const changeTranslucency = (value: number) => {
+    // Apply the shared material immediately. The repository write remains the
+    // source of truth, while this keeps a fast slider drag from waiting for a
+    // Dexie live-query round trip before the shell responds.
+    applyThemeAttributes(
+      resolveTheme(settings.theme, prefersDark),
+      settings.reducedEffects,
+      settings.glass ?? 'standard',
+      value,
+    )
+    persist({ glassTranslucency: value })
   }
 
   return (
@@ -278,7 +296,16 @@ export function SettingsMiniApp() {
         ) : null}
 
         {mode === 'simple' ? (
-          <SimpleSettings settings={settings} persist={persist} />
+          <SimpleSettings
+            settings={settings}
+            persist={(patch) => {
+              if (patch.glassTranslucency !== undefined) {
+                changeTranslucency(patch.glassTranslucency)
+                return
+              }
+              persist(patch)
+            }}
+          />
         ) : (
           <AdvancedSettings />
         )}
