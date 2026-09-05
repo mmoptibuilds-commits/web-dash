@@ -1,0 +1,429 @@
+/* ============================================================
+   Tasks feature — mini-app + Home widget.
+   ============================================================ */
+
+/* ---------- Mini-app shell ---------- */
+.app {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+
+.addForm {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: none;
+  padding: var(--sp-3);
+  border-bottom: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
+}
+
+.taskInput {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-md);
+  background: rgb(var(--glass-1) / 0.55);
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  box-shadow: var(--shadow-inset-1);
+  font-size: var(--fs-sm);
+  color: rgb(var(--ink-1));
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.taskInput::placeholder {
+  color: rgb(var(--ink-3));
+}
+
+.taskInput:hover {
+  background: rgb(var(--glass-1) / 0.75);
+}
+
+.taskInput:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgb(var(--glass-1) / 0.9);
+  box-shadow: 0 0 0 3px rgb(var(--accent) / 0.22);
+}
+
+.addBtn {
+  flex: none;
+  height: 38px;
+}
+
+.listBody {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.taskList {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--sp-2);
+}
+
+.taskRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 44px;
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: var(--r-md);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.taskRow:hover,
+.taskRow:focus-within {
+  background: rgb(var(--glass-3) / 0.6);
+}
+
+.taskCheck {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.taskCheck:hover {
+  background: rgb(var(--glass-3) / 0.9);
+}
+
+.taskCheckbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.taskText {
+  flex: 1;
+  min-width: 0;
+  padding: var(--sp-1) 0;
+  text-align: left;
+  font-size: var(--fs-md);
+  color: rgb(var(--ink-1));
+  overflow-wrap: anywhere;
+  cursor: text;
+}
+
+.taskRowDone .taskText {
+  color: rgb(var(--ink-3));
+  text-decoration: line-through;
+}
+
+.taskEdit {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  padding: 0 var(--sp-2);
+  border-radius: var(--r-sm);
+  background: rgb(var(--glass-1) / 0.9);
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 0 3px rgb(var(--accent) / 0.22);
+  font-size: var(--fs-md);
+  color: rgb(var(--ink-1));
+  outline: none;
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  flex: none;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.taskRow:hover .rowActions,
+.taskRow:focus-within .rowActions {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .rowActions {
+    opacity: 1;
+  }
+}
+
+/* ---------- Empty state ---------- */
+.empty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-6);
+  text-align: center;
+  color: rgb(var(--ink-3));
+}
+
+.emptyIcon {
+  color: rgb(var(--ink-3) / 0.8);
+}
+
+.emptyTitle {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  color: rgb(var(--ink-2));
+}
+
+.emptyHint {
+  font-size: var(--fs-sm);
+  color: rgb(var(--ink-3));
+  max-width: 30ch;
+}
+
+/* ---------- Footer ---------- */
+.footer {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: none;
+  min-height: 42px;
+  padding: var(--sp-2) var(--sp-4);
+  border-top: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
+  font-size: var(--fs-xs);
+  color: rgb(var(--ink-2));
+}
+
+.footerCount {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clearBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  height: 30px;
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-xs);
+  font-weight: 550;
+  color: hsl(4 82% 55%);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.clearBtn:hover {
+  background: rgb(220 60 60 / 0.14);
+}
+
+/* ---------- Shared buttons ---------- */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  height: 36px;
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-sm);
+  font-weight: 550;
+  letter-spacing: var(--tracking-tight);
+  white-space: nowrap;
+  user-select: none;
+  color: rgb(var(--ink-1));
+  background: rgb(var(--glass-1) / var(--glass-a-1));
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
+  box-shadow: var(--shadow-inset-1);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.button:hover {
+  background: rgb(var(--glass-1) / 0.95);
+}
+
+.button:active {
+  transform: scale(0.97);
+}
+
+.buttonPrimary {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--on-accent);
+}
+
+.buttonPrimary:hover {
+  background: var(--accent-strong);
+}
+
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-pill);
+  color: rgb(var(--ink-2));
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.iconBtn:hover {
+  background: rgb(var(--glass-3) / 0.9);
+  color: rgb(var(--ink-1));
+}
+
+.iconBtn:active {
+  transform: scale(0.92);
+}
+
+.dangerBtn {
+  color: hsl(4 82% 55%);
+}
+
+.dangerBtn:hover {
+  background: rgb(220 60 60 / 0.14);
+  color: hsl(4 82% 55%);
+}
+
+/* ============================================================
+   Home widget (glass panel)
+   ============================================================ */
+.widgetPanel {
+  container-type: inline-size;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  background: rgb(var(--glass-2) / var(--glass-a-2));
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  box-shadow: var(--shadow-1), var(--shadow-inset-1);
+  -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(1.4);
+  backdrop-filter: blur(var(--blur-sm)) saturate(1.4);
+}
+
+.widgetHead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4) 0;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  color: rgb(var(--ink-2));
+}
+
+.widgetList {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sp-2);
+}
+
+.widgetRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.widgetRow:hover {
+  background: rgb(var(--glass-3) / 0.75);
+}
+
+.widgetCheck {
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.widgetCheckbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.widgetRowText {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-sm);
+  color: rgb(var(--ink-1));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.widgetRowDone .widgetRowText {
+  color: rgb(var(--ink-3));
+  text-decoration: line-through;
+}
+
+.widgetEmpty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--sp-1);
+  padding: var(--sp-4);
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: rgb(var(--ink-3));
+}
+
+.widgetFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin: 0 var(--sp-2) var(--sp-2);
+  padding: 8px var(--sp-3);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-xs);
+  font-weight: 550;
+  color: rgb(var(--ink-1));
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.widgetFooter:hover {
+  background: rgb(var(--glass-3) / 0.85);
+}
+
+.widgetFootAction {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-weight: 600;
+}
+
+.widgetFootLabel {
+  color: rgb(var(--ink-3));
+  font-weight: 500;
+}
