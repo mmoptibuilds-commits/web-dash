@@ -81,13 +81,20 @@ function DockTile({
       ref={setNodeRef}
       className={`${styles.tileWrap} ${isDragging ? styles.tileDragging : ''}`}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      {...(editable ? { ...attributes, ...listeners } : {})}
     >
       <button
         type="button"
         className={styles.tile}
         aria-label={`Open ${label}`}
         title={label}
+        // Drag affordance lives on the launcher button itself (the sole
+        // interactive element per tile). Spreading dnd-kit's attributes onto the
+        // wrapper div earlier turned it into a phantom role=button whose
+        // accessible name duplicated the launcher's, so assistive tech heard two
+        // "Open <label>" controls per tile. Listeners stay on the button only:
+        // pointer-drags start from the glyph, and the unpin/indicator never
+        // collide with a drag.
+        {...(editable ? { ...attributes, ...listeners } : {})}
         onClick={() => {
           if (!editable) onOpen()
         }}

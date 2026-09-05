@@ -42,7 +42,9 @@ closed itself, Edit Mode is intact, and the pin survives reload. Fails pre-fix
 - **A11y (a11y sweep):** in Edit Mode dnd-kit spreads `role="button"` +
   listeners onto each dock tile's *wrapper div*, whose accessible name
   duplicates the real launcher `<button>`'s label — redundant interactive
-  element per tile for assistive tech.
+  element per tile for assistive tech. **FIXED** (commit after e1e40d6): drag
+  attributes/listeners now live on the launcher button, the sole interactive
+  element per tile; the unpin/indicator never collide with a drag.
 - **Pattern sweep (bug sweep):** audit other `pointer-events:none` containers
   (backdrop, windows, home, bookmarks, settings, builtins) for popovers that
   render inside them without re-enabling pointer events — same bug class.
