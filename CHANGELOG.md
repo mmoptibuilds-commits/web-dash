@@ -11,6 +11,20 @@ first tagged release the log lives under `[Unreleased]`.
 
 ## [Unreleased]
 
+### Fixed — V2 overhaul (work-in-progress)
+- **Edit-Mode "Add to dock" popover was inert.** `.dock` is `pointer-events:
+  none` (so the full-width fixed strip never blocks the page) and only `.bar`
+  opted back in with `auto`; the Edit-Mode add popover (`.addPop`) inherited
+  `none`, so every candidate row was painted but not clickable — clicks fell
+  through to the Home page beneath and the outside-close handler dismissed the
+  popover ("UI appears but nothing inside is clickable; clicking dismisses the
+  screen"). Fixed by giving `.addPop` `pointer-events: auto`. Regression:
+  `e2e/dock-edit.spec.ts` (fails pre-fix, passes post-fix, desktop + mobile).
+- Dock launcher counting in the new spec is CSS-scoped to the real
+  `<button aria-label="Open …">` elements because dnd-kit gives each tile's
+  wrapper div a `role="button"` in Edit Mode whose accessible name duplicates
+  the launcher's (an accessibility issue tracked for the a11y sweep).
+
 ### Added — v1.0.0 (initial build)
 
 **Shell & modes**

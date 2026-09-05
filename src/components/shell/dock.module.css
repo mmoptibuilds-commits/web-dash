@@ -146,6 +146,11 @@
   right: 0;
   bottom: calc(100% + 10px);
   z-index: var(--z-command);
+  /* .dock is pointer-events:none so the wide fixed strip never blocks the
+     page; .bar opts back in. This popover floats above the page too, so it
+     must also opt back in or every click inside it falls through to the page
+     beneath and the outside-close handler dismisses it. */
+  pointer-events: auto;
   width: 288px;
   max-width: 78vw;
   display: flex;
