@@ -46,7 +46,9 @@ export interface Box {
 export const MIN_BOX: Record<LayoutItemKind, { w: number; h: number }> = {
   shortcut: { w: 120, h: 84 },
   folder: { w: 120, h: 84 },
-  widget: { w: 220, h: 140 },
+  // Widgets can be as small as their canonical 'small' preset — the min must
+  // never exceed a shipped default, or "shrink" would grow the tile.
+  widget: { w: FREE_COL_W, h: FREE_ROW_H }, // 170×110 == freeBoxForKind('widget','small')
 }
 
 /** Canonical desktop box for a payload kind (widgets keyed by their preset). */
@@ -140,6 +142,65 @@ export function assignDefaultGeometry(rows: Placeable[]): Map<string, { x: numbe
   return out
 }
 
+/* ---------------------- Whole-page default planning ---------------- */
+
+export interface PlanItem {
+  id: string
+  pageId: string
+  order: number
+  kind: LayoutItemKind
+  /** Payload id — resolves widget presets for canonical sizing. */
+  refId: string
+}
+
+export interface GeometryPlan {
+  id: string
+  box: Box
+  /** Stacking order within the page (index in `order`-sorted items). */
+  z: number
+}
+
+/**
+ * Deterministic freeform geometry for whole pages: group rows by page, sort
+ * each page by `order`, and run the shared first-fit packer over the canonical
+ * boxes. Returns each item's box + stacking `z`. Shared by the v1→v2 Dexie
+ * migration and the restore/backfill path so fresh installs, upgrades and
+ * imported pre-freeform backups converge on identical canonical layout.
+ */
+export function planFreeformGeometry(
+  items: PlanItem[],
+  sizeOf: (refId: string, kind: LayoutItemKind) => WidgetSizeId | undefined,
+): Map<string, GeometryPlan> {
+  const byPage = new Map<string, PlanItem[]>()
+  for (const it of items) {
+    const list = byPage.get(it.pageId)
+    if (list) list.push(it)
+    else byPage.set(it.pageId, [it])
+  }
+  const plan = new Map<string, GeometryPlan>()
+  for (const pageItems of byPage.values()) {
+    const sorted = [...pageItems].sort((a, b) => a.order - b.order)
+    const canonical = sorted.map((it) => {
+      const box = freeBoxForKind(
+        it.kind,
+        it.kind === 'widget' ? sizeOf(it.refId, it.kind) : undefined,
+      )
+      return { id: it.id, order: it.order, w: box.w, h: box.h }
+    })
+    const placed = assignDefaultGeometry(canonical)
+    sorted.forEach((it, z) => {
+      const pos = placed.get(it.id)
+      if (!pos) return
+      const box = freeBoxForKind(
+        it.kind,
+        it.kind === 'widget' ? sizeOf(it.refId, it.kind) : undefined,
+      )
+      plan.set(it.id, { id: it.id, box: { x: pos.x, y: pos.y, w: box.w, h: box.h }, z })
+    })
+  }
+  return plan
+}
+
 /* ------------------------- Snap + alignment ------------------------- */
 
 /** Round `v` to the nearest multiple of `step`. */
@@ -209,13 +270,23 @@ export function resolveMove(
   return { box, guides }
 }
 
-/** Snap a resize (keeps the top-left anchor; right/bottom follow the grid). */
+/**
+ * Snap a resize (keeps the top-left anchor; right/bottom follow the grid).
+ *
+ * Growth is capped at the canvas edge measured from the anchored corner, so
+ * enlarging a tile toward/past the right edge narrows the growth instead of
+ * sliding the anchor (the corner the pointer is pulling away from) leftward.
+ * Every reachable box satisfies x + w <= canvasW (moves clamp), so
+ * `canvasW - proposed.x` >= the current width and the min never re-triggers
+ * outside degenerate, already-persisted states.
+ */
 export function resolveResize(
   proposed: Box,
   min: { w: number; h: number },
   canvasW: number,
 ): Box {
-  const w = Math.max(min.w, snapTo(proposed.w))
+  const maxW = Math.max(min.w, canvasW - proposed.x)
+  const w = Math.max(min.w, Math.min(snapTo(proposed.w), maxW))
   const h = Math.max(min.h, snapTo(proposed.h))
-  return clampBoxX({ ...proposed, w, h }, canvasW)
+  return { x: proposed.x, y: proposed.y, w, h }
 }

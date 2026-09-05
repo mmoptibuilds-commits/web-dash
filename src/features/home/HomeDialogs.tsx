@@ -432,9 +432,19 @@ export function PagesManagerDialog({
               value={names[p.id] ?? p.name}
               onChange={(e) => setNames((n) => ({ ...n, [p.id]: e.target.value }))}
               onBlur={() => {
-                const next = (names[p.id] ?? '').trim()
-                if (next && next !== p.name) void renamePage(p.id, next)
-                setNames((n) => ({ ...n, [p.id]: p.name }))
+                const draft = (names[p.id] ?? '').trim()
+                const commit = draft && draft !== p.name ? draft : null
+                // The override is set to the committed (trimmed) text — never a
+                // stale p.name — so a rename sticks in the field while the live
+                // row catches up. An empty/unchanged draft clears the override
+                // and the field falls back to the live page name.
+                setNames((n) => {
+                  const c = { ...n }
+                  if (commit) c[p.id] = commit
+                  else delete c[p.id]
+                  return c
+                })
+                if (commit) void renamePage(p.id, commit)
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') (e.target as HTMLInputElement).blur()

@@ -29,7 +29,6 @@ interface UiStore {
   controlCenterOpen: boolean
   searchOpen: boolean
   openFolderId: string | null
-  settingsSectionOpen: boolean
 
   setMode: (mode: Mode) => void
   setActivePageId: (id: string | null) => void
@@ -73,7 +72,6 @@ export const useUi = create<UiStore>((set, get) => ({
   controlCenterOpen: false,
   searchOpen: false,
   openFolderId: null,
-  settingsSectionOpen: false,
 
   setMode: (mode) => {
     if (mode === get().mode) return
@@ -125,15 +123,17 @@ export const useUi = create<UiStore>((set, get) => ({
     set({
       windows: { ...state.windows, [appId]: win },
       focusOrder: [...state.focusOrder, appId],
-      settingsSectionOpen: appId === 'settings',
     })
   },
 
   openMobile: (appId) => {
     set({
       mobileAppId: appId,
-      windows: {},
-      focusOrder: [],
+      // Transient overlays drop, but the desktop window stage is deliberately
+      // left untouched: the store is shared across breakpoints, and a resize to
+      // phone width (or a sheet launched from the dock) must not destroy the
+      // windows a user had arranged at desktop width — they simply aren't
+      // rendered while sheets are shown, and come back on widening.
       controlCenterOpen: false,
       searchOpen: false,
       openFolderId: null,

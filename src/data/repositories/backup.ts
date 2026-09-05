@@ -1,8 +1,10 @@
 import { db } from '@/data/db/db'
 import { isSafeUrl } from '@/lib/url'
+import { planFreeformGeometry } from '@/data/layout/geometry'
 import type { Table } from 'dexie'
 import type {
   AppSettings,
+  CurrencyRates,
   DockItem,
   Folder,
   HistoryEntry,
@@ -103,6 +105,12 @@ const TABLES: BackupTableHandle[] = [
     clear: () => db.dockItems.clear(),
     put: (r) => db.dockItems.bulkPut(r as DockItem[]),
   },
+  {
+    name: 'currencyRates',
+    read: () => db.currencyRates.toArray(),
+    clear: () => db.currencyRates.clear(),
+    put: (r) => db.currencyRates.bulkPut(r as CurrencyRates[]),
+  },
 ]
 
 /** Dexie store references used to scope the import transaction. */
@@ -117,6 +125,7 @@ const ALL_STORES = [
   db.tasks,
   db.history,
   db.dockItems,
+  db.currencyRates,
 ] as unknown as readonly Table[]
 
 const KNOWN_TABLES = new Set<string>(TABLES.map((t) => t.name))
@@ -162,6 +171,7 @@ const BUILTIN_APP_ID_VALUES = new Set([
   'tasks',
   'calendar',
   'bookmarks',
+  'calculator',
   'settings',
 ])
 const DATA_IMAGE_URL_RE = /^data:image\//
@@ -273,6 +283,22 @@ const ROW_VALIDATORS: Record<string, (row: unknown) => string | null> = {
     if (row.shortcutId !== null && !isStr(row.shortcutId)) return 'shortcutId must be null or a string'
     return null
   },
+  currencyRates: (row) => {
+    if (!isObj(row)) return 'row is not an object'
+    if (row.id !== 'default') return 'id must be "default"'
+    // base is fixed at USD in V1 (the pairing is USD-anchored); a crafted
+    // table with a different base would silently mis-price every conversion.
+    if (row.base !== 'USD') return 'base must be "USD"'
+    const rates = row.rates
+    if (!isObj(rates)) return 'rates is not an object'
+    for (const code of Object.keys(rates)) {
+      if (!/^[A-Z]{3}$/.test(code)) return `rate key “${code}” is not a 3-letter code`
+      if (!(isFin(rates[code]) && rates[code] > 0)) return `rate for “${code}” is not a positive number`
+    }
+    if (!isNumOrNull(row.editedAt)) return 'editedAt must be a number or null'
+    if (!isFin(row.updatedAt)) return 'updatedAt is not a number'
+    return null
+  },
 }
 
 /** Returns a human message for the first invalid row, or null if all pass. */
@@ -369,6 +395,55 @@ export async function importBackupJson(
         if (rows === undefined) continue // table absent → tolerate by skipping
         await t.clear()
         if (rows.length > 0) await t.put(rows)
+      }
+
+      // Backfill freeform geometry for any imported layout rows that lack it.
+      // Pre-freeform (V1) backups carry only id/pageId/kind/refId/order; their
+      // desktop canvas would otherwise stack every tile at (0,0) — the v1→v2
+      // Dexie migration has already run by the time a file is restored, so the
+      // backfill must happen here, reusing the same deterministic packer.
+      const imported = (rowData.layoutItems ?? []) as Array<
+        Pick<LayoutItem, 'id' | 'pageId' | 'order' | 'kind' | 'refId'> &
+          Partial<Pick<LayoutItem, 'x' | 'y' | 'w' | 'h'>>
+      >
+      const needsGeometry = imported.filter(
+        (r) =>
+          !(
+            typeof r.x === 'number' &&
+            typeof r.y === 'number' &&
+            typeof r.w === 'number' &&
+            typeof r.h === 'number'
+          ),
+      )
+      if (needsGeometry.length > 0) {
+        const widgetIds = [
+          ...new Set(needsGeometry.filter((r) => r.kind === 'widget').map((r) => r.refId)),
+        ]
+        const widgets = widgetIds.length > 0 ? await db.widgetInstances.bulkGet(widgetIds) : []
+        const sizeById = new Map(
+          widgets.filter((w): w is WidgetInstance => Boolean(w)).map((w) => [w.id, w.size]),
+        )
+        const plan = planFreeformGeometry(
+          needsGeometry.map((r) => ({
+            id: r.id,
+            pageId: r.pageId,
+            order: r.order,
+            kind: r.kind,
+            refId: r.refId,
+          })),
+          (refId) => sizeById.get(refId),
+        )
+        await Promise.all(
+          [...plan].map(([id, p]) =>
+            db.layoutItems.update(id, {
+              x: p.box.x,
+              y: p.box.y,
+              w: p.box.w,
+              h: p.box.h,
+              z: p.z,
+            }),
+          ),
+        )
       }
     })
   } catch (err) {

@@ -194,7 +194,9 @@ test('32b. widget density follows its tile width, not the window (container quer
 
   // Drag the resize handle down to the tile's minimum width (< 240px). The
   // window stays 1440px wide, so only a container query could hide the row.
-  const handle = tile.getByRole('button', { name: 'Resize Calendar' })
+  // Pointer-only chrome: the drag handle is aria-hidden (keyboard resize is
+  // Alt+Arrows on the focused tile), so it is targeted by test id, not role.
+  const handle = tile.getByTestId('resize-handle')
   const hb = await handle.boundingBox()
   if (!hb) throw new Error('missing calendar resize handle')
   await page.mouse.move(hb.x + 4, hb.y + 4)

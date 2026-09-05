@@ -23,6 +23,17 @@ export function useIsDesktop(): boolean {
   return useMediaQuery('(min-width: 1024px)')
 }
 
+/**
+ * True when the Home freeform canvas can actually contain the canonical
+ * FREE_CANVAS_W layout (1120px + the page's 2×24px padding = 1168px). Between
+ * the 1024px desktop breakpoint and this width the canvas measures under 1120px
+ * and persisted px geometry would overflow onto neighbours, so Home stays on
+ * the reflowing ordered grid there.
+ */
+export function useFreeformCanvas(): boolean {
+  return useMediaQuery('(min-width: 1168px)')
+}
+
 export function usePrefersDark(): boolean {
   return useMediaQuery('(prefers-color-scheme: dark)')
 }

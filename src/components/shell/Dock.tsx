@@ -87,6 +87,7 @@ function DockTile({
         className={styles.tile}
         aria-label={`Open ${label}`}
         title={label}
+        data-appid={shortcut ? undefined : item.appId}
         // Drag affordance lives on the launcher button itself (the sole
         // interactive element per tile). Spreading dnd-kit's attributes onto the
         // wrapper div earlier turned it into a phantom role=button whose

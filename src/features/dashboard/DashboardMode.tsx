@@ -15,7 +15,12 @@ function AppCard({ appId }: { appId: BuiltinAppId }) {
   const Icon = app.icon
   const h = hueFor(app.name)
   return (
-    <button type="button" className={styles.card} onClick={() => launchApp(appId)}>
+    <button
+      type="button"
+      className={styles.card}
+      data-appid={appId}
+      onClick={() => launchApp(appId)}
+    >
       <span
         className={styles.cardGlyph}
         style={{
@@ -75,9 +80,23 @@ function MobileSheet({ appId }: { appId: BuiltinAppId }) {
     const id = window.requestAnimationFrame(() => handleRef.current?.focus())
     return () => {
       window.cancelAnimationFrame(id)
-      openerRef.current?.focus?.()
+      const opener = openerRef.current
+      if (opener && opener.isConnected) {
+        opener.focus?.()
+        return
+      }
+      // The launcher that opened the sheet is usually unmounted for the whole
+      // time a full-screen sheet is up (Dashboard's Overview is replaced by the
+      // sheet), so a snapshot taken on open is disconnected by close. Re-query
+      // the freshly committed surface for this app's launcher (`data-appid`)
+      // once it exists instead of dropping focus to <body>.
+      window.requestAnimationFrame(() => {
+        document
+          .querySelector<HTMLElement>(`[data-appid="${appId}"]`)
+          ?.focus?.()
+      })
     }
-  }, [])
+  }, [appId])
 
   if (!app) return null
   const Icon = app.icon
@@ -95,6 +114,10 @@ function MobileSheet({ appId }: { appId: BuiltinAppId }) {
     if (!sheet) return
     const cap = window.innerHeight * 0.4 // rubber-band past 40% so a fling can't fly off
     const offset = dy > cap ? cap + (dy - cap) * 0.3 : dy
+    // The slide-up entrance animation owns `transform` while it plays, so an
+    // inline transform set mid-animation would be ignored and the sheet would
+    // not follow the finger. Drop the animation, then drive it by transform.
+    sheet.style.animation = 'none'
     sheet.style.transition = 'none'
     sheet.style.transform = `translateY(${offset.toFixed(1)}px)`
   }

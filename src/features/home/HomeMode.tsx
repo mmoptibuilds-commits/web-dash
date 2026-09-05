@@ -30,7 +30,7 @@ import {
   useFolders,
   useWidgetInstancesOf,
 } from '@/hooks/data'
-import { useIsDesktop } from '@/hooks/useMedia'
+import { useFreeformCanvas } from '@/hooks/useMedia'
 import { getWidgetDef } from '@/features/widgets/registry'
 import { WIDGET_SIZE_LABELS } from '@/types/widgets'
 import { useUi } from '@/state/ui'
@@ -41,6 +41,7 @@ import { reorderPageItems, setItemBox } from '@/data/repositories/layout'
 import { deleteWidgetInstanceCascade, updateWidgetInstance } from '@/data/repositories/widgets'
 import {
   FREE_CANVAS_W,
+  SNAP,
   canonicalBoxForWidget,
   clampBoxX,
   itemBox,
@@ -358,7 +359,12 @@ function FreeTile(props: FreeTileProps) {
         <button
           type="button"
           className={styles.freeHandle}
-          aria-label={`Resize ${label}`}
+          // Pointer-only chrome: keyboard users resize the focused tile with
+          // Alt+Arrows (the tile itself is the tab stop), so this handle must
+          // not surface as an announced-but-inert control in the tab order.
+          tabIndex={-1}
+          aria-hidden
+          data-testid="resize-handle"
           onPointerDown={(e) => {
             e.preventDefault()
             e.stopPropagation()
@@ -410,7 +416,11 @@ interface PageProps {
 function isFormTarget(t: EventTarget | null): boolean {
   return (
     t instanceof Element &&
-    Boolean(t.closest('input, textarea, select, [contenteditable], .freeHandle, .remove'))
+    Boolean(
+      t.closest(
+        'input, textarea, select, [contenteditable], .freeHandle, .remove, .resizeChip',
+      ),
+    )
   )
 }
 
@@ -484,8 +494,12 @@ function PagePane(props: PageProps) {
     const box = int.box
     void setItemBox(g.id, { x: box.x, y: box.y, w: box.w, h: box.h })
     // A real drag that ends on its own tile must not then "click" the tile's
-    // inner control (open shortcut/folder/widget button).
-    if (g.mode === 'move' && g.moved && released) {
+    // inner control (open shortcut/folder/widget button). A shake that snaps
+    // back onto the original slot is not a move — let the click through so the
+    // trailing release still opens the editor.
+    const settled =
+      box.x !== g.base.x || box.y !== g.base.y || box.w !== g.base.w || box.h !== g.base.h
+    if (g.mode === 'move' && g.moved && settled && released) {
       const t = released.target as Element | null
       if (t?.closest?.(`[data-tile-id="${g.id}"]`)) suppressClickRef.current = true
     }
@@ -510,7 +524,10 @@ function PagePane(props: PageProps) {
     const dy = e.clientY - rect.top - g.originCY
 
     if (g.mode === 'move') {
-      if (!g.moved && Math.hypot(dx, dy) < 4) return
+      // Only claim a drag once the pointer clears one lattice pitch (SNAP).
+      // Anything shorter re-snaps to the same slot anyway, so engaging earlier
+      // just swallows ordinary click jitter and bumps z for nothing.
+      if (!g.moved && Math.hypot(dx, dy) < SNAP) return
       if (!g.moved) {
         g.moved = true
         // Bring-to-front: persist a z above every other tile the moment the
@@ -621,6 +638,17 @@ function PagePane(props: PageProps) {
     const delta = sign * step
     if (alt) {
       const min = MIN_BOX[item.kind]
+      if (step === 1) {
+        // Fine 1px Alt+arrow resize: bypass the magnetic lattice, since
+        // resolveResize would snap straight back onto the 8px grid and a single
+        // press would never change the box. Clamp only — to the kind's minimum
+        // and to the right/bottom canvas edge — monotonic in the arrow direction.
+        const maxW = Math.max(min.w, cw - box.x)
+        const w = isX ? Math.max(min.w, Math.min(box.w + delta, maxW)) : box.w
+        const h = isY ? Math.max(min.h, box.h + delta) : box.h
+        void setItemBox(item.id, { x: box.x, y: box.y, w, h })
+        return
+      }
       const next: Box = {
         x: box.x,
         y: box.y,
@@ -821,10 +849,11 @@ export function HomeMode() {
   const activePageId = useUi((s) => s.activePageId)
   const setActivePageId = useUi((s) => s.setActivePageId)
   const stripRef = useRef<HTMLDivElement>(null)
+  const editBarRef = useRef<HTMLDivElement>(null)
   const [dialog, setDialog] = useState<DialogState>(null)
   const [pendingRemove, setPendingRemove] = useState<LayoutItem | null>(null)
   const [removeLabel, setRemoveLabel] = useState('this item')
-  const freeform = useIsDesktop()
+  const freeform = useFreeformCanvas()
 
   const showLabels = settings?.showLabels ?? true
   const iconScale = settings?.iconSize ?? 'regular'
@@ -924,6 +953,15 @@ export function HomeMode() {
     else if (item.kind === 'folder') await deleteFolderCascade(item.refId)
     else await deleteWidgetInstanceCascade(item.refId)
     setPendingRemove(null)
+    // The confirm dialog hands focus back to the tile's Remove button, which is
+    // gone with the tile, so focus would drop to <body>. Land on the first
+    // edit-bar control instead so keyboard edit mode keeps a target.
+    window.requestAnimationFrame(() => {
+      const bar = editBarRef.current
+      if (!bar) return
+      const first = bar.querySelector<HTMLElement>('button:not([disabled])')
+      first?.focus()
+    })
   }
 
   const newFolderCreated = (folder: Folder) => {
@@ -1003,7 +1041,7 @@ export function HomeMode() {
       </div>
 
       {editMode && (
-        <div className={styles.editBar}>
+        <div className={styles.editBar} ref={editBarRef}>
           <button type="button" className="btn btn-ghost" onClick={() => setDialog({ type: 'shortcut', editing: null })}>
             <Plus size={15} aria-hidden />
             Shortcut

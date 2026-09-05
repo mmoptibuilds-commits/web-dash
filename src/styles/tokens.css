@@ -309,9 +309,21 @@
 }
 
 :root[data-effects='reduced'] {
-  --glass-a-1: 0.9;
-  --glass-a-2: 0.88;
-  --glass-a-3: 0.85;
+  /* Reduced Effects replaces translucency with a solid surface: fills go fully
+     opaque (so foreground text never competes with the wallpaper), which the
+     universal backdrop-filter:none sweep below enforces too. The blur tokens
+     are ALSO zeroed here: surfaces build their backdrop filter from these
+     tokens, so zeroing them makes every tokenized surface compute an inert
+     blur(0px) … at the source. That is the mechanism that survives CSS
+     minification — a build-time prefixer can drop the unprefixed
+     backdrop-filter:none from the sweep below, and Blink honours the standard
+     spelling over the -webkit alias. --glass-sat is deliberately left alone:
+     Reduced Effects owns no material override, and with opaque fills the
+     residual saturate() has nothing to act on. */
+  --glass-a-1: 1;
+  --glass-a-2: 1;
+  --glass-a-3: 1;
+  --glass-a-elev: 1;
   --blur-xs: 0px;
   --blur-sm: 0px;
   --blur-md: 0px;
@@ -334,6 +346,10 @@ html[data-effects='reduced'] *::after {
   animation-duration: 0.001ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.001ms !important;
+  /* blur(0px) is not "off" — the surface would still sample the backdrop and
+     apply saturate(). A truly solid surface must not filter at all. */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 /* ============================ Breakpoints ============================ */

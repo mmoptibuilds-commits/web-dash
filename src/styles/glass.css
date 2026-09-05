@@ -15,9 +15,21 @@
   backdrop-filter: blur(var(--blur-md)) saturate(var(--glass-sat, 1.5));
 }
 
-/* No-backdrop-filter fallback: nudge opacity up so text stays readable. */
+/* No-backdrop-filter fallback: every surface reads its fill alpha from the
+   shared --glass-a-* tokens, so overriding them here re-glasses the whole
+   shell (windows, dock, menu bar, dialogs, feature panels) at once — not just
+   the .glass utility. Fills go near-opaque because without a blur behind them
+   a translucent fill would leave foreground text fighting the wallpaper.
+   This block sits after tokens.css in index.css, so it wins the cascade for
+   the default (inline-transparency-free) state. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --glass-a-1: 0.96;
+    --glass-a-2: 0.94;
+    --glass-a-3: 0.92;
+    --glass-a-elev: 0.98;
+  }
   .glass {
-    background: rgb(var(--glass-1) / 0.94);
+    background: rgb(var(--glass-1) / 0.96);
   }
 }

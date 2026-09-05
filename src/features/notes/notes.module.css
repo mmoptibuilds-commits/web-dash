@@ -49,6 +49,10 @@
   .app:not(.hasSelection) .editorPane {
     display: none;
   }
+  /* With the list hidden behind the editor there must be a way back. */
+  .hasSelection .backBtn {
+    display: flex;
+  }
 }
 
 /* ---------- List pane ---------- */

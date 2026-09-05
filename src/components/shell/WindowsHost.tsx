@@ -42,6 +42,19 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
     frameRef.current?.focus()
   }, [])
 
+  /** When the window ahead of this one is closed/minimized, its frame (and any
+   *  focus inside it) unmounts and focus drops to <body>. If this window is now
+   *  the front one, reclaim focus so keyboard navigation stays on the stage. */
+  const isFront = focusOrder[focusOrder.length - 1] === appId
+  const wasFront = useRef(false)
+  useEffect(() => {
+    if (isFront && !wasFront.current) {
+      const a = document.activeElement
+      if (a === document.body || (a && !a.isConnected)) frameRef.current?.focus()
+    }
+    wasFront.current = isFront
+  }, [isFront, focusOrder, appId])
+
   /** Raise the window when any part of it receives keyboard focus (macOS model). */
   const raiseIfBehind = () => {
     const st = useUi.getState()

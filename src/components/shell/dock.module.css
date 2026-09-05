@@ -278,12 +278,29 @@
 }
 
 @media (max-width: 639px) {
+  /* Fluid dock. Tiles sit at a comfortable 50px but shrink-to-fit (equal
+     shares, down to a 34px floor) so the row always stays inside the viewport:
+     a fixed-size row overflows the moment the default 7 apps exceed a ~397px
+     phone, shoving the outer tiles off-screen. Gap also eases on narrow
+     widths. */
+  .bar {
+    max-width: calc(100vw - 2 * var(--sp-3));
+    gap: clamp(var(--sp-1), 1.6vw, var(--sp-2));
+  }
+  .tileWrap {
+    flex: 0 1 50px;
+    min-width: 34px;
+  }
   .tile {
-    width: 50px;
-    height: 50px;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
   }
   .addChip {
-    width: 50px;
-    height: 50px;
+    flex: 0 1 50px;
+    min-width: 34px;
+    width: auto;
+    height: auto;
+    aspect-ratio: 1 / 1;
   }
 }

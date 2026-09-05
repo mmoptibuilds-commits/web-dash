@@ -1,5 +1,5 @@
 import { db } from '@/data/db/db'
-import type { LayoutItem } from '@/types/domain'
+import type { LayoutItem, WidgetInstance } from '@/types/domain'
 import { uid } from '@/lib/id'
 import { findFreeSpot, freeBoxForKind, itemBox } from '@/data/layout/geometry'
 
@@ -33,8 +33,22 @@ export async function addItemToPage(
   const order = insertAt ?? (await nextOrder(pageId))
   const size = kind === 'widget' ? (await db.widgetInstances.get(refId))?.size : undefined
   const def = freeBoxForKind(kind, size)
+  // Resolve existing rows with their real widget size (renderers size widgets
+  // from their preset), so a geometry-less large widget is reserved at its
+  // rendered footprint — not the medium default — and new tiles can't be
+  // placed overlapping it.
+  const existingWidgetIds = [
+    ...new Set(items.filter((it) => it.kind === 'widget').map((it) => it.refId)),
+  ]
+  const existingWidgets =
+    existingWidgetIds.length > 0 ? await db.widgetInstances.bulkGet(existingWidgetIds) : []
+  const sizeById = new Map(
+    existingWidgets
+      .filter((w): w is WidgetInstance => Boolean(w))
+      .map((w) => [w.id, w.size]),
+  )
   const existing = items
-    .map((it) => itemBox(it))
+    .map((it) => itemBox(it, it.kind === 'widget' ? sizeById.get(it.refId) : undefined))
     .filter((b) => b.w > 0 && b.h > 0)
   const pos = findFreeSpot(existing, def.w, def.h)
   const z = items.reduce((m, it) => Math.max(m, it.z ?? -1), -1) + 1

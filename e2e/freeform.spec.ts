@@ -23,7 +23,9 @@ test('freeform: drag-resize a tile from its handle and keep the size after reloa
   const before = await google.boundingBox()
   if (!before) throw new Error('Missing tile geometry')
 
-  const handle = wrap.getByRole('button', { name: 'Resize Google' })
+  // Pointer-only chrome: the drag handle is aria-hidden (keyboard users resize
+  // a focused tile with Alt+Arrows), so it is targeted by test id, not role.
+  const handle = wrap.getByTestId('resize-handle')
   const hb = await handle.boundingBox()
   if (!hb) throw new Error('Missing resize handle')
 

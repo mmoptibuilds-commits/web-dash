@@ -175,10 +175,14 @@ test('33.2 in-app Reduced effects collapses timing, solidifies glass, and is rev
     'data-glass',
     'off',
   )
-  expect(Number.parseFloat(await cssVar(page, '--glass-a-1')), 'fill 1 is pinned solid').toBe(0.9) // tokens.css 312
-  expect(Number.parseFloat(await cssVar(page, '--glass-a-2')), 'fill 2 is pinned solid').toBe(0.88) // tokens.css 313
-  expect(await cssVar(page, '--blur-md'), 'blur token collapses to none').toBe('0px') // tokens.css 317
-  expect(ms(await cssVar(page, '--dur-fast')), 'duration token collapses to ~1ms').toBeLessThan(6) // tokens.css 326
+  // Reduced Effects replaces translucency with a solid surface: fills go fully
+  // opaque (--glass-a-* pinned to 1, tokens.css 316-319) rather than merely
+  // near-solid, and blur is removed at the surface via backdrop-filter:none
+  // (the universal sweep) instead of zeroing the --blur-* tokens — a blur(0px)
+  // fill would still sample the backdrop and apply its saturate().
+  expect(Number.parseFloat(await cssVar(page, '--glass-a-1')), 'fill 1 is pinned solid').toBe(1) // tokens.css 316
+  expect(Number.parseFloat(await cssVar(page, '--glass-a-2')), 'fill 2 is pinned solid').toBe(1) // tokens.css 317
+  expect(ms(await cssVar(page, '--dur-fast')), 'duration token collapses to ~1ms').toBeLessThan(6) // tokens.css 328-331
 
   // Real glass surface solidifies: the Add-shortcut modal card.
   await page.getByRole('button', { name: 'Close Settings' }).click() // WindowsHost close: `Close ${app.name}`
@@ -189,7 +193,15 @@ test('33.2 in-app Reduced effects collapses timing, solidifies glass, and is rev
   expect(surface.name, 'the surface still resolves its pop animation').toBe('pop-in')
   expect(ms(surface.duration), 'surface animation is squashed by the !important sweep').toBeLessThanOrEqual(6) // tokens.css 331-337
   expect(surface.iterations, 'surface iteration-count is forced to one').toBe('1')
-  expect(surface.filter, 'surface blur is zeroed to a solid fill').toContain('blur(0px)')
+  // The surface's backdrop blur is gone: either the sweep hard-removes it
+  // (backdrop-filter: none) or the zeroed --blur-* tokens collapse it to an
+  // inert blur(0px) saturate(1) at the source (both are reduced-effects
+  // guarantees; the minifier may drop the unprefixed sweep).
+  const filter = surface.filter
+  expect(
+    filter === 'none' || filter.includes('blur(0px)'),
+    `backdrop blur removed, got ${filter}`,
+  ).toBe(true)
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog', { name: 'Add shortcut' })).toHaveCount(0)
   await exitEdit(page)

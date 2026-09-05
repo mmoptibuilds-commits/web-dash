@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
   FREE_CANVAS_W,
+  MIN_BOX,
   assignDefaultGeometry,
   clampBoxX,
   findFreeSpot,
   freeBoxForKind,
   itemBox,
+  planFreeformGeometry,
   resolveMove,
   resolveResize,
   snapTo,
@@ -30,6 +32,22 @@ describe('freeBoxForKind', () => {
 
   it('defaults widget size to medium when unspecified', () => {
     expect(freeBoxForKind('widget')).toEqual(freeBoxForKind('widget', 'medium'))
+  })
+
+  it('never ships a preset below the enforced per-kind minimum', () => {
+    // A resize can't shrink below MIN_BOX, so every canonical default (the
+    // size a tile is first placed at) must already satisfy it — otherwise
+    // "shrink" would grow the tile.
+    for (const kind of ['shortcut', 'folder', 'widget'] as const) {
+      const sizes = kind === 'widget' ? (['small', 'medium', 'large'] as const) : ([undefined] as const)
+      for (const s of sizes) {
+        const b = freeBoxForKind(kind, s)
+        expect(b.w).toBeGreaterThanOrEqual(MIN_BOX[kind].w)
+        expect(b.h).toBeGreaterThanOrEqual(MIN_BOX[kind].h)
+      }
+    }
+    // Widget min equals the smallest shipped preset (small 170×110).
+    expect(MIN_BOX.widget).toEqual({ w: 170, h: 110 })
   })
 })
 
@@ -104,6 +122,34 @@ describe('assignDefaultGeometry', () => {
     ]
     const rev = [...base].reverse()
     expect(assignDefaultGeometry(base)).toEqual(assignDefaultGeometry(rev))
+  })
+})
+
+describe('planFreeformGeometry', () => {
+  const items = [
+    { id: 'a', pageId: 'p1', order: 0, kind: 'widget' as const, refId: 'a' },
+    { id: 'b', pageId: 'p1', order: 1, kind: 'shortcut' as const, refId: 'b' },
+    { id: 'x', pageId: 'p2', order: 0, kind: 'shortcut' as const, refId: 'x' },
+  ]
+
+  it('packs each page on its own canonical grid and stacks by order', () => {
+    const plan = planFreeformGeometry(items, (refId) => (refId === 'a' ? 'small' : undefined))
+    expect(plan.size).toBe(3)
+    expect(plan.get('a')?.box).toEqual({ x: 0, y: 0, w: 170, h: 110 })
+    expect(plan.get('a')?.z).toBe(0)
+    expect(plan.get('b')?.box).toEqual({ x: 190, y: 0, w: 170, h: 110 })
+    expect(plan.get('b')?.z).toBe(1)
+    // A second page repacks from its own origin.
+    expect(plan.get('x')?.box).toEqual({ x: 0, y: 0, w: 170, h: 110 })
+    expect(plan.get('x')?.z).toBe(0)
+  })
+
+  it('sizes widget boxes from the size lookup (large = 740 wide)', () => {
+    const plan = planFreeformGeometry(
+      [{ id: 'w', pageId: 'p', order: 0, kind: 'widget' as const, refId: 'w' }],
+      () => 'large',
+    )
+    expect(plan.get('w')?.box).toEqual({ x: 0, y: 0, w: 740, h: 240 })
   })
 })
 
@@ -188,8 +234,14 @@ describe('resolveResize', () => {
     expect(r.h).toBe(min.h)
   })
 
-  it('clamps the anchor so the box stays inside the canvas', () => {
-    const r = resolveResize(box(360, 0, 300, 200), min, canvasW)
-    expect(r.x).toBeLessThanOrEqual(canvasW - r.w)
+  it('caps growth at the canvas edge without moving the anchored corner', () => {
+    // A right-hand tile pulled past the edge keeps x and caps the width rather
+    // than sliding the anchor (top-left) leftward.
+    const r = resolveResize(box(200, 0, 300, 100), min, canvasW)
+    expect(r.x).toBe(200)
+    expect(r.w).toBe(200) // canvasW - x
+    // Growth that still fits stays on the lattice and inside the canvas.
+    const fit = resolveResize(box(100, 0, 200, 96), min, canvasW)
+    expect(fit).toEqual(box(100, 0, 200, 96))
   })
 })
