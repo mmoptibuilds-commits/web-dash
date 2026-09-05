@@ -5,9 +5,12 @@
 spec (`Web-dashboard-One-Shot-Claude-Code-Prompt.md`).
 
 ## Current phase
-Phase 5 (responsive + visual QA) committed. Next: Phase 6 — harsh critique
-loop (incl. an adversarial DOM/layout audit), then engineering review and
-release readiness.
+Phase 6 (harsh critique loop, ≤3 rounds) IN PROGRESS — a read-only workflow of
+four independent critics (UX/functional, accessibility/interaction, visual
+design code-grounded, spec/copy conformance) returns findings which an
+adversarial verify stage confirms; coordinator fixes confirmed defects, then
+re-runs unit + E2E. Then Phase 7 engineering review and Phase 8 release
+readiness.
 
 ## Completed milestones (git)
 - Phase 0/1 committed (`2c28da0`, `ab1b76b`): docs/contracts, Vite 8 + React 19
@@ -19,8 +22,7 @@ release readiness.
   edit mode + dialogs, folder overlay), Dashboard (overview, floating windows,
   mobile sheets), shell chrome (menubar, control-center-lite, dock, backdrop),
   search overlay, all CSS modules. Typecheck/lint green.
-- Phase 2 lanes merged + integration committed (`59a2…` pending hash,
-  `feat(integration)`): notes+tasks, calendar+bookmarks, settings (incl.
+- Phase 2 lanes merged + integration committed (`d852b66`, `feat(integration)`): notes+tasks, calendar+bookmarks, settings (incl.
   wallpaper + JSON backup/import). All three diffs additive; typecheck green
   after each merge. Feature mini-apps wired into `AppContent`; registry now has
   the full V1 addable list (clock/search/notes/tasks/calendar/links/photo/
@@ -31,7 +33,7 @@ release readiness.
   desktop 1440×900 + mobile 390×844 projects, runs against `vite preview` so the
   PWA/SW is exercised), shared helpers, 8 spec files covering all 16 spec flows
   incl. reload-persistence and PWA manifest/offline. `e2e`/`test:e2e` scripts.
-- Phase 5 committed (`<pending hash>`): responsive width-sweep spec
+- Phase 5 committed (`d110b35`): responsive width-sweep spec
   (`e2e/responsive.spec.ts`) asserting no horizontal overflow and in-viewport
   chrome at 360/390/768/1024/1280/1440, plus platform-correct window vs sheet
   surfaces. Fixed a latent shell bug it caught: window traffic-light buttons
@@ -74,9 +76,10 @@ release readiness.
   clicks always land (WindowsHost).
 
 ## Next action
-1. Phase 6: harsh critique loop (≤3 rounds) — functionality + visual/appearance
-   critic + UI copy/contrast; adversarial DOM audit where no vision is
-   available. Fix every confirmed defect.
-2. Phase 7–8: engineering review (lint/typecheck/tests/build, code/security/
-   simplification review, dead-code removal, secrets check), release readiness
-   (PWA manifest/SW verify, README, CHANGELOG, QA checklist finalize).
+1. Phase 6 (in progress): await critique-workflow result; apply each
+   adversarially-confirmed fix; re-run unit tests + `npm run check` + the full
+   desktop/mobile Playwright suites; up to 3 critique rounds until dry.
+2. Phase 7: engineering review — lint/typecheck/tests/build, code/security/
+   simplification review, dead-code removal, secrets check, no V2/V3 surface.
+3. Phase 8: release readiness — PWA manifest/SW verify, README, CHANGELOG, QA
+   checklist finalize, final commit.
