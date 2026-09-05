@@ -1,0 +1,537 @@
+/* ============================================================
+   Notes feature — mini-app + Home widget.
+   Surfaces sit on the shell window/sheet; only hairline
+   dividers separate regions (no outer card chrome).
+   ============================================================ */
+
+/* ---------- Mini-app shell (fills 100% of parent) ---------- */
+.app {
+  container-type: inline-size;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* Wide layout default: list | editor */
+.listPane {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  width: 272px;
+  min-height: 0;
+  border-right: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
+}
+
+.editorPane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Narrow layout: one pane at a time */
+@container (max-width: 639px) {
+  .app {
+    flex-direction: column;
+  }
+  .listPane,
+  .editorPane {
+    flex: 1 1 100%;
+    width: 100%;
+    border-right: none;
+  }
+  .hasSelection .listPane {
+    display: none;
+  }
+  .app:not(.hasSelection) .editorPane {
+    display: none;
+  }
+}
+
+/* ---------- List pane ---------- */
+.listHead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border-bottom: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
+}
+
+.searchWrap {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-pill);
+  background: rgb(var(--glass-1) / 0.55);
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  box-shadow: var(--shadow-inset-1);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.searchWrap:focus-within {
+  border-color: var(--accent);
+  background: rgb(var(--glass-1) / 0.85);
+  box-shadow: 0 0 0 3px rgb(var(--accent) / 0.22);
+}
+
+.searchIcon {
+  flex: none;
+  color: rgb(var(--ink-3));
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: var(--fs-sm);
+  color: rgb(var(--ink-1));
+}
+
+.searchInput::placeholder {
+  color: rgb(var(--ink-3));
+}
+
+.listBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.noteList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sp-2);
+}
+
+.noteItem {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 52px;
+  text-align: left;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  color: rgb(var(--ink-1));
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.noteItem:hover {
+  background: rgb(var(--glass-3) / 0.7);
+}
+
+.noteItemSelected,
+.noteItemSelected:hover {
+  background: rgb(var(--glass-3) / 0.9);
+  box-shadow: inset 0 0 0 1px rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+}
+
+.noteItemTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-width: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  line-height: 1.3;
+}
+
+.noteItemTitleText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pinMark {
+  flex: none;
+  color: var(--accent-strong);
+}
+
+.noteItemSnippet {
+  display: block;
+  margin-top: 1px;
+  font-size: var(--fs-xs);
+  color: rgb(var(--ink-3));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.noteItemMeta {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--fs-2xs);
+  color: rgb(var(--ink-3));
+}
+
+/* ---------- Empty / invite states ---------- */
+.empty {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--sp-2);
+  min-height: 100%;
+  padding: var(--sp-6);
+  text-align: center;
+  color: rgb(var(--ink-3));
+}
+
+.emptyIcon {
+  color: rgb(var(--ink-3) / 0.8);
+}
+
+.emptyTitle {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  color: rgb(var(--ink-2));
+}
+
+.emptyHint {
+  font-size: var(--fs-sm);
+  color: rgb(var(--ink-3));
+  max-width: 30ch;
+}
+
+/* ---------- Editor pane ---------- */
+.editorHead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 48px;
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
+}
+
+.backBtn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-pill);
+  color: rgb(var(--ink-2));
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.backBtn:hover {
+  background: rgb(var(--glass-3) / 0.85);
+  color: rgb(var(--ink-1));
+}
+
+.editorMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-xs);
+  color: rgb(var(--ink-3));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.savingDot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  animation: pulse 1.1s var(--ease-in-out) infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.editorActions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.pinBtn[aria-pressed='true'] {
+  background: rgb(var(--accent) / 0.16);
+  color: var(--accent-strong);
+}
+
+.editorBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--sp-4);
+}
+
+.titleInput {
+  width: 100%;
+  background: transparent;
+  border: none;
+  font-size: var(--fs-2xl);
+  font-weight: 650;
+  letter-spacing: var(--tracking-tighter);
+  line-height: 1.2;
+  color: rgb(var(--ink-1));
+}
+
+.titleInput::placeholder {
+  color: rgb(var(--ink-3));
+}
+
+.bodyField {
+  flex: 1;
+  width: 100%;
+  min-height: 140px;
+  background: transparent;
+  border: none;
+  resize: none;
+  font-size: var(--fs-md);
+  line-height: var(--lh-snug);
+  color: rgb(var(--ink-1));
+}
+
+.bodyField::placeholder {
+  color: rgb(var(--ink-3));
+}
+
+.editorEmpty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--sp-3);
+  padding: var(--sp-6);
+  text-align: center;
+  color: rgb(var(--ink-3));
+}
+
+/* ---------- Shared buttons / controls ---------- */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  height: 36px;
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-sm);
+  font-weight: 550;
+  letter-spacing: var(--tracking-tight);
+  white-space: nowrap;
+  user-select: none;
+  color: rgb(var(--ink-1));
+  background: rgb(var(--glass-1) / var(--glass-a-1));
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
+  box-shadow: var(--shadow-inset-1);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.button:hover {
+  background: rgb(var(--glass-1) / 0.95);
+}
+
+.button:active {
+  transform: scale(0.97);
+}
+
+.buttonPrimary {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--on-accent);
+}
+
+.buttonPrimary:hover {
+  background: var(--accent-strong);
+}
+
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-pill);
+  color: rgb(var(--ink-2));
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.iconBtn:hover {
+  background: rgb(var(--glass-3) / 0.85);
+  color: rgb(var(--ink-1));
+}
+
+.iconBtn:active {
+  transform: scale(0.92);
+}
+
+.dangerBtn {
+  color: hsl(4 82% 55%);
+}
+
+.dangerBtn:hover {
+  background: rgb(220 60 60 / 0.14);
+  color: hsl(4 82% 55%);
+}
+
+/* Confirm row revealed in place of the delete icon while armed */
+.confirmRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 0 2px;
+}
+
+.confirmText {
+  font-size: var(--fs-2xs);
+  color: rgb(var(--ink-3));
+  white-space: nowrap;
+}
+
+/* ============================================================
+   Home widget (glass panel)
+   ============================================================ */
+.widgetPanel {
+  container-type: inline-size;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  background: rgb(var(--glass-2) / var(--glass-a-2));
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  box-shadow: var(--shadow-1), var(--shadow-inset-1);
+  -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(1.4);
+  backdrop-filter: blur(var(--blur-sm)) saturate(1.4);
+}
+
+.widgetHead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4) 0;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  color: rgb(var(--ink-2));
+}
+
+.widgetList {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sp-2);
+}
+
+.widgetRow {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  color: rgb(var(--ink-1));
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.widgetRow:hover {
+  background: rgb(var(--glass-3) / 0.75);
+}
+
+.widgetRowTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-width: 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+
+.widgetRowTitleText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.widgetRowSnippet {
+  font-size: var(--fs-xs);
+  color: rgb(var(--ink-3));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.widgetEmpty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--sp-1);
+  padding: var(--sp-4);
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: rgb(var(--ink-3));
+}
+
+.widgetFooter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  margin: 0 var(--sp-2) var(--sp-2);
+  padding: 8px var(--sp-3);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-xs);
+  font-weight: 550;
+  color: rgb(var(--ink-2));
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.widgetFooter:hover {
+  background: rgb(var(--glass-3) / 0.85);
+  color: rgb(var(--ink-1));
+}
+
+/* Small tiles: drop the snippet line to keep rows compact. */
+@container (max-width: 220px) {
+  .widgetRowSnippet {
+    display: none;
+  }
+}
