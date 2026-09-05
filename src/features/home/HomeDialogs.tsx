@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link2, Plus, Trash2, FolderPlus, Image as ImageIcon, Type } from 'lucide-react'
+import { ArrowDown, ArrowUp, FolderPlus, Image as ImageIcon, Link2, Plus, Trash2, Type } from 'lucide-react'
 import { Modal } from '@/components/common/Modal'
 import { useHomePages } from '@/hooks/data'
 import { createShortcut, updateShortcut } from '@/data/repositories/shortcuts'
@@ -450,7 +450,7 @@ export function PagesManagerDialog({
                 disabled={i === 0}
                 onClick={() => void movePage(p.id, i - 1)}
               >
-                ↑
+                <ArrowUp size={15} aria-hidden />
               </button>
               <button
                 type="button"
@@ -459,7 +459,7 @@ export function PagesManagerDialog({
                 disabled={i === pages.length - 1}
                 onClick={() => void movePage(p.id, i + 1)}
               >
-                ↓
+                <ArrowDown size={15} aria-hidden />
               </button>
               <button
                 type="button"

@@ -38,11 +38,23 @@
   --glass-a-1: 0.66;
   --glass-a-2: 0.62;
   --glass-a-3: 0.56;
+  --glass-a-elev: 0.9; /* raised thumbs/segments sit on near-opaque glass-1 */
+
+  /* Neutral overlays / dark chrome (as channels, alpha at use site) */
+  --wallpaper-fallback: #101216; /* behind the wallpaper while it loads */
+  --overlay: 8 10 14; /* full-screen scrim channel (modal/search/folder veils) */
+  --badge-dark: 38 42 50; /* remove/pin badge chip channel */
+  --badge-dark-alpha: 0.92;
+
+  /* Liquid-Glass saturation. Surfaces declare their own tuned default via
+     `saturate(var(--glass-sat, N))`; the Appearance settings (#29) may set a
+     single --glass-sat on :root to override every surface uniformly. */
 
   --border: 0 0 0 / 0.1; /* placeholder, real: use --stroke below */
   --stroke-1: 20 22 27;
   --stroke-alpha-1: 0.1;
   --stroke-alpha-2: 0.06;
+  --stroke-alpha-3: 0.22; /* control tracks (toggle/switch rails) */
   --stroke-hairline: 255 255 255;
 
   /* ---- Scrim used to guarantee chrome legibility over wallpaper ---- */
@@ -56,6 +68,12 @@
   --shadow-4: 0 28px 80px rgb(0 0 0 / 0.32), 0 8px 24px rgb(0 0 0 / 0.16);
   --shadow-inset-1: inset 0 1px 0 rgb(255 255 255 / 0.6);
 
+  /* Shared recipes (replaces per-surface literals) */
+  --shadow-accent: 0 1px 2px rgb(0 0 0 / 0.18); /* lift under accent/colored chips */
+  --shadow-glyph: inset 0 1px 0 rgb(255 255 255 / 0.18),
+    0 2px 6px rgb(0 0 0 / 0.14); /* raised glyph tiles (squircle/logo chips) */
+  --focus-ring: 0 0 0 3px hsl(var(--accent-h) var(--accent-s) var(--accent-l) / 0.22);
+
   /* ---- Radii ---- */
   --r-xs: 6px;
   --r-sm: 10px;
@@ -64,6 +82,7 @@
   --r-xl: 28px;
   --r-2xl: 40px;
   --r-pill: 999px;
+  --r-squircle: 24%; /* app-icon tile corner (DESIGN.md "Icon tiles") */
 
   /* ---- Typography ---- */
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto,
@@ -84,6 +103,13 @@
   --lh-normal: 1.55;
   --tracking-tight: -0.011em;
   --tracking-tighter: -0.022em;
+  --tracking-wide: 0.05em; /* micro-labels / uppercase section titles */
+
+  /* Font weight scale (single source; maps to system faces) */
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
 
   /* ---- Spacing scale ---- */
   --sp-1: 4px;
@@ -101,6 +127,13 @@
   --menu-h: 46px;
   --dock-h: 76px;
   --dock-pad: 10px;
+
+  /* Control heights (single source; modules reference these, never px) */
+  --ctrl-h-sm: 28px; /* small buttons, chips */
+  --ctrl-h: 34px; /* default buttons / icon buttons */
+  --ctrl-h-lg: 36px; /* mini-app toolbar controls */
+  --field-h: 38px; /* text inputs, selects */
+  --touch-min: 40px; /* minimum interactive hit area */
   --home-grid-cols: 4;
   --grid-gap: 20px;
   --safe-top: env(safe-area-inset-top, 0px);

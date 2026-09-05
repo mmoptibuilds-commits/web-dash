@@ -17,8 +17,8 @@
   background: rgb(var(--glass-2) / var(--glass-a-2));
   border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
   box-shadow: var(--shadow-4), var(--shadow-inset-1);
-  -webkit-backdrop-filter: blur(var(--blur-md)) saturate(1.6);
-  backdrop-filter: blur(var(--blur-md)) saturate(1.6);
+  -webkit-backdrop-filter: blur(var(--blur-md)) saturate(var(--glass-sat, 1.6));
+  backdrop-filter: blur(var(--blur-md)) saturate(var(--glass-sat, 1.6));
   overflow: hidden;
   transition: box-shadow var(--dur-base) var(--ease-out);
 }
@@ -35,7 +35,7 @@
   padding: 0 var(--sp-3);
   user-select: none;
   cursor: default;
-  border-bottom: 1px solid rgb(var(--stroke-1) / var(--stroke-alpha-2));
+  border-bottom: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
 }
 
 .traffic {

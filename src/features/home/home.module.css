@@ -51,11 +51,11 @@
   border: 0;
   border-radius: var(--r-pill);
   background: rgb(20 22 28 / 0.34);
-  -webkit-backdrop-filter: blur(var(--blur-xs)) saturate(1.3);
-  backdrop-filter: blur(var(--blur-xs)) saturate(1.3);
+  -webkit-backdrop-filter: blur(var(--blur-xs)) saturate(var(--glass-sat, 1.3));
+  backdrop-filter: blur(var(--blur-xs)) saturate(var(--glass-sat, 1.3));
   color: #fff;
   font-size: var(--fs-sm);
-  font-weight: 620;
+  font-weight: var(--fw-semibold);
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
   cursor: pointer;
 }
@@ -202,7 +202,7 @@
   display: grid;
   place-items: center;
   flex: none;
-  border-radius: 24%;
+  border-radius: var(--r-squircle);
   transition: transform var(--dur-base) var(--ease-spring);
   filter: drop-shadow(0 4px 8px rgb(0 0 0 / 0.18));
 }
@@ -258,11 +258,11 @@
   padding: 3px 9px;
   border-radius: var(--r-pill);
   background: rgb(var(--glass-1) / 0.46);
-  -webkit-backdrop-filter: blur(var(--blur-xs)) saturate(1.4);
-  backdrop-filter: blur(var(--blur-xs)) saturate(1.4);
+  -webkit-backdrop-filter: blur(var(--blur-xs)) saturate(var(--glass-sat, 1.4));
+  backdrop-filter: blur(var(--blur-xs)) saturate(var(--glass-sat, 1.4));
   color: rgb(var(--ink-1));
   font-size: var(--fs-xs);
-  font-weight: 540;
+  font-weight: var(--fw-medium);
   line-height: 1.25;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -310,7 +310,7 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: rgb(38 42 50 / 0.92);
+  background: rgb(var(--badge-dark) / var(--badge-dark-alpha));
   color: #fff;
   box-shadow: var(--shadow-1);
   cursor: pointer;
@@ -343,8 +343,8 @@
   border-radius: var(--r-xs);
   background: transparent;
   color: rgb(var(--ink-2));
-  font-size: 10px;
-  font-weight: 700;
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-bold);
   cursor: pointer;
 }
 .resizeChip:hover {
@@ -400,7 +400,7 @@
   inset: -3px;
   z-index: 6;
   border-radius: calc(var(--r-lg) + 3px);
-  border: 1.5px solid rgb(var(--accent-h) var(--accent-s) var(--accent-l) / 0.65);
+  border: 1.5px solid hsl(var(--accent-h) var(--accent-s) var(--accent-l) / 0.65);
   box-shadow: 0 0 0 1px rgb(255 255 255 / 0.35);
   pointer-events: none;
   opacity: 0;
@@ -445,7 +445,7 @@
   position: absolute;
   z-index: 1000000; /* above every tile z — canvas is its own stacking context */
   pointer-events: none;
-  background: rgb(var(--accent-h) var(--accent-s) var(--accent-l) / 0.85);
+  background: hsl(var(--accent-h) var(--accent-s) var(--accent-l) / 0.85);
   box-shadow: 0 0 0 1px rgb(255 255 255 / 0.55);
 }
 .guideV {
@@ -466,7 +466,7 @@
   border-radius: var(--r-lg);
 }
 .freeRingOn ~ .widgetHost {
-  box-shadow: inset 0 0 0 1px rgb(var(--accent-h) var(--accent-s) var(--accent-l) / 0.35);
+  box-shadow: inset 0 0 0 1px hsl(var(--accent-h) var(--accent-s) var(--accent-l) / 0.35);
 }
 
 
@@ -503,8 +503,8 @@
   background: rgb(var(--glass-1) / var(--glass-a-1));
   border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
   box-shadow: var(--shadow-3), var(--shadow-inset-1);
-  -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(1.6);
-  backdrop-filter: blur(var(--blur-sm)) saturate(1.6);
+  -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-sat, 1.6));
+  backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-sat, 1.6));
 }
 
 /* ============================================================
@@ -513,9 +513,9 @@
 
 .fieldLabel {
   font-size: var(--fs-2xs);
-  font-weight: 650;
+  font-weight: var(--fw-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--tracking-wide);
   color: rgb(var(--ink-3));
 }
 
@@ -550,7 +550,7 @@
 }
 .segOn {
   background: var(--accent-soft);
-  border-color: rgb(var(--accent-h) var(--accent-s) var(--accent-l) / 0.4);
+  border-color: hsl(var(--accent-h) var(--accent-s) var(--accent-l) / 0.4);
   color: var(--accent);
 }
 
@@ -657,7 +657,7 @@
   flex-direction: column;
 }
 .widgetPickName {
-  font-weight: 640;
+  font-weight: var(--fw-semibold);
 }
 .widgetPickDesc {
   font-size: var(--fs-xs);
@@ -682,7 +682,7 @@
   border: 1px solid transparent;
 }
 .pageRowActive {
-  border-color: rgb(var(--accent-h) var(--accent-s) var(--accent-l) / 0.45);
+  border-color: hsl(var(--accent-h) var(--accent-s) var(--accent-l) / 0.45);
   background: var(--accent-soft);
 }
 .pageSel {
@@ -743,9 +743,9 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-modal);
-  background: rgb(8 10 14 / 0.42);
-  -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(1.2);
-  backdrop-filter: blur(var(--blur-sm)) saturate(1.2);
+  background: rgb(var(--overlay) / 0.42);
+  -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-sat, 1.2));
+  backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-sat, 1.2));
   overflow-y: auto;
 }
 
@@ -799,7 +799,7 @@
   flex-direction: column;
   min-width: 0;
   font-size: var(--fs-xl);
-  font-weight: 720;
+  font-weight: var(--fw-bold);
   letter-spacing: var(--tracking-tight);
   color: rgb(var(--ink-1));
 }
@@ -825,7 +825,7 @@
   background: rgb(var(--glass-1));
   color: rgb(var(--ink-1));
   font-size: var(--fs-lg);
-  font-weight: 650;
+  font-weight: var(--fw-semibold);
   padding: var(--sp-1) var(--sp-2);
   box-shadow: 0 0 0 1px var(--accent);
 }
@@ -869,7 +869,7 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: rgb(38 42 50 / 0.9);
+  background: rgb(var(--badge-dark) / var(--badge-dark-alpha));
   color: #fff;
   opacity: 0;
   pointer-events: none; /* invisible = not clickable, until revealed */
@@ -920,21 +920,21 @@
     text-shadow: none;
   }
 }
-::global(:root[data-theme='light']) .navBtn {
+:global(:root[data-theme='light']) .navBtn {
   color: rgb(15 17 22 / 0.78);
   text-shadow: none;
 }
-::global(:root[data-theme='light']) .navBtn:hover:not(:disabled) {
+:global(:root[data-theme='light']) .navBtn:hover:not(:disabled) {
   background: rgb(15 17 22 / 0.1);
 }
-::global(:root[data-theme='light']) .dot::after {
+:global(:root[data-theme='light']) .dot::after {
   background: rgb(15 17 22 / 0.38);
   box-shadow: 0 0 0 1px rgb(255 255 255 / 0.5);
 }
-::global(:root[data-theme='light']) .dotOn::after {
+:global(:root[data-theme='light']) .dotOn::after {
   background: rgb(15 17 22 / 0.85);
 }
-::global(:root[data-theme='light']) .emptyPage {
+:global(:root[data-theme='light']) .emptyPage {
   color: rgb(15 17 22 / 0.85);
   text-shadow: none;
 }

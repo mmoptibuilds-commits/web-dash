@@ -6,6 +6,65 @@ task list; this file records what changed, evidence, and open follow-ups.
 
 Branch: `build/v1-one-shot` (V2 continues on top of the V1 one-shot build).
 
+## 2 — Design tokens + typography + icon + surface normalization (done)
+
+Centralized the surface language and removed the "AI-generated" look via
+restraint. New recipes live in `styles/tokens.css` (single source of truth);
+component CSS-module files consume them instead of hand-rolled literals.
+
+### What changed
+- **Token recipes added** (`styles/tokens.css`): `--r-squircle: 24%`,
+  `--tracking-wide: 0.05em`, full `--fw-*` weight scale
+  (medium/semibold/bold), control heights `--ctrl-h-sm/-/lg` + `--field-h`,
+  `--touch-min`, `--stroke-alpha-3`, `--glass-a-elev`, `--wallpaper-fallback`,
+  `--overlay`, `--badge-dark`/`--badge-dark-alpha`, plus composable shadow /
+  focus recipes `--shadow-accent`, `--shadow-glyph`, `--focus-ring`.
+- **Typography normalized** — all `font-weight` literals off the declared scale
+  (520/540/550/560/580/620/640/650/680/720…) remapped to the nearest token face
+  (ties → lighter); literal `letter-spacing: 0.05em` → `--tracking-wide`;
+  `font-size` edge literals (10px) → scale token. Swept across bookmarks,
+  search, builtins, menubar, dock, Modal, calendar, dashboard, settings, notes,
+  tasks, home, Glyph.
+- **Icons through lucide-react only** — migrated the 3 residual unicode glyphs
+  (Control-Center row chevron `›`, Pages reorder `↑`/`↓`) to
+  `<ChevronRight/>` / `<ArrowUp/>` / `<ArrowDown/>` so every icon shares the
+  consistent 24-grid geometry. No new "shared Icon component" abstraction was
+  added (V1 scope forbids it) — lucide already provides the single geometry.
+- **Surface normalization** — restrained radius hierarchy (squircle folders use
+  `--r-squircle`, no new pill/radius literals); borders/separators preferred
+  over heavy shadows (`--stroke-*` tokens); backdrop glass centralized with
+  `saturate(var(--glass-sat, N))` on BOTH `-webkit-backdrop-filter` and
+  `backdrop-filter` lines so #29's single appearance slider can drive every
+  glass surface; delete/edit chips + edit-mode folder overlay repainted from
+  hard black to `rgb(var(--badge-dark)/…)` and `rgb(var(--overlay)/…)`;
+  `::global(...)` typos corrected to `:global(...)`.
+- **Fixed a latent accent-color composition bug (visual, app-wide)** — accent
+  alpha surfaces were composed `rgb(var(--accent)/α)`, which is **invalid at
+  computed-value time** (declaration dropped → transparent) or, in the
+  h-s-l-in-rgb form, **rendered teal**. All 17 sites across 8 files now compose
+  `hsl(var(--accent-h) var(--accent-s) var(--accent-l)/α)`. This restored every
+  accent-soft background, focus ring, guide line and segmented-control "on"
+  border that silently never rendered (and removed ~6 teal accents). Verified
+  empirically in Chromium; recipe documented in project memory.
+
+### Evidence
+- `npm run check` green (lint + typecheck + unit tests + production build).
+- Functional E2E: **41 passed / 7 skipped / 0 failed** (desktop + mobile).
+- 13-viewport capture to `.shots/v2-tokens/` (26 screenshots, Home + edit-mode
+  add-to-dock, 1920→320 × desktop+mobile): **0 console errors, overflowX = 0
+  everywhere**. Pixel-level review not possible in this harness (Read cannot
+  render images on this model) — geometry asserted programmatically instead.
+- Consistency greps clean: no off-scale `font-weight`, no literal
+  `saturate(N)`, no `rgb(var(--accent`, no `::global(`, no literal
+  `letter-spacing: 0.0X` across `src/`.
+
+### Follow-ups
+- **Appearance/glass presets (§29)** builds on this: one `--glass-sat` /
+  `--glass-blur` variable driven by a user setting, with live preview in
+  Settings, now that every surface reads `var(--glass-sat)`.
+- **Wallpaper contrast (#31 safe areas / #29)** — `--wallpaper-fallback` added
+  so an empty/errored wallpaper keeps text legible; confirm on mobile.
+
 ## 1 — Freeform widget canvas (done)
 
 ### What changed

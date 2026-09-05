@@ -70,12 +70,3 @@
 .anim-slide-up {
   animation: slide-up var(--dur-slow) var(--ease-in-out) both;
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .anim-rise,
-  .anim-pop,
-  .anim-fade,
-  .anim-slide-up {
-    animation-duration: 0.001ms;
-  }
-}

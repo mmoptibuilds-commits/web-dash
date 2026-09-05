@@ -6,9 +6,9 @@
   justify-content: center;
   align-items: flex-start;
   padding: calc(var(--menu-h) + var(--safe-top) + 14vh) var(--sp-4) 0;
-  background: rgb(8 10 14 / 0.32);
-  -webkit-backdrop-filter: blur(var(--blur-xs)) saturate(1.1);
-  backdrop-filter: blur(var(--blur-xs)) saturate(1.1);
+  background: rgb(var(--overlay) / 0.32);
+  -webkit-backdrop-filter: blur(var(--blur-xs)) saturate(var(--glass-sat, 1.1));
+  backdrop-filter: blur(var(--blur-xs)) saturate(var(--glass-sat, 1.1));
 }
 
 .panel {
@@ -17,8 +17,8 @@
   background: rgb(var(--glass-1) / var(--glass-a-1));
   border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
   box-shadow: var(--shadow-4), var(--shadow-inset-1);
-  -webkit-backdrop-filter: blur(var(--blur-md)) saturate(1.6);
-  backdrop-filter: blur(var(--blur-md)) saturate(1.6);
+  -webkit-backdrop-filter: blur(var(--blur-md)) saturate(var(--glass-sat, 1.6));
+  backdrop-filter: blur(var(--blur-md)) saturate(var(--glass-sat, 1.6));
   overflow: hidden;
 }
 
@@ -42,7 +42,7 @@
   background: transparent;
   color: rgb(var(--ink-1));
   font-size: var(--fs-lg);
-  font-weight: 520;
+  font-weight: var(--fw-medium);
 }
 .input::placeholder {
   color: rgb(var(--ink-3));

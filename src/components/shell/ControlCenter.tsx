@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Maximize2, Monitor, Moon, Settings, Sun, X } from 'lucide-react'
+import { ChevronRight, Maximize2, Monitor, Moon, Settings, Sun, X } from 'lucide-react'
 import { launchApp } from '@/state/nav'
 import { useSettings } from '@/hooks/data'
 import { updateSettings } from '@/data/repositories/settings'
@@ -34,7 +34,7 @@ function Row({
         {label}
         {hint && <span className={styles.rowHint}>{hint}</span>}
       </span>
-      <span className={styles.rowChevron}>›</span>
+      <ChevronRight size={16} className={styles.rowChevron} aria-hidden />
     </button>
   )
 }

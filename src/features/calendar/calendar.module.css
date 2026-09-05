@@ -34,7 +34,7 @@
 .navTitle {
   margin: 0 var(--sp-1);
   font-size: var(--fs-xl);
-  font-weight: 640;
+  font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-tighter);
   line-height: var(--lh-tight);
   color: rgb(var(--ink-1));
@@ -49,7 +49,7 @@
   align-items: center;
   justify-content: center;
   width: 36px;
-  height: 36px;
+  height: var(--ctrl-h-lg);
   border-radius: var(--r-pill);
   color: rgb(var(--ink-2));
   flex: none;
@@ -77,7 +77,7 @@
   background: rgb(var(--glass-1) / var(--glass-a-1));
   box-shadow: var(--shadow-1), var(--shadow-inset-1);
   font-size: var(--fs-xs);
-  font-weight: 620;
+  font-weight: var(--fw-semibold);
   color: rgb(var(--ink-1));
   transition:
     background var(--dur-fast) var(--ease-out),
@@ -115,8 +115,8 @@
   line-height: 20px;
   text-align: center;
   font-size: var(--fs-2xs);
-  font-weight: 620;
-  letter-spacing: 0.07em;
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: rgb(var(--ink-3));
 }
@@ -153,8 +153,8 @@
 .cellToday {
   background: var(--accent);
   color: var(--on-accent);
-  font-weight: 680;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.18);
+  font-weight: var(--fw-bold);
+  box-shadow: var(--shadow-accent);
 }
 
 /* Slightly more compact in short windows so the whole month stays visible. */
@@ -180,14 +180,14 @@
   background: rgb(var(--glass-2) / var(--glass-a-2));
   border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
   box-shadow: var(--shadow-1), var(--shadow-inset-1);
-  -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(1.4);
-  backdrop-filter: blur(var(--blur-sm)) saturate(1.4);
+  -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-sat, 1.4));
+  backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-sat, 1.4));
   color: rgb(var(--ink-1));
 }
 
 .wTitle {
   font-size: var(--fs-sm);
-  font-weight: 640;
+  font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-tight);
   color: rgb(var(--ink-1));
   padding: 0 var(--sp-1);
@@ -203,9 +203,9 @@
 
 .wWeekday {
   text-align: center;
-  font-size: 9px;
-  font-weight: 620;
-  letter-spacing: 0.04em;
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: rgb(var(--ink-3));
   height: 16px;
@@ -243,5 +243,5 @@
   background: var(--accent);
   color: var(--on-accent);
   font-weight: 700;
-  box-shadow: 0 1px 2px rgb(0 0 0 / 0.16);
+  box-shadow: var(--shadow-accent);
 }

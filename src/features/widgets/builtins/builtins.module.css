@@ -16,8 +16,8 @@
   background: rgb(var(--glass-2) / var(--glass-a-2));
   border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
   box-shadow: var(--shadow-1), var(--shadow-inset-1);
-  -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(1.4);
-  backdrop-filter: blur(var(--blur-sm)) saturate(1.4);
+  -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-sat, 1.4));
+  backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-sat, 1.4));
 }
 
 /* ---------- Clock ---------- */
@@ -33,7 +33,7 @@
 
 .clockTime {
   font-size: calc(11cqw + 10px);
-  font-weight: 640;
+  font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-tighter);
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -42,7 +42,7 @@
 .clockDate {
   display: none;
   font-size: var(--fs-sm);
-  font-weight: 520;
+  font-weight: var(--fw-medium);
   color: rgb(var(--ink-2));
   white-space: nowrap;
   overflow: hidden;
@@ -83,7 +83,7 @@
 .searchBar:focus-within {
   background: rgb(var(--glass-1) / 0.85);
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgb(var(--accent) / 0.22);
+  box-shadow: 0 0 0 3px hsl(var(--accent-h) var(--accent-s) var(--accent-l) / 0.22);
 }
 
 .searchIcon {
@@ -220,7 +220,7 @@
   margin: 0;
   text-align: center;
   font-size: var(--fs-2xs);
-  color: #ffb3a7;
+  color: var(--danger);
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
   pointer-events: none;
 }
@@ -264,7 +264,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: var(--fs-xs);
-  font-weight: 560;
+  font-weight: var(--fw-semibold);
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.5);
 }
 
@@ -293,7 +293,8 @@
   background: rgb(0 0 0 / 0.4);
   padding: 2px 8px;
   border-radius: var(--r-pill);
-  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(var(--blur-xs));
+  backdrop-filter: blur(var(--blur-xs));
   pointer-events: none;
 }
 
@@ -328,7 +329,7 @@
 
 .embedInput:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgb(var(--accent) / 0.22);
+  box-shadow: 0 0 0 3px hsl(var(--accent-h) var(--accent-s) var(--accent-l) / 0.22);
 }
 
 .embedInput::placeholder {

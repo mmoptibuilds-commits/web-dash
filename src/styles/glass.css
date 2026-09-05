@@ -11,8 +11,8 @@
   background: rgb(var(--glass-1) / var(--glass-a-1));
   border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
   box-shadow: var(--shadow-2), var(--shadow-inset-1);
-  -webkit-backdrop-filter: blur(var(--blur-md)) saturate(1.5);
-  backdrop-filter: blur(var(--blur-md)) saturate(1.5);
+  -webkit-backdrop-filter: blur(var(--blur-md)) saturate(var(--glass-sat, 1.5));
+  backdrop-filter: blur(var(--blur-md)) saturate(var(--glass-sat, 1.5));
 }
 
 /* No-backdrop-filter fallback: nudge opacity up so text stays readable. */

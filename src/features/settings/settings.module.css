@@ -60,17 +60,17 @@
 }
 
 .segOption {
-  min-height: 36px;
+  min-height: var(--ctrl-h-lg);
   padding: 0 var(--sp-4);
   border-radius: var(--r-pill);
   font-size: var(--fs-sm);
-  font-weight: 560;
+  font-weight: var(--fw-semibold);
   color: rgb(var(--ink-2));
   letter-spacing: var(--tracking-tight);
 }
 
 .segActive {
-  background: rgb(var(--glass-1) / 0.9);
+  background: rgb(var(--glass-1) / var(--glass-a-elev));
   color: rgb(var(--ink-1));
   box-shadow: var(--shadow-1);
 }
@@ -86,8 +86,8 @@
 .sectionTitle {
   padding-inline: var(--sp-2);
   font-size: var(--fs-xs);
-  font-weight: 620;
-  letter-spacing: 0.05em;
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: rgb(var(--ink-3));
 }
@@ -124,7 +124,7 @@
 
 .settingTitle {
   font-size: var(--fs-md);
-  font-weight: 560;
+  font-weight: var(--fw-semibold);
   color: rgb(var(--ink-1));
 }
 
@@ -154,11 +154,11 @@
   display: inline-flex;
   align-items: center;
   gap: var(--sp-1);
-  min-height: 36px;
+  min-height: var(--ctrl-h-lg);
   padding: 0 var(--sp-3);
   border-radius: var(--r-pill);
   font-size: var(--fs-sm);
-  font-weight: 520;
+  font-weight: var(--fw-medium);
   color: rgb(var(--ink-2));
   background: rgb(var(--glass-3) / 0.7);
   border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
@@ -190,11 +190,11 @@
   position: relative;
   flex: none;
   width: 52px;
-  height: 36px;
+  height: var(--ctrl-h-lg);
   border-radius: var(--r-pill);
   /* Neutral track that keeps the white knob visible in both themes (mirrors
      the Control Center toggle) instead of a near-white light-theme fill. */
-  background: rgb(var(--stroke-1) / 0.22);
+  background: rgb(var(--stroke-1) / var(--stroke-alpha-3));
   border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
   box-shadow: var(--shadow-inset-1);
   transition: background var(--dur-fast) var(--ease-out);
@@ -280,11 +280,11 @@
   display: inline-flex;
   align-items: center;
   gap: var(--sp-2);
-  min-height: 36px;
+  min-height: var(--ctrl-h-lg);
   padding: 0 var(--sp-4);
   border-radius: var(--r-pill);
   font-size: var(--fs-sm);
-  font-weight: 560;
+  font-weight: var(--fw-semibold);
   color: rgb(var(--ink-1));
   background: rgb(var(--glass-3) / 0.7);
   border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
@@ -390,7 +390,7 @@
   display: grid;
   place-items: center;
   width: 36px;
-  height: 36px;
+  height: var(--ctrl-h-lg);
   border-radius: var(--r-sm);
   color: rgb(var(--ink-3));
 }
@@ -414,11 +414,11 @@
   align-items: center;
   justify-content: center;
   gap: var(--sp-2);
-  min-height: 36px;
+  min-height: var(--ctrl-h-lg);
   padding: 0 var(--sp-4);
   border-radius: var(--r-pill);
   font-size: var(--fs-sm);
-  font-weight: 560;
+  font-weight: var(--fw-semibold);
   color: rgb(var(--ink-1));
   background: rgb(var(--glass-3) / 0.7);
   border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
@@ -438,11 +438,11 @@
   align-items: center;
   justify-content: center;
   gap: var(--sp-2);
-  min-height: 36px;
+  min-height: var(--ctrl-h-lg);
   padding: 0 var(--sp-4);
   border-radius: var(--r-pill);
   font-size: var(--fs-sm);
-  font-weight: 560;
+  font-weight: var(--fw-semibold);
   color: #fff;
   background: var(--danger);
   border: 1px solid transparent;
@@ -496,7 +496,7 @@
 
 .infoValue {
   font-size: var(--fs-sm);
-  font-weight: 560;
+  font-weight: var(--fw-semibold);
   color: rgb(var(--ink-1));
   text-align: right;
 }
@@ -513,6 +513,6 @@
 .btn:focus-visible,
 .btnDanger:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px hsl(var(--accent-h) var(--accent-s) var(--accent-l) / 0.35);
+  box-shadow: var(--focus-ring);
 }
 

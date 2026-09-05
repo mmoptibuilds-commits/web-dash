@@ -3,7 +3,7 @@
   inset: 0;
   z-index: var(--z-wallpaper);
   overflow: hidden;
-  background: #0b0d12;
+  background: var(--wallpaper-fallback);
 }
 
 .paint {

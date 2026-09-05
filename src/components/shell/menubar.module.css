@@ -13,8 +13,8 @@
   align-items: center;
   gap: var(--sp-2);
   background: rgb(var(--glass-1) / var(--glass-a-1));
-  -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(1.6);
-  backdrop-filter: blur(var(--blur-sm)) saturate(1.6);
+  -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-sat, 1.6));
+  backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-sat, 1.6));
   border-bottom: 1px solid rgb(var(--stroke-1) / var(--stroke-alpha-1));
   user-select: none;
 }
@@ -64,7 +64,7 @@
 
 .brandText {
   font-size: var(--fs-sm);
-  font-weight: 680;
+  font-weight: var(--fw-bold);
   letter-spacing: var(--tracking-tight);
 }
 
@@ -87,12 +87,12 @@
   background: transparent;
   color: rgb(var(--ink-2));
   font-size: var(--fs-sm);
-  font-weight: 560;
+  font-weight: var(--fw-semibold);
   cursor: pointer;
   transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
 }
 .switchBtnActive {
-  background: rgb(var(--glass-1) / 0.9);
+  background: rgb(var(--glass-1) / var(--glass-a-elev));
   color: rgb(var(--ink-1));
   box-shadow: var(--shadow-1);
 }
@@ -115,13 +115,13 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  line-height: 1.15;
+  line-height: var(--lh-tight);
   padding: 0 var(--sp-1);
   color: rgb(var(--ink-1));
 }
 .clockTime {
   font-size: var(--fs-sm);
-  font-weight: 620;
+  font-weight: var(--fw-semibold);
   font-variant-numeric: tabular-nums;
 }
 .clockDate {
@@ -151,8 +151,8 @@
   background: rgb(var(--glass-1) / var(--glass-a-1));
   border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
   box-shadow: var(--shadow-4), var(--shadow-inset-1);
-  -webkit-backdrop-filter: blur(var(--blur-md)) saturate(1.6);
-  backdrop-filter: blur(var(--blur-md)) saturate(1.6);
+  -webkit-backdrop-filter: blur(var(--blur-md)) saturate(var(--glass-sat, 1.6));
+  backdrop-filter: blur(var(--blur-md)) saturate(var(--glass-sat, 1.6));
 }
 
 .ccHead {
@@ -162,15 +162,15 @@
 }
 .ccTitle {
   font-size: var(--fs-md);
-  font-weight: 650;
+  font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-tight);
 }
 
 .label {
   font-size: var(--fs-2xs);
-  font-weight: 650;
+  font-weight: var(--fw-semibold);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-wide);
   color: rgb(var(--ink-3));
   margin-top: var(--sp-1);
 }
@@ -195,11 +195,11 @@
   background: transparent;
   color: rgb(var(--ink-2));
   font-size: var(--fs-sm);
-  font-weight: 560;
+  font-weight: var(--fw-semibold);
   cursor: pointer;
 }
 .segmentOn {
-  background: rgb(var(--glass-1) / 0.9);
+  background: rgb(var(--glass-1) / var(--glass-a-elev));
   color: rgb(var(--ink-1));
   box-shadow: var(--shadow-1);
 }
@@ -261,7 +261,7 @@
   width: 38px;
   height: 24px;
   border-radius: var(--r-pill);
-  background: rgb(var(--stroke-1) / 0.22);
+  background: rgb(var(--stroke-1) / var(--stroke-alpha-3));
   transition: background var(--dur-fast) var(--ease-out);
 }
 .toggleOn {
@@ -275,7 +275,7 @@
   height: 18px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+  box-shadow: var(--shadow-1);
   transition: transform var(--dur-base) var(--ease-spring);
 }
 .toggleOn .toggleKnob {
