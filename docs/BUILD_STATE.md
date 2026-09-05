@@ -5,8 +5,8 @@
 spec (`Web-dashboard-One-Shot-Claude-Code-Prompt.md`).
 
 ## Current phase
-Phase 4 (functional E2E) committed. Next: Phase 5 — responsive + visual QA
-(viewport sweeps + screenshots), then harsh critique, engineering review,
+Phase 5 (responsive + visual QA) committed. Next: Phase 6 — harsh critique
+loop (incl. an adversarial DOM/layout audit), then engineering review and
 release readiness.
 
 ## Completed milestones (git)
@@ -27,10 +27,17 @@ release readiness.
   embed); interim panel removed. PWA icon set generated (flame mark,
   192/512/maskable-512/apple-180/favicon). `npm run check` green:
   lint 0, typecheck 0, 12 files / 45 tests, build + PWA (15 precache entries).
-- Phase 4 E2E committed (`<pending hash>`): Playwright config (msedge channel,
+- Phase 4 E2E committed (`f87e1e6`): Playwright config (msedge channel,
   desktop 1440×900 + mobile 390×844 projects, runs against `vite preview` so the
   PWA/SW is exercised), shared helpers, 8 spec files covering all 16 spec flows
   incl. reload-persistence and PWA manifest/offline. `e2e`/`test:e2e` scripts.
+- Phase 5 committed (`<pending hash>`): responsive width-sweep spec
+  (`e2e/responsive.spec.ts`) asserting no horizontal overflow and in-viewport
+  chrome at 360/390/768/1024/1280/1440, plus platform-correct window vs sheet
+  surfaces. Fixed a latent shell bug it caught: window traffic-light buttons
+  could be swallowed by the titlebar drag/pointer-capture handler (buttons now
+  exempt drag initiation). Screenshot sweep captured to `.shots/` (gitignored)
+  for human visual review across 6 widths × 8 states.
 
 ## Lane worktrees
 - `D:\web-dash-lanes\{notes-tasks,calendar-bookmarks,settings}` —
@@ -39,11 +46,15 @@ release readiness.
 
 ## Verification status
 - lint: PASS (0) · typecheck: PASS · test: 45 PASS · build: PASS (+PWA)
-- Playwright E2E (Phase 4): PASS — desktop 18/18, mobile 16/16 + 2 desktop-only
-  skips (drag-reorder #7, JSON import/export #16). PWA flows 14/15 pass on both
-  projects. Screenshots captured as test artifacts on failure only.
-- Not yet run: responsive + visual QA sweep, harsh critique, engineering
-  review, release-readiness gates.
+- Playwright E2E (Phase 4): PASS — desktop 19/19, mobile 16/16 + 3 skips
+  (drag-reorder #7, JSON import/export #16, and the responsive width sweep which
+  runs once on desktop). PWA flows 14/15 pass on both projects.
+- Responsive sweep (Phase 5): PASS — no horizontal overflow at any width/state;
+  chrome inside viewport; window↔sheet surfaces follow the <1024px breakpoint.
+- Screenshots: 48 frames (6 viewports × 8 states) in `.shots/`. NOTE: this
+  build session's model has no image input, so pixel-level aesthetics were not
+  judged by eye here — frames are saved for the human acceptance gate; layout
+  integrity was verified by the automated DOM/geometry checks above.
 
 ## Known integration notes
 - Dexie schema indexes added to v1 (unreleased): `layoutItems.refId`,
@@ -58,10 +69,14 @@ release readiness.
   phone widths the menu-bar Home/Dashboard tabs are hidden — mobile switches
   mode via the brand (Home) and the dock "Dashboard" launcher. Fresh IndexedDB
   per test (new context) seeds the starter layout via `ensureBootData`.
+- Desktop window traffic lights sit inside the titlebar drag handler; presses
+  that start on a button are exempt from drag/pointer-capture so Close/Maximize
+  clicks always land (WindowsHost).
 
 ## Next action
-1. Phase 5: responsive + visual QA — viewport sweeps at key widths, capture
-   screenshots (desktop + mobile), fix visual defects.
-2. Phase 6–8: harsh critique loop, engineering review (lint/typecheck/tests/
-   build, code/security/simplification review, secrets check), release
-   readiness (PWA manifest/SW verify, README, CHANGELOG, QA checklist).
+1. Phase 6: harsh critique loop (≤3 rounds) — functionality + visual/appearance
+   critic + UI copy/contrast; adversarial DOM audit where no vision is
+   available. Fix every confirmed defect.
+2. Phase 7–8: engineering review (lint/typecheck/tests/build, code/security/
+   simplification review, dead-code removal, secrets check), release readiness
+   (PWA manifest/SW verify, README, CHANGELOG, QA checklist finalize).

@@ -54,6 +54,10 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
 
   const onTitleDown = (e: ReactPointerEvent<HTMLElement>) => {
     if (win.maximized) return
+    // The traffic-light buttons live inside the titlebar; never start a drag
+    // (or capture the pointer) for a press that began on a button, or the
+    // button's own click gets retargeted and swallowed.
+    if ((e.target as HTMLElement).closest('button')) return
     focusApp(appId)
     const el = e.currentTarget
     try {
@@ -108,7 +112,10 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
         onPointerDown={onTitleDown}
         onPointerMove={onTitleMove}
         onPointerUp={endDrag}
-        onDoubleClick={() => toggleMaximize(appId)}
+        onDoubleClick={(e) => {
+          if ((e.target as HTMLElement).closest('button')) return
+          toggleMaximize(appId)
+        }}
       >
         <div className={styles.traffic}>
           <button

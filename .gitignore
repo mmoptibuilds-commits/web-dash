@@ -43,3 +43,5 @@ coverage/
 
 # Local git worktrees used for parallel lanes (coordinator-only)
 .worktrees/
+.shots/
+scripts/capture.mjs
