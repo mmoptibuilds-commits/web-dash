@@ -1,0 +1,59 @@
+/* ============================================================
+   Hearth — Liquid Glass Lite.
+   Translucent, blurred, subtly saturated surfaces with fine
+   borders and layered soft shadows. Each class also works when
+   backdrop-filter is unsupported: fills simply turn more opaque
+   (see html[data-effects='reduced'] and the @supports rules).
+   ============================================================ */
+
+/* A blurred, translucent panel. Elevation sets fill opacity + shadow. */
+.glass {
+  background: rgb(var(--glass-1) / var(--glass-a-1));
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  box-shadow: var(--shadow-2), var(--shadow-inset-1);
+  -webkit-backdrop-filter: blur(var(--blur-md)) saturate(1.5);
+  backdrop-filter: blur(var(--blur-md)) saturate(1.5);
+}
+
+.glass-e2 {
+  background: rgb(var(--glass-2) / var(--glass-a-2));
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
+  box-shadow: var(--shadow-1), var(--shadow-inset-1);
+  -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(1.45);
+  backdrop-filter: blur(var(--blur-sm)) saturate(1.45);
+}
+
+.glass-raise {
+  box-shadow: var(--shadow-3), var(--shadow-inset-1);
+}
+
+/* Translucent fill WITHOUT blur (lightweight tiles, dividers). */
+.glass-plain {
+  background: rgb(var(--glass-1) / var(--glass-a-1));
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
+  box-shadow: var(--shadow-1), var(--shadow-inset-1);
+}
+
+/* No-backdrop-filter fallback: nudge opacity up so text stays readable. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background: rgb(var(--glass-1) / 0.94);
+  }
+  .glass-e2 {
+    background: rgb(var(--glass-2) / 0.94);
+  }
+}
+
+/* Visual scrim layers used to keep chrome legible over wallpaper. */
+.scrim-veil {
+  background: radial-gradient(
+    120% 90% at 50% 0%,
+    rgb(var(--scrim-top) / var(--scrim-alpha-top)),
+    transparent 55%
+  );
+}
+
+/* Subtle 1px inner top highlight used on glass edges. */
+.hairline-top {
+  box-shadow: inset 0 1px 0 rgb(var(--stroke-hairline) / 0.4);
+}

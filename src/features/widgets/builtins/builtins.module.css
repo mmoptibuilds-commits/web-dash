@@ -1,0 +1,376 @@
+/* Built-in widget visuals. Each widget root is a self-contained glass panel
+   that adapts via container queries, so the same component works as a home
+   tile, a dashboard panel, or a mini-app chunk. */
+.container {
+  container-type: inline-size;
+}
+
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  background: rgb(var(--glass-2) / var(--glass-a-2));
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  box-shadow: var(--shadow-1), var(--shadow-inset-1);
+  -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(1.4);
+  backdrop-filter: blur(var(--blur-sm)) saturate(1.4);
+}
+
+/* ---------- Clock ---------- */
+.clock {
+  composes: panel;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  padding: var(--sp-4);
+  text-align: center;
+  color: rgb(var(--ink-1));
+}
+
+.clockTime {
+  font-size: calc(11cqw + 10px);
+  font-weight: 640;
+  letter-spacing: var(--tracking-tighter);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.clockDate {
+  display: none;
+  font-size: var(--fs-sm);
+  font-weight: 520;
+  color: rgb(var(--ink-2));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+@container (min-width: 280px) {
+  .clockDate {
+    display: block;
+  }
+}
+
+/* ---------- Search ---------- */
+.search {
+  composes: panel;
+  padding: var(--sp-4);
+  gap: var(--sp-2);
+  justify-content: center;
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-3);
+  height: 44px;
+  border-radius: var(--r-pill);
+  background: rgb(var(--glass-1) / 0.6);
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  box-shadow: var(--shadow-inset-1);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.searchBar:focus-within {
+  background: rgb(var(--glass-1) / 0.85);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgb(var(--accent) / 0.22);
+}
+
+.searchIcon {
+  color: rgb(var(--ink-3));
+  flex: none;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: var(--fs-md);
+  color: rgb(var(--ink-1));
+}
+
+.searchInput::placeholder {
+  color: rgb(var(--ink-3));
+}
+
+.searchGo {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-pill);
+  display: grid;
+  place-items: center;
+  color: rgb(var(--ink-3));
+}
+
+.searchGo:hover {
+  background: rgb(var(--glass-3));
+  color: rgb(var(--ink-1));
+}
+
+.searchHint {
+  font-size: var(--fs-2xs);
+  color: rgb(var(--ink-3));
+  text-align: center;
+  min-height: 1em;
+}
+
+.searchError {
+  color: hsl(4 82% 56%);
+}
+
+.suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.suggestion {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+  color: rgb(var(--ink-2));
+  text-align: left;
+  min-width: 0;
+}
+
+.suggestion:hover,
+.suggestion.isActive {
+  background: rgb(var(--glass-3) / 0.85);
+  color: rgb(var(--ink-1));
+}
+
+.suggestionText {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suggestionMeta {
+  font-size: var(--fs-2xs);
+  color: rgb(var(--ink-3));
+  flex: none;
+}
+
+/* ---------- Photo ---------- */
+.photo {
+  composes: panel;
+}
+
+.photoImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photoEmpty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  color: rgb(var(--ink-3));
+  text-align: center;
+  font-size: var(--fs-sm);
+}
+
+.photoActions {
+  position: absolute;
+  right: var(--sp-2);
+  bottom: var(--sp-2);
+  display: flex;
+  gap: var(--sp-1);
+}
+
+.photoImgOverlay {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 44%;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.38), transparent);
+  pointer-events: none;
+}
+
+.photoErr {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 6px;
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-2xs);
+  color: #ffb3a7;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
+  pointer-events: none;
+}
+
+/* ---------- Embed ---------- */
+.embed {
+  composes: panel;
+}
+
+.embedFrame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #fff;
+}
+
+.embedEmpty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  color: rgb(var(--ink-3));
+  text-align: center;
+}
+
+.embedBar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-top: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
+  font-size: var(--fs-2xs);
+  color: rgb(var(--ink-3));
+  min-height: 34px;
+}
+
+.embedBarText {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.embedTop {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  background: linear-gradient(to bottom, rgb(0 0 0 / 0.55), rgb(0 0 0 / 0) 100%);
+  color: #fff;
+  pointer-events: none;
+}
+
+.embedTop > * {
+  pointer-events: auto;
+}
+
+.embedHost {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  font-weight: 560;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.5);
+}
+
+.embedOpenBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  color: #fff;
+  font-size: var(--fs-2xs);
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: rgb(255 255 255 / 0.18);
+}
+
+.embedOpenBtn:hover {
+  background: rgb(255 255 255 / 0.32);
+}
+
+.embedNote {
+  position: absolute;
+  right: var(--sp-2);
+  bottom: var(--sp-2);
+  z-index: 2;
+  font-size: var(--fs-2xs);
+  color: rgb(255 255 255 / 0.85);
+  background: rgb(0 0 0 / 0.4);
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+}
+
+/* ---------- Embed configure ---------- */
+.embedForm {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+}
+
+.embedFormRow {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.embedInput {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-md);
+  background: rgb(var(--glass-1) / 0.6);
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  color: rgb(var(--ink-1));
+  font-size: var(--fs-sm);
+  outline: none;
+  box-shadow: var(--shadow-inset-1);
+}
+
+.embedInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgb(var(--accent) / 0.22);
+}
+
+.embedInput::placeholder {
+  color: rgb(var(--ink-3));
+}
+
+.embedErr {
+  font-size: var(--fs-2xs);
+  color: hsl(4 82% 56%);
+}
+
+.embedHelp {
+  font-size: var(--fs-2xs);
+  color: rgb(var(--ink-3));
+}
