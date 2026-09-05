@@ -1,0 +1,516 @@
+/* ============================================================
+   Settings mini-app — plain CSS using design tokens only.
+   Fills its parent; owns its own scrolling. No outer chrome.
+   ============================================================ */
+
+.root {
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  color: rgb(var(--ink-1));
+  font-size: var(--fs-md);
+  line-height: var(--lh-snug);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.inner {
+  max-width: 640px;
+  margin-inline: auto;
+  padding: var(--sp-5) var(--sp-5) var(--sp-9);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+}
+
+/* ---------- Button base ---------- */
+
+.chip,
+.segOption,
+.switch,
+.swatch,
+.uploadBtn,
+.uploadItem,
+.iconBtn,
+.btn,
+.btnDanger {
+  font-family: var(--font-sans);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.switch,
+.uploadItem,
+.iconBtn {
+  background: transparent;
+}
+
+/* ---------- Segmented (Simple / Advanced) ---------- */
+
+.segmented {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--r-pill);
+  background: rgb(var(--glass-3) / 0.9);
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  box-shadow: var(--shadow-inset-1);
+}
+
+.segOption {
+  min-height: 36px;
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-sm);
+  font-weight: 560;
+  color: rgb(var(--ink-2));
+  letter-spacing: var(--tracking-tight);
+}
+
+.segActive {
+  background: rgb(var(--glass-1) / 0.9);
+  color: rgb(var(--ink-1));
+  box-shadow: var(--shadow-1);
+}
+
+/* ---------- Sections ---------- */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.sectionTitle {
+  padding-inline: var(--sp-2);
+  font-size: var(--fs-xs);
+  font-weight: 620;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgb(var(--ink-3));
+}
+
+.sectionBody {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-lg);
+  background: rgb(var(--glass-2) / var(--glass-a-2));
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  box-shadow: var(--shadow-inset-1);
+  overflow: hidden;
+}
+
+.sectionBody > * + * {
+  border-top: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+}
+
+/* ---------- Setting rows / fields ---------- */
+
+.settingBlock {
+  padding: var(--sp-3) var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.settingText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.settingTitle {
+  font-size: var(--fs-md);
+  font-weight: 560;
+  color: rgb(var(--ink-1));
+}
+
+.settingDesc {
+  font-size: var(--fs-xs);
+  color: rgb(var(--ink-3));
+  line-height: var(--lh-snug);
+}
+
+.toggleRow {
+  padding: var(--sp-3) var(--sp-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+
+/* ---------- Chips ---------- */
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-height: 36px;
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-sm);
+  font-weight: 520;
+  color: rgb(var(--ink-2));
+  background: rgb(var(--glass-3) / 0.7);
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.chip:hover {
+  background: rgb(var(--glass-3));
+  color: rgb(var(--ink-1));
+}
+
+.chipActive,
+.chipActive:hover {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: transparent;
+}
+
+.chipIcon {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ---------- Switch ---------- */
+
+.switch {
+  position: relative;
+  flex: none;
+  width: 52px;
+  height: 36px;
+  border-radius: var(--r-pill);
+  background: rgb(var(--glass-3));
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  box-shadow: var(--shadow-inset-1);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.switchOn {
+  background: var(--accent);
+  border-color: transparent;
+}
+
+.knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--shadow-1);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.switchOn .knob {
+  transform: translateX(16px);
+}
+
+/* ---------- Wallpaper swatches ---------- */
+
+.swatchGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: var(--sp-2);
+}
+
+.swatch {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  min-height: 52px;
+  border-radius: var(--r-md);
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
+  box-shadow: var(--shadow-inset-1);
+  overflow: hidden;
+}
+
+.swatchActive {
+  box-shadow:
+    0 0 0 2px var(--accent),
+    var(--shadow-inset-1);
+}
+
+.swatchCheck {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.45);
+  color: #fff;
+  box-shadow: var(--shadow-1);
+}
+
+/* ---------- Wallpaper upload + list ---------- */
+
+.hiddenInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.uploadRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.uploadBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 36px;
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-sm);
+  font-weight: 560;
+  color: rgb(var(--ink-1));
+  background: rgb(var(--glass-3) / 0.7);
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  box-shadow: var(--shadow-inset-1);
+}
+
+.uploadBtn:hover {
+  background: rgb(var(--glass-1));
+}
+
+.uploadBtn:disabled {
+  opacity: 0.55;
+}
+
+.uploadedList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--sp-1);
+}
+
+.uploadedList li {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.uploadItem {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1);
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  text-align: left;
+}
+
+.uploadItem:hover {
+  background: rgb(var(--glass-3) / 0.6);
+}
+
+.uploadItemActive {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.uploadThumb {
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: rgb(var(--glass-3));
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+}
+
+.uploadThumb img,
+.uploadThumb video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.activeBadge {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.uploadName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  color: rgb(var(--ink-1));
+}
+
+.emptyHint {
+  font-size: var(--fs-sm);
+  color: rgb(var(--ink-3));
+}
+
+/* ---------- Icon buttons ---------- */
+
+.iconBtn {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-sm);
+  color: rgb(var(--ink-3));
+}
+
+.iconBtn:hover {
+  background: rgb(var(--glass-3));
+  color: rgb(var(--ink-1));
+}
+
+/* ---------- Data buttons + confirmation ---------- */
+
+.buttonRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: 36px;
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-sm);
+  font-weight: 560;
+  color: rgb(var(--ink-1));
+  background: rgb(var(--glass-3) / 0.7);
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  box-shadow: var(--shadow-inset-1);
+}
+
+.btn:hover {
+  background: rgb(var(--glass-1));
+}
+
+.btn:disabled {
+  opacity: 0.55;
+}
+
+.btnDanger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: 36px;
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-sm);
+  font-weight: 560;
+  color: #fff;
+  background: hsl(4 76% 50%);
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-inset-1);
+}
+
+.btnDanger:hover {
+  background: hsl(4 76% 44%);
+}
+
+.confirmBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-md);
+  background: rgb(var(--glass-3) / 0.6);
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+}
+
+.confirmText {
+  font-size: var(--fs-sm);
+  color: rgb(var(--ink-2));
+  line-height: var(--lh-snug);
+}
+
+.statusText {
+  font-size: var(--fs-xs);
+  color: rgb(var(--ink-2));
+}
+
+.errorText {
+  font-size: var(--fs-xs);
+  color: hsl(4 82% 56%);
+}
+
+/* ---------- About ---------- */
+
+.infoRow {
+  padding: var(--sp-3) var(--sp-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+
+.infoKey {
+  font-size: var(--fs-sm);
+  color: rgb(var(--ink-2));
+}
+
+.infoValue {
+  font-size: var(--fs-sm);
+  font-weight: 560;
+  color: rgb(var(--ink-1));
+  text-align: right;
+}
+
+/* ---------- Focus ---------- */
+
+.chip:focus-visible,
+.segOption:focus-visible,
+.switch:focus-visible,
+.swatch:focus-visible,
+.uploadBtn:focus-visible,
+.uploadItem:focus-visible,
+.iconBtn:focus-visible,
+.btn:focus-visible,
+.btnDanger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px hsl(var(--accent-h) var(--accent-s) var(--accent-l) / 0.35);
+}
+
