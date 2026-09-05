@@ -1,5 +1,6 @@
 import {
   Bookmark,
+  Calculator,
   CalendarDays,
   Clock3,
   Image,
@@ -20,6 +21,7 @@ import { NotesWidget } from '@/features/notes'
 import { TasksWidget } from '@/features/tasks'
 import { CalendarWidget } from '@/features/calendar'
 import { BookmarksWidget } from '@/features/bookmarks'
+import { CalculatorWidget } from '@/features/calculator'
 
 export interface WidgetComponentProps {
   instance: WidgetInstance
@@ -38,10 +40,10 @@ export interface WidgetDef {
 }
 
 /**
- * Shared widget registry (coordinator-owned contract). One entry per V1
- * widget type in the specification's built-in list: clock/search core,
- * the four productivity companions beside their mini-app features, and the
- * generic photo/embed widgets.
+ * Shared widget registry (coordinator-owned contract). One entry per widget
+ * type in the built-in list: clock/search core, the productivity companions
+ * (notes, tasks, calendar, bookmarks) and the calculator tool surface beside
+ * their mini-app features, and the generic photo/embed widgets.
  */
 export const WIDGET_REGISTRY: Partial<Record<WidgetType, WidgetDef>> = {
   clock: {
@@ -98,6 +100,15 @@ export const WIDGET_REGISTRY: Partial<Record<WidgetType, WidgetDef>> = {
     defaultSize: 'medium',
     component: BookmarksWidget,
   },
+  calculator: {
+    type: 'calculator',
+    name: 'Calculator',
+    description: 'Quick arithmetic — tap to open the full calculator.',
+    icon: Calculator,
+    sizes: ['medium', 'large'],
+    defaultSize: 'large',
+    component: CalculatorWidget,
+  },
   photo: {
     type: 'photo',
     name: 'Photo',
@@ -131,6 +142,7 @@ export const ADDABLE_WIDGETS: WidgetDef[] = (
     'tasks',
     'calendar',
     'bookmarks',
+    'calculator',
     'photo',
     'embed',
   ] as WidgetType[]

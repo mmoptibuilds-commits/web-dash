@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type {
   AppSettings,
+  CurrencyRates,
   DockItem,
   Folder,
   HistoryEntry,
@@ -22,7 +23,7 @@ import type {
  */
 
 /** Current schema version. Bump + add an upgrade block for any change. */
-export const DB_VERSION = 2
+export const DB_VERSION = 3
 
 class HearthDatabase extends Dexie {
   settings!: EntityTable<AppSettings, 'id'>
@@ -36,6 +37,7 @@ class HearthDatabase extends Dexie {
   history!: EntityTable<HistoryEntry, 'id'>
   wallpapers!: EntityTable<Wallpaper, 'id'>
   dockItems!: EntityTable<DockItem, 'id'>
+  currencyRates!: EntityTable<CurrencyRates, 'id'>
 
   constructor() {
     super('hearth')
@@ -73,6 +75,25 @@ class HearthDatabase extends Dexie {
       })
       .upgrade((tx) => import('../migrations/v2Freeform').then((m) => m.upgradeToFreeform(tx)))
 
+    // v3 adds the Calculator's offline currency-rates singleton (new table —
+    // created empty). Fresh installs seed the baseline row in ensureBootData;
+    // existing installs read a transient default until the first manual save
+    // persists a real row (see repositories/currencyRates.ts).
+    this.version(3).stores({
+      settings: 'id',
+      homePages: 'id,index',
+      layoutItems: 'id,pageId,order,refId',
+      shortcuts: 'id',
+      folders: 'id',
+      widgetInstances: 'id,type',
+      notes: 'id,updatedAt',
+      tasks: 'id,updatedAt,done',
+      history: 'id,kind,lastUsedAt',
+      wallpapers: 'id,kind',
+      dockItems: 'id,order,appId,shortcutId',
+      currencyRates: 'id',
+    })
+
     // Fail loudly (surfaced by callers as a recoverable message) rather than
     // leaving the app half-initialized.
     this.on('populate', () => {
@@ -96,3 +117,4 @@ export type HearthTableName =
   | 'history'
   | 'wallpapers'
   | 'dockItems'
+  | 'currencyRates'

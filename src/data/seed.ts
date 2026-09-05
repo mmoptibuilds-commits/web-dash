@@ -1,5 +1,5 @@
 import { db } from '@/data/db/db'
-import { defaultSettings } from '@/data/defaults'
+import { defaultCurrencyRates, defaultSettings } from '@/data/defaults'
 import { hasSettingsRow } from '@/data/repositories/settings'
 import { createPage } from '@/data/repositories/pages'
 import { createShortcut } from '@/data/repositories/shortcuts'
@@ -18,6 +18,8 @@ export async function ensureBootData(): Promise<boolean> {
 
   // Reserve settings first (acts as the "initialized" flag).
   await db.settings.put(defaultSettings())
+  // The Calculator ships with a stored baseline rates row from first boot.
+  await db.currencyRates.put(defaultCurrencyRates())
 
   const page = await createPage('Home')
 
@@ -59,6 +61,7 @@ export async function ensureBootData(): Promise<boolean> {
     'tasks',
     'calendar',
     'bookmarks',
+    'calculator',
     'settings',
   ]
   await db.dockItems.bulkPut(
@@ -89,6 +92,7 @@ export async function wipeAllData(): Promise<void> {
       db.history,
       db.wallpapers,
       db.dockItems,
+      db.currencyRates,
     ],
     async () => {
       await Promise.all([
@@ -103,6 +107,7 @@ export async function wipeAllData(): Promise<void> {
         db.history.clear(),
         db.wallpapers.clear(),
         db.dockItems.clear(),
+        db.currencyRates.clear(),
       ])
     },
   )

@@ -9,7 +9,8 @@ import { listFolders } from '@/data/repositories/folders'
 import { listDock } from '@/data/repositories/dock'
 import { listWallpapers } from '@/data/repositories/wallpapers'
 import { listItemsForPage } from '@/data/repositories/layout'
-import type { AppSettings, HomePage, Note, TaskItem } from '@/types/domain'
+import { getCurrencyRates } from '@/data/repositories/currencyRates'
+import type { AppSettings, CurrencyRates, HomePage, Note, TaskItem } from '@/types/domain'
 
 /** Reactive settings (read after ensureBootData has run). */
 export function useSettings(): AppSettings | undefined {
@@ -54,6 +55,11 @@ export function useWallpapers() {
 /** Ordered layout items for one home page. */
 export function usePageItems(pageId: string) {
   return useLiveQuery(() => listItemsForPage(pageId), [pageId])
+}
+
+/** Reactive Calculator currency rates (single offline row, self-seeding). */
+export function useCurrencyRates(): CurrencyRates | undefined {
+  return useLiveQuery(() => getCurrencyRates(), [])
 }
 
 /** Raw lookup of arbitrary rows (used by item renderers). */

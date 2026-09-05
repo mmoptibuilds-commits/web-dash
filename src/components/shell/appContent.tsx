@@ -3,6 +3,7 @@ import { NotesMiniApp } from '@/features/notes'
 import { TasksMiniApp } from '@/features/tasks'
 import { CalendarMiniApp } from '@/features/calendar'
 import { BookmarksMiniApp } from '@/features/bookmarks'
+import { CalculatorMiniApp } from '@/features/calculator'
 import { SettingsMiniApp } from '@/features/settings'
 import type { BuiltinAppId } from '@/types/domain'
 
@@ -16,6 +17,7 @@ const MINI_APPS: Partial<Record<BuiltinAppId, ComponentType>> = {
   tasks: TasksMiniApp,
   calendar: CalendarMiniApp,
   bookmarks: BookmarksMiniApp,
+  calculator: CalculatorMiniApp,
   settings: SettingsMiniApp,
 }
 

@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react'
 import {
   Bookmark,
+  Calculator,
   CalendarDays,
   Home,
   LayoutDashboard,
@@ -64,6 +65,13 @@ export const BUILTIN_APPS: Record<BuiltinAppId, BuiltinAppDescriptor> = {
     name: 'Links',
     description: 'All your shortcuts in one place.',
     icon: Bookmark,
+    kind: 'window',
+  },
+  calculator: {
+    id: 'calculator',
+    name: 'Calculator',
+    description: 'Arithmetic, dates and currency.',
+    icon: Calculator,
     kind: 'window',
   },
   settings: {

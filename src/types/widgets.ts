@@ -3,8 +3,9 @@ import type { WidgetSizeId } from '@/types/domain'
 /**
  * Built-in widget types. The registry maps these to components + metadata.
  * `clock` and `search` are core; productivity widgets (notes, tasks,
- * calendar, bookmarks) live beside their mini-app feature; photo/embed are
- * small generic widgets.
+ * calendar, bookmarks) live beside their mini-app feature; calculator is a
+ * compact tool surface that opens its mini-app; photo/embed are small generic
+ * widgets.
  */
 export const WIDGET_TYPES = [
   'clock',
@@ -13,6 +14,7 @@ export const WIDGET_TYPES = [
   'tasks',
   'calendar',
   'bookmarks',
+  'calculator',
   'photo',
   'embed',
 ] as const

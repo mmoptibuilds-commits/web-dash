@@ -172,6 +172,7 @@ export type BuiltinAppId =
   | 'tasks'
   | 'calendar'
   | 'bookmarks'
+  | 'calculator'
   | 'settings'
 
 export interface DockItem {
@@ -181,6 +182,29 @@ export interface DockItem {
   appId: BuiltinAppId
   /** A user shortcut (external link) pinned to the dock. */
   shortcutId: EntityId | null
+}
+
+/* ------------------------------------------------------------------ */
+/* Calculator                                                         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Offline currency rates backing the Calculator's converter. Single row
+ * (`id: 'default'`), user-editable, local-first: no live feed — Hearth never
+ * talks to a rate API. Rates are anchored to `base` (fixed USD in V1): each
+ * value is how many units of that code one unit of `base` buys, so any pair
+ * converts as `amount × rate(to) / rate(from)`. `editedAt` is null until the
+ * user overrides a baseline rate, marking the table as "manual".
+ */
+export interface CurrencyRates {
+  id: 'default'
+  /** Reference currency the stored rates are anchored to (fixed 'USD' in V1). */
+  base: string
+  /** Units of each code per 1 unit of `base`. Codes are uppercase ISO 4217. */
+  rates: Record<string, number>
+  /** Epoch ms of the last manual edit; null while rates are the code baseline. */
+  editedAt: number | null
+  updatedAt: number
 }
 
 /* ------------------------------------------------------------------ */
