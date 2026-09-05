@@ -117,7 +117,8 @@ export function MenuBar() {
         <button
           type="button"
           className={`icon-btn ${searchOpen ? 'is-active' : ''}`}
-          aria-pressed={searchOpen}
+          aria-haspopup="dialog"
+          aria-expanded={searchOpen}
           aria-label="Search"
           title="Search (⌘K)"
           onClick={() => setSearchOpen(!searchOpen)}
@@ -128,10 +129,9 @@ export function MenuBar() {
         <button
           type="button"
           className={`icon-btn ${controlCenterOpen ? 'is-active' : ''}`}
-          aria-pressed={controlCenterOpen}
-          aria-label="Control Center"
           aria-haspopup="dialog"
           aria-expanded={controlCenterOpen}
+          aria-label="Control Center"
           title="Control Center"
           onClick={() => setControlCenter(!controlCenterOpen)}
         >

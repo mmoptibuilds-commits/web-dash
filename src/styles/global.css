@@ -172,7 +172,7 @@ h4 {
 }
 
 .btn-ghost.is-active {
-  background: hsl(var(--accent-h) var(--accent-s) var(--accent-l) / 0.16);
+  background: var(--accent-soft);
   color: var(--accent-strong);
   filter: none;
 }
@@ -223,7 +223,7 @@ h4 {
 
 .icon-btn[aria-pressed='true'],
 .icon-btn.is-active {
-  background: hsl(var(--accent-h) var(--accent-s) var(--accent-l) / 0.16);
+  background: var(--accent-soft);
   color: var(--accent-strong);
 }
 
@@ -255,7 +255,7 @@ h4 {
   outline: none;
   border-color: var(--accent);
   background: rgb(var(--glass-1) / 0.9);
-  box-shadow: 0 0 0 3px hsl(var(--accent-h) var(--accent-s) var(--accent-l) / 0.22);
+  box-shadow: var(--focus-ring);
 }
 
 textarea.field {

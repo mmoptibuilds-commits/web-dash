@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Maximize2, X } from 'lucide-react'
+import { Maximize2, Minus, X } from 'lucide-react'
 import { useUi } from '@/state/ui'
 import { BUILTIN_APPS } from '@/types/apps'
 import { AppContent } from './appContent'
@@ -31,6 +31,7 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
   const focusOrder = useUi((s) => s.focusOrder)
   const focusApp = useUi((s) => s.focusApp)
   const closeApp = useUi((s) => s.closeApp)
+  const minimizeApp = useUi((s) => s.minimizeApp)
   const toggleMaximize = useUi((s) => s.toggleMaximize)
   const moveWindow = useUi((s) => s.moveWindow)
   const drag = useRef<DragRef | null>(null)
@@ -114,7 +115,7 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
   return (
     <section
       ref={frameRef}
-      className={`${styles.window} ${maximized ? styles.maximized : ''}`}
+      className={styles.window}
       role="dialog"
       aria-label={`${app.name} window`}
       tabIndex={-1}
@@ -141,6 +142,14 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
             onClick={() => closeApp(appId)}
           >
             <X size={10} aria-hidden />
+          </button>
+          <button
+            type="button"
+            className={`${styles.dot} ${styles.min}`}
+            aria-label={`Minimize ${app.name}`}
+            onClick={() => minimizeApp(appId)}
+          >
+            <Minus size={10} aria-hidden />
           </button>
           <button
             type="button"

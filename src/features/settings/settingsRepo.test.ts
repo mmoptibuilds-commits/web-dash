@@ -23,6 +23,7 @@ describe('settings persistence', () => {
     expect(settings.showLabels).toBe(true)
     expect(settings.reducedEffects).toBe(false)
     expect(settings.glass).toBe('standard')
+    expect(settings.glassTranslucency).toBe(0.5)
     expect(settings.wallpaper).toEqual({ kind: 'builtin', id: 'ember' })
   })
 
@@ -43,6 +44,7 @@ describe('settings persistence', () => {
     const settings = await getSettings()
     expect(settings.theme).toBe('dark')
     expect(settings.glass).toBe('standard')
+    expect(settings.glassTranslucency).toBe(0.5)
     expect(settings.createdAt).toBe(1)
   })
 
@@ -50,6 +52,15 @@ describe('settings persistence', () => {
     await updateSettings({ glass: 'vibrant' })
     const settings = await getSettings()
     expect(settings.glass).toBe('vibrant')
+  })
+
+  it('persists a transparency level and keeps it across later patches', async () => {
+    await updateSettings({ glassTranslucency: 0.85 })
+    expect((await getSettings()).glassTranslucency).toBe(0.85)
+    await updateSettings({ theme: 'light' })
+    const settings = await getSettings()
+    expect(settings.theme).toBe('light')
+    expect(settings.glassTranslucency).toBe(0.85)
   })
 
   it('persists a settings patch', async () => {

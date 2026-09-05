@@ -16,6 +16,7 @@
   --accent: hsl(var(--accent-h) var(--accent-s) var(--accent-l));
   --accent-strong: hsl(var(--accent-h) calc(var(--accent-s) - 8%) calc(var(--accent-l) - 9%));
   --accent-soft: hsl(var(--accent-h) var(--accent-s) var(--accent-l) / 0.16);
+  --accent-line: hsl(var(--accent-h) var(--accent-s) var(--accent-l) / 0.5); /* strong accent border/line */
   --on-accent: hsl(24 40% 12%);
 
   /* ---- Destructive / danger ---- */
@@ -23,6 +24,12 @@
   --danger-strong: hsl(4 82% 45%);
   --danger-soft: rgb(220 60 60 / 0.12);
   --danger-border: rgb(220 60 60 / 0.22);
+
+  /* ---- macOS window traffic lights (skeuomorphic hues stay fixed) ---- */
+  --traffic-close: #ff5f57;
+  --traffic-zoom: #28c840;
+  --traffic-min: #fdbc40;
+  --traffic-glyph: rgb(0 0 0 / 0.55); /* glyph ink over the traffic dots */
 
   /* ---- Neutral ink / paper (theme-able, set per theme below) ---- */
   --ink-1: 20 22 27; /* primary text */
@@ -45,6 +52,7 @@
   --overlay: 8 10 14; /* full-screen scrim channel (modal/search/folder veils) */
   --badge-dark: 38 42 50; /* remove/pin badge chip channel */
   --badge-dark-alpha: 0.92;
+  --glyph-ink: 255 255 255; /* white ink on saturated/gradient glyph tiles */
 
   /* Liquid-Glass saturation. Surfaces declare their own tuned default via
      `saturate(var(--glass-sat, N))`; the Appearance settings (#29) may set a
@@ -72,6 +80,7 @@
   --shadow-accent: 0 1px 2px rgb(0 0 0 / 0.18); /* lift under accent/colored chips */
   --shadow-glyph: inset 0 1px 0 rgb(255 255 255 / 0.18),
     0 2px 6px rgb(0 0 0 / 0.14); /* raised glyph tiles (squircle/logo chips) */
+  --shadow-glyph-text: 0 1px 3px rgb(0 0 0 / 0.25); /* text shadow under glyph ink */
   --focus-ring: 0 0 0 3px hsl(var(--accent-h) var(--accent-s) var(--accent-l) / 0.22);
 
   /* ---- Radii ---- */
@@ -127,6 +136,13 @@
   --menu-h: 46px;
   --dock-h: 76px;
   --dock-pad: 10px;
+  --titlebar-h: 38px; /* floating-window title bar */
+
+  /* ---- macOS switch (Settings + Control Center share one geometry) ---- */
+  --switch-w: 44px;
+  --switch-h: 28px;
+  --switch-knob: 20px;
+  --switch-knob-color: #fff; /* knob fill over accent/neutral tracks */
 
   /* Control heights (single source; modules reference these, never px) */
   --ctrl-h-sm: 28px; /* small buttons, chips */
@@ -259,20 +275,20 @@
 /* ============================ Glass presets ============================ */
 /* Settings → Appearance → Glass. Each preset restyles the shared material
    tokens uniformly — every surface already reads var(--glass-sat) (with its
-   own tuned fallback), the --blur-* scale and the --glass-a-* translucency
-   alphas — so picking one re-glasses the whole shell at once. 'standard' is
-   the default and needs no block: surfaces keep their tuned defaults. The
-   reduced-effects rules below come later in the file, so data-effects='reduced'
-   wins over a data-glass preset if both were ever present. */
+   own tuned fallback) and the --blur-* scale — so picking one re-glasses the
+   whole shell at once. Presets deliberately leave the --glass-a-* fill alphas
+   alone: continuous translucency is owned by the Transparency setting, which
+   theme.ts writes inline, so a preset + slider compose (preset = blur/sat
+   texture, slider = fill opacity). 'standard' needs no block: surfaces keep
+   their tuned defaults. The reduced-effects rules below come later in the
+   file, so data-effects='reduced' wins over a data-glass preset if both were
+   ever present. */
 :root[data-glass='subtle'] {
   --glass-sat: 1.2;
   --blur-xs: 6px;
   --blur-sm: 10px;
   --blur-md: 16px;
   --blur-lg: 26px;
-  --glass-a-1: 0.78;
-  --glass-a-2: 0.74;
-  --glass-a-3: 0.7;
 }
 :root[data-glass='vibrant'] {
   --glass-sat: 2;
@@ -280,9 +296,6 @@
   --blur-sm: 22px;
   --blur-md: 30px;
   --blur-lg: 48px;
-  --glass-a-1: 0.56;
-  --glass-a-2: 0.52;
-  --glass-a-3: 0.48;
 }
 
 /* ---- Reduced effects: replace blur with solid, high-opacity fills ---- */
@@ -295,7 +308,7 @@
   }
 }
 
-html[data-effects='reduced'] {
+:root[data-effects='reduced'] {
   --glass-a-1: 0.9;
   --glass-a-2: 0.88;
   --glass-a-3: 0.85;
@@ -309,7 +322,7 @@ html[data-effects='reduced'] {
    blur). Duration tokens drive almost every animation/transition, so zeroing
    them collapses the easing; the sweep below catches any hard-coded duration
    (e.g. a keyframe written in ms) the tokens do not reach. */
-html[data-effects='reduced'] {
+:root[data-effects='reduced'] {
   --dur-fast: 1ms;
   --dur-base: 1ms;
   --dur-slow: 1ms;

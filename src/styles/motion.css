@@ -45,15 +45,6 @@
   }
 }
 
-@keyframes dock-hover {
-  from {
-    transform: translateY(0) scale(1);
-  }
-  to {
-    transform: translateY(calc(-1 * var(--move-2))) scale(1.18);
-  }
-}
-
 /* Utility classes */
 .anim-rise {
   animation: rise-in var(--dur-base) var(--ease-out) both;

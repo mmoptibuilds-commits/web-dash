@@ -175,6 +175,13 @@ const ROW_VALIDATORS: Record<string, (row: unknown) => string | null> = {
     if (!isBool(row.reducedEffects)) return 'reducedEffects is not a boolean'
     if (row.glass !== undefined && !inValues(GLASS_VALUES)(row.glass))
       return 'glass is not subtle/standard/vibrant' // optional: older backups lack it
+    // Optional: older backups lack glassTranslucency; when present it must be a
+    // number in [0,1] (0 solid … 1 most see-through).
+    if (
+      row.glassTranslucency !== undefined &&
+      !(isFin(row.glassTranslucency) && row.glassTranslucency >= 0 && row.glassTranslucency <= 1)
+    )
+      return 'glassTranslucency is not a number in 0..1'
     if (!inValues(SEARCH_ENGINE_VALUES)(row.defaultSearchEngine))
       return 'defaultSearchEngine is not google/bing/duckduckgo'
     if (!inValues(ICON_SIZE_VALUES)(row.iconSize)) return 'iconSize is not small/regular/large'

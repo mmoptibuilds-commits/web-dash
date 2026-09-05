@@ -53,10 +53,14 @@
   transition: transform var(--dur-base) var(--ease-spring), filter var(--dur-fast) var(--ease-out);
 }
 .tile:hover {
-  transform: translateY(-5px) scale(1.1);
+  transform: translateY(calc(-1 * var(--move-1))) scale(1.1);
 }
 .tile:active {
   transform: translateY(0) scale(0.98);
+}
+.tile:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .glyph {
@@ -65,8 +69,8 @@
   width: 100%;
   height: 100%;
   border-radius: var(--r-md);
-  color: #fff;
-  text-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+  color: rgb(var(--glyph-ink));
+  text-shadow: var(--shadow-glyph-text);
   box-shadow: var(--shadow-glyph);
 }
 
@@ -83,7 +87,7 @@
 }
 .glyphShell img,
 .glyphShell span {
-  border-radius: 14%;
+  border-radius: var(--r-squircle);
 }
 
 .unpin {
@@ -99,7 +103,7 @@
   border: 0;
   border-radius: 50%;
   background: rgb(var(--badge-dark) / var(--badge-dark-alpha));
-  color: #fff;
+  color: rgb(var(--glyph-ink));
   cursor: pointer;
   box-shadow: var(--shadow-1);
 }
@@ -127,18 +131,25 @@
     color var(--dur-fast) var(--ease-out),
     transform var(--dur-fast) var(--ease-out);
 }
-.addChip:hover,
-.addChip[aria-expanded='true'] {
+.addChip:hover {
   background: rgb(var(--glass-2) / 0.85);
-  border-color: hsl(var(--accent-h) var(--accent-s) var(--accent-l) / 0.55);
+  border-color: var(--accent-line);
   color: var(--accent);
+}
+.addChip[aria-expanded='true'] {
+  /* Open state reads unmistakably different from a hover: tinted fill + solid
+     accent edge vs. the hover's neutral fill + hairline edge. */
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  border-style: solid;
+  color: var(--accent-strong);
 }
 .addChip:active {
   transform: scale(0.96);
 }
 .addChip:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .addPop {
@@ -194,10 +205,13 @@
   cursor: pointer;
   transition: background var(--dur-fast) var(--ease-out);
 }
-.addRow:hover,
-.addRow:focus-visible {
+.addRow:hover {
   background: rgb(var(--glass-3) / 0.85);
+}
+.addRow:focus-visible {
   outline: none;
+  background: rgb(var(--glass-3) / 0.85);
+  box-shadow: var(--focus-ring);
 }
 
 .addRowIcon {
@@ -245,11 +259,18 @@
 }
 
 .indicator {
-  margin-top: 4px;
+  /* Absolute + out of flow: the running-app dot floats in the bar's lower
+     padding band instead of inflating the bar above --dock-h. It centers under
+     the glyph of its tile (flex row keeps every tile the same 56px). */
+  position: absolute;
+  top: calc(100% + 1px);
+  left: 50%;
+  transform: translateX(-50%);
   width: 4px;
   height: 4px;
   border-radius: var(--r-pill);
   background: transparent;
+  transition: background var(--dur-fast) var(--ease-out);
 }
 .indicatorOn {
   background: rgb(var(--ink-1) / 0.85);

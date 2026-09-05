@@ -13,6 +13,7 @@ export function defaultSettings(): AppSettings {
     theme: 'auto',
     reducedEffects: false,
     glass: 'standard',
+    glassTranslucency: 0.5,
     defaultSearchEngine: 'google',
     iconSize: 'regular',
     showLabels: true,

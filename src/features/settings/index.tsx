@@ -71,14 +71,21 @@ const GLASS_DESCRIPTION: Record<GlassPreset, string> = {
  * Glass preset picker with a live sample. The sample is a real translucent
  * panel built from the shared material tokens, so picking a preset restyles it
  * in place — and because every chrome surface reads the same tokens, the whole
- * shell behind the settings window re-glasses live too.
+ * shell behind the settings window re-glasses live too. The Transparency slider
+ * below composes with the preset: the preset owns blur + saturation while the
+ * slider scales the shared --glass-a-* fill alphas (theme.ts), so both act on
+ * the same live sample.
  */
 function GlassSetting({
   value,
+  translucency,
   onChange,
+  onTranslucency,
 }: {
   value: GlassPreset
+  translucency: number
   onChange: (glass: GlassPreset) => void
+  onTranslucency: (translucency: number) => void
 }) {
   return (
     <div className={styles.settingBlock}>
@@ -119,6 +126,34 @@ function GlassSetting({
           )
         })}
       </div>
+
+      <div className={styles.transRow}>
+        <div className={styles.settingText}>
+          <span className={styles.settingTitle} id="glass-transparency-title">
+            Transparency
+          </span>
+          <span className={styles.settingDesc}>
+            How much the wallpaper shows through. 0% is nearly solid; 100% is the most
+            see-through. The preset above controls blur and colour; this controls fill opacity.
+          </span>
+        </div>
+        <div className={styles.transControl}>
+          <input
+            type="range"
+            className={styles.range}
+            min={0}
+            max={1}
+            step={0.01}
+            value={translucency}
+            aria-labelledby="glass-transparency-title"
+            aria-valuetext={`${Math.round(translucency * 100)} percent transparent`}
+            onChange={(e) => onTranslucency(Number(e.currentTarget.value))}
+          />
+          <span className={styles.transValue} aria-hidden>
+            {Math.round(translucency * 100)}%
+          </span>
+        </div>
+      </div>
     </div>
   )
 }
@@ -136,7 +171,9 @@ function SimpleSettings({ settings, persist }: { settings: AppSettings; persist:
         />
         <GlassSetting
           value={settings.glass ?? 'standard'}
+          translucency={settings.glassTranslucency}
           onChange={(glass) => persist({ glass })}
+          onTranslucency={(glassTranslucency) => persist({ glassTranslucency })}
         />
         <ToggleSetting
           title="Reduced effects"

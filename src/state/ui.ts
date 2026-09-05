@@ -11,6 +11,9 @@ export interface WindowState {
   w: number
   h: number
   maximized: boolean
+  /** Hidden into the dock (macOS "minimize"): the window stays open (dock dot
+   * lit) but leaves the visible stage until the dock tile is activated again. */
+  minimized: boolean
 }
 
 interface UiStore {
@@ -39,6 +42,8 @@ interface UiStore {
   closeApp: (appId: BuiltinAppId) => void
   focusApp: (appId: BuiltinAppId) => void
   toggleMaximize: (appId: BuiltinAppId) => void
+  /** Hide a desktop window into the dock; activating its dock tile restores it. */
+  minimizeApp: (appId: BuiltinAppId) => void
   moveWindow: (appId: BuiltinAppId, x: number, y: number) => void
   resizeWindow: (appId: BuiltinAppId, w: number, h: number) => void
   closeAllWindows: () => void
@@ -93,7 +98,17 @@ export const useUi = create<UiStore>((set, get) => ({
     // Mode nav handled by callers; window apps open here.
     const existing = state.windows[appId]
     if (existing) {
-      set({ focusOrder: [...state.focusOrder.filter((a) => a !== appId), appId] })
+      const next = [...state.focusOrder.filter((a) => a !== appId), appId]
+      // A minimized window is not on the stage; activating it again restores it
+      // (macOS: dock click re-opens a minimized window).
+      if (existing.minimized) {
+        set({
+          windows: { ...state.windows, [appId]: { ...existing, minimized: false } },
+          focusOrder: next,
+        })
+      } else {
+        set({ focusOrder: next })
+      }
       return
     }
     const count = state.focusOrder.length
@@ -105,6 +120,7 @@ export const useUi = create<UiStore>((set, get) => ({
       w: 720,
       h: 520,
       maximized: false,
+      minimized: false,
     }
     set({
       windows: { ...state.windows, [appId]: win },
@@ -155,6 +171,19 @@ export const useUi = create<UiStore>((set, get) => ({
     set({
       windows: { ...state.windows, [appId]: { ...win, maximized: !win.maximized, z: nextZ() } },
       focusOrder: [...state.focusOrder.filter((a) => a !== appId), appId],
+    })
+  },
+
+  minimizeApp: (appId) => {
+    const state = get()
+    const win = state.windows[appId]
+    if (!win || win.minimized) return
+    set({
+      windows: { ...state.windows, [appId]: { ...win, minimized: true } },
+      // Leaving focusOrder removes it from the stage (WindowsHost iterates
+      // focusOrder) and lets the window behind keep focus. The dock dot stays
+      // lit because the window is still present in `windows`.
+      focusOrder: state.focusOrder.filter((a) => a !== appId),
     })
   },
 

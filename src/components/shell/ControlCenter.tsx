@@ -62,13 +62,35 @@ function ThemePicker({ value, onChange }: { value: ThemePreference; onChange: (t
 export function ControlCenterMenu({ onClose }: { onClose: () => void }) {
   const settings = useSettings()
   const [fullscreen, setFullscreen] = useState(false)
+  const [closing, setClosing] = useState(false)
   const reduced = settings?.reducedEffects ?? false
   const theme = settings?.theme ?? 'auto'
   const panelRef = useRef<HTMLDivElement>(null)
+  // Exit is animated (the panel reverses its rise), so the component must stay
+  // mounted until the animation ends. These refs let the one-time mount effect
+  // drive that lifecycle without depending on re-created callbacks.
+  const closingRef = useRef(false)
+  const closeTimer = useRef<number | undefined>(undefined)
+
+  const finishClose = () => onClose()
+
+  const requestClose = () => {
+    if (closingRef.current) return
+    closingRef.current = true
+    setClosing(true)
+    // Safety net: if animationend is ever missed, unmount shortly after the
+    // exit animation would have ended.
+    closeTimer.current = window.setTimeout(finishClose, 420)
+  }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        // Consume Escape so the app-wide chrome handler can't unmount us before
+        // the exit animation runs.
+        e.stopPropagation()
+        requestClose()
+      }
       if (panelRef.current) trapTab(e, panelRef.current)
     }
     const syncFs = () => setFullscreen(Boolean(document.fullscreenElement))
@@ -82,23 +104,32 @@ export function ControlCenterMenu({ onClose }: { onClose: () => void }) {
       window.removeEventListener('keydown', onKey, true)
       document.removeEventListener('fullscreenchange', syncFs)
       window.cancelAnimationFrame(raf)
+      if (closeTimer.current !== undefined) window.clearTimeout(closeTimer.current)
       restoreFocus(opener)
     }
-  }, [onClose])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
-      <div className={styles.ccScrim} onClick={onClose} aria-hidden="true" />
+      <div className={styles.ccScrim} onClick={requestClose} aria-hidden="true" />
       <div
         ref={panelRef}
-        className={`${styles.ccPanel} anim-rise`}
+        className={`${styles.ccPanel} anim-rise ${closing ? styles.closing : ''}`}
         role="dialog"
         aria-label="Control Center"
         tabIndex={-1}
+        onAnimationEnd={(e) => {
+          if (closing && e.target === e.currentTarget) finishClose()
+        }}
       >
         <div className={styles.ccHead}>
           <span className={styles.ccTitle}>Control Center</span>
-          <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>
+          <button
+            type="button"
+            className="icon-btn"
+            aria-label="Close"
+            onClick={requestClose}
+          >
             <X size={15} aria-hidden />
           </button>
         </div>
@@ -120,8 +151,8 @@ export function ControlCenterMenu({ onClose }: { onClose: () => void }) {
             <Moon size={15} aria-hidden />
           </span>
           <span className={styles.rowText}>Reduce motion &amp; blur</span>
-          <span className={`${styles.toggle} ${reduced ? styles.toggleOn : ''}`} aria-hidden>
-            <span className={styles.toggleKnob} />
+          <span className={`${styles.ctrlSwitch} ${reduced ? styles.ctrlSwitchOn : ''}`} aria-hidden>
+            <span className={styles.ctrlKnob} />
           </span>
         </button>
 

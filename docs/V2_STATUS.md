@@ -6,6 +6,86 @@ task list; this file records what changed, evidence, and open follow-ups.
 
 Branch: `build/v1-one-shot` (V2 continues on top of the V1 one-shot build).
 
+## 4 — Desktop shell + dock macOS coherence + continuous Transparency (done)
+
+Closed the macOS-coherence loop on the desktop shell and made translucency a
+continuous user setting instead of three discrete presets. The dock, floating
+windows and Control Center now share one token-driven switch/geometry/motion
+language, and glass fill opacity is a live slider that composes with the Glass
+preset (§3, now blur + saturation only).
+
+### What changed
+- **Window chrome (macOS traffic lights)** — `WindowsHost` gains the yellow
+  **minimize** light between close (red) and zoom (green); the three dots now
+  match the existing 54px `.titleSpacer`, so titles stay centered. State: new
+  `WindowState.minimized` + `minimizeApp` action (drops the window off
+  `focusOrder` → not rendered) while the dock tile keeps its running dot;
+  clicking the tile restores. CSS (`windows.module.css`): colours/tokenized
+  `--traffic-*`, windows surface `--glass-1` (its documented elevation) at
+  `--glass-a-2`, inactive windows dim (grayscale traffic lights + dulled title
+  via `:not([data-front])`), `.dot` glyph reveals on hover and on a neutral
+  focus halo, heights/weights tokenized.
+- **Dock polish** — running `.indicator` is now absolute + out of flow
+  (bottom band of the bar) so it no longer inflates the bar above `--dock-h`;
+  glyph/unpin/mono ink uses `rgb(var(--glyph-ink))` + `--shadow-glyph-text`;
+  squircle radius tokenized; `.tile:hover` uses the `--move-1` token and tiles
+  get a real `:focus-visible` ring; "Add to dock" chip separates **hover**
+  (neutral fill + `--accent-line` edge) from **open** (`--accent-soft` fill +
+  solid accent edge); its popover plays `anim-rise` and **returns focus** to the
+  `+` trigger when dismissed by Escape/rows/an outside click on a non-focusable
+  spot.
+- **Control Center chrome + motion** — entrance rises from the top-right
+  (`transform-origin: top right`); dismissal plays a mirrored reverse rise and
+  unmounts on `animationend` (Escape is consumed so the app-wide handler can't
+  cut it short); Reduce-motion switch now uses the shared token geometry
+  (`--switch-w/-h/-knob`) as `.ctrlSwitch/.ctrlKnob`; theme segmented control
+  matches the menu-bar Mode switch well geometry; row icon wells unified to 32px
+  with the dock's; brand dot highlight computed from `--accent-l` instead of a
+  literal lightness.
+- **Continuous Transparency setting** — new persisted `AppSettings.glassTranslucency`
+  (0..1, default 0.5 = tuned baseline). `applyThemeAttributes` now takes it and
+  writes the four `--glass-a-*` tokens inline by scaling the *computed* CSS base
+  per theme (`1 + (0.5 − t) × 0.9`, clamped 0.32…0.96); **no number is
+  duplicated in code**, and at the 0.5 baseline nothing is written so CSS owns
+  the tuned default (zero drift for existing users). Glass presets dropped their
+  fill-alpha overrides to own blur + saturation only, so preset + slider compose.
+  Reduced Effects clears the inline alphas and its CSS block pins solid fills.
+  UI: a `Transparency` range slider (0–100%) inside the Glass setting with a
+  live value readout; every surface (including the in-panel sample) re-glasses
+  live because all read `--glass-a-*`.
+- **Token/`src/styles` cleanups** — `--titlebar-h`, `--switch-*`, `--traffic-*`,
+  `--glyph-ink`, `--shadow-glyph-text`, `--accent-line` tokens added; settings +
+  Control Center switches share one recipe; dead `dock-hover` keyframes removed;
+  `global.css` accent-soft / focus-ring literals replaced with tokens; `Glyph`
+  mono ink tokenized; MenuBar Search/Control-Center invokers now use
+  `aria-haspopup="dialog"` + `aria-expanded` (not a toggled `aria-pressed`).
+
+### Evidence
+- `npm run check` green (lint + typecheck + 75 unit tests incl. new
+  `glassTranslucency` default/backfill/persist asserts + production build).
+- E2E full suite green after two latent bugs surfaced by the new asserts were
+  fixed (see below): **51 passed / 9 skipped / 0 failed** desktop + mobile.
+- `glass.spec` 29c (Transparency slider: baseline writes no inline alpha →
+  Home/End extremes scale it, persists across reload, Reduced Effects pins it
+  solid); new `e2e/windows.spec.ts` (minimize → dock restore; front-most chrome
+  + close ordering).
+
+### Latent bugs the new E2E caught (both fixed)
+- **ThemeSync boot race** — the session theme effect applied on mount *before*
+  the Dexie settings row loaded, so a persisted non-default Translucency was
+  wiped back to the 0.5 baseline a frame later (a flash of the wrong opacity).
+  `ThemeSync` now no-ops until `settings` is truthy; `main.tsx` keeps the
+  pre-paint inline write.
+- **Reduced-effects specificity** — `html[data-effects='reduced']` (0,1,1) lost
+  the cascade to `:root[data-theme='light'|'dark']` (0,2,0), so Reduce Motion &
+  Blur's near-solid fills (0.9/0.88/0.85) silently never applied — only the
+  blur was actually being zeroed. Both blocks now select `:root[data-effects='reduced']` (0,2,0, later source order).
+
+### Follow-ups
+- **A11y sweep (#33)** — revisit the CC Theme segmented control's `aria-pressed`
+  (mutually-exclusive group) and pill-vs-segment grammar across Home/Settings.
+- **Control Center quick toggles (#30/§33)** — mirror Glass/Reduced-effects in CC.
+
 ## 3 — Appearance/Glass presets with live preview (done)
 
 A user-facing translucency setting that re-glasses the whole shell at once,

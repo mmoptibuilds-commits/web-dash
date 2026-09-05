@@ -15,15 +15,18 @@ function glassAttr(reducedEffects: boolean, glass: GlassPreset): string {
 }
 
 /**
- * Apply the resolved theme + reduced-effects + glass-preset attrs to <html>.
+ * Apply the resolved theme + reduced-effects + glass-preset attrs to <html>,
+ * and drive the glass fill alphas from the continuous Transparency setting.
  * `data-glass` reflects what is *rendered*: 'off' while Reduced Effects is on
  * (that mode replaces glass with a solid surface), otherwise the chosen
- * preset. tokens.css keys the material tokens off these two attributes.
+ * preset. tokens.css keys the material tokens off the data attributes; fill
+ * translucency is written inline because it is continuous (see applyGlassAlpha).
  */
 export function applyThemeAttributes(
   theme: ResolvedTheme,
   reducedEffects: boolean,
   glass: GlassPreset = 'standard',
+  translucency = 0.5,
 ): void {
   const root = document.documentElement
   root.dataset.theme = theme
@@ -31,6 +34,35 @@ export function applyThemeAttributes(
   root.dataset.glass = glassAttr(reducedEffects, glass)
   const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
   meta?.setAttribute('content', theme === 'dark' ? '#15181d' : '#f2f3f5')
+  applyGlassAlpha(root, reducedEffects, translucency)
+}
+
+/** Fill alphas the Transparency setting may override. */
+const GLASS_ALPHA_TOKENS = ['--glass-a-1', '--glass-a-2', '--glass-a-3', '--glass-a-elev'] as const
+
+/**
+ * Write `--glass-a-*` inline from the Transparency slider.
+ *
+ * The per-theme defaults already live in tokens.css, so we read each token's
+ * computed base after the data attributes are set (never duplicate the numbers)
+ * and scale it about the baseline: slider 0 (solid) → 1.45×, 0.5 (tuned
+ * default) → 1×, 1 (most see-through) → 0.55×, clamped so fills never go fully
+ * invisible or fully opaque. At the baseline we write nothing — CSS owns the
+ * exact tuned value. Reduced Effects never gets inline alphas; its
+ * `[data-effects='reduced']` block forces the solid fills instead.
+ */
+function applyGlassAlpha(root: HTMLElement, reducedEffects: boolean, translucency: number): void {
+  for (const prop of GLASS_ALPHA_TOKENS) root.style.removeProperty(prop)
+  if (reducedEffects) return
+  if (Math.abs(translucency - 0.5) < 0.001) return
+  const computed = getComputedStyle(root)
+  const scale = 1 + (0.5 - translucency) * 0.9
+  for (const prop of GLASS_ALPHA_TOKENS) {
+    const base = Number.parseFloat(computed.getPropertyValue(prop))
+    if (!Number.isFinite(base)) continue
+    const alpha = Math.min(0.96, Math.max(0.32, base * scale))
+    root.style.setProperty(prop, alpha.toFixed(3))
+  }
 }
 
 /** Toggle native fullscreen when the browser permits it. */

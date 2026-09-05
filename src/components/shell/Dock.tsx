@@ -142,6 +142,16 @@ export function Dock() {
   const [adding, setAdding] = useState(false)
   const barRef = useRef<HTMLDivElement>(null)
   const popRef = useRef<HTMLDivElement>(null)
+  const addChipRef = useRef<HTMLButtonElement>(null)
+
+  /** Close the "Add to dock" popover, optionally restoring keyboard focus to
+   *  the + trigger (rows/Escape leave focus inside the popover; the disclosure
+   *  point must get it back). Focus is restored on the next frame so the
+   *  unmounting popover cannot steal it back. */
+  const closeAdd = (restoreFocus: boolean) => {
+    setAdding(false)
+    if (restoreFocus) requestAnimationFrame(() => addChipRef.current?.focus())
+  }
 
   const canAdd = editMode && mode === 'home'
   const open = adding && canAdd
@@ -164,10 +174,20 @@ export function Dock() {
   useEffect(() => {
     if (!open) return
     const onDoc = (e: Event) => {
-      if (barRef.current && !barRef.current.contains(e.target as Node)) setAdding(false)
+      if (barRef.current && !barRef.current.contains(e.target as Node)) {
+        const target = e.target as HTMLElement | null
+        // If the dismissal click landed on something focusable, the browser has
+        // already given it focus (or is about to) — don't fight it. Only a
+        // non-focusable spot (page background…) strands keyboard focus inside
+        // the vanishing popover, and that's the case to repair.
+        const focusable =
+          !!target &&
+          (target.closest('button, a, input, select, textarea, [role="switch"], [tabindex]') !== null)
+        closeAdd(!focusable)
+      }
     }
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setAdding(false)
+      if (e.key === 'Escape') closeAdd(true)
     }
     document.addEventListener('pointerdown', onDoc)
     document.addEventListener('click', onDoc)
@@ -253,12 +273,12 @@ export function Dock() {
 
   const addApp = (appId: BuiltinAppId) => {
     void addAppToDock(appId)
-    setAdding(false)
+    closeAdd(true)
   }
 
   const addShortcut = (id: string) => {
     void addShortcutToDock(id)
-    setAdding(false)
+    closeAdd(true)
   }
 
   const nothingToAdd = addableApps.length === 0 && addableShortcuts.length === 0
@@ -270,7 +290,7 @@ export function Dock() {
           <div
             id="dock-add-pop"
             ref={popRef}
-            className={styles.addPop}
+            className={`${styles.addPop} anim-rise`}
             role="dialog"
             aria-label="Add to dock"
           >
@@ -343,6 +363,7 @@ export function Dock() {
           {canAdd && (
             <button
               type="button"
+              ref={addChipRef}
               className={styles.addChip}
               aria-label="Add to dock"
               aria-haspopup="dialog"

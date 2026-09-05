@@ -41,6 +41,13 @@ export interface AppSettings {
   reducedEffects: boolean
   /** Glass material preset (see GlassPreset). 'standard' is the tuned default. */
   glass: GlassPreset
+  /**
+   * Continuous translucency of glass fills, orthogonal to the preset (which owns
+   * blur + saturation). 0 = most solid (near-opaque), 1 = most see-through;
+   * 0.5 is the tuned baseline where no inline override is written. Reduced
+   * Effects overrides it with a solid surface.
+   */
+  glassTranslucency: number
   defaultSearchEngine: SearchEngineId
   iconSize: IconSizePreset
   /** Whether shortcut labels render on home pages. */

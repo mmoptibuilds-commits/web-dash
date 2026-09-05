@@ -13,20 +13,23 @@ import { SearchOverlay } from '@/features/search/SearchOverlay'
 
 /**
  * Keeps <html data-theme / data-effects / data-glass> in sync with Settings and
- * the OS (auto). Runs for the whole session; the pre-paint apply happens in main.
+ * the OS (auto). main.tsx applies the persisted values before first paint; this
+ * effect only drives later changes. It skips until the settings row has loaded:
+ * an early apply would run on the 0.5 default Translucency and wipe the inline
+ * alphas main.tsx wrote for a non-default value (a brief visual flash on boot).
  */
 function ThemeSync() {
-  const themePref = useSettings()?.theme
-  const reduced = useSettings()?.reducedEffects
-  const glass = useSettings()?.glass
+  const settings = useSettings()
   const prefersDark = usePrefersDark()
   useEffect(() => {
+    if (!settings) return
     applyThemeAttributes(
-      resolveTheme(themePref ?? 'auto', prefersDark),
-      reduced ?? false,
-      glass ?? 'standard',
+      resolveTheme(settings.theme, prefersDark),
+      settings.reducedEffects,
+      settings.glass ?? 'standard',
+      settings.glassTranslucency,
     )
-  }, [themePref, reduced, glass, prefersDark])
+  }, [settings, prefersDark])
   return null
 }
 
