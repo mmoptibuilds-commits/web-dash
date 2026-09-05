@@ -21,10 +21,14 @@
   pointer-events: auto;
   display: flex;
   align-items: flex-end;
-  gap: var(--sp-2);
+  gap: var(--sp-1);
   padding: var(--dock-pad) var(--dock-pad) 6px;
   border-radius: var(--r-2xl);
-  background: rgb(var(--glass-1) / var(--glass-a-1));
+  background: linear-gradient(
+    180deg,
+    rgb(var(--glass-1) / var(--glass-a-1)),
+    rgb(var(--glass-2) / var(--glass-a-2))
+  );
   border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
   box-shadow: var(--shadow-3), var(--shadow-inset-1);
   -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-sat, 1.6));
@@ -43,8 +47,8 @@
 }
 
 .tile {
-  width: 56px;
-  height: 56px;
+  width: 54px;
+  height: 54px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -87,8 +91,8 @@
 }
 
 .glyph svg {
-  width: 48%;
-  height: 48%;
+  width: 46%;
+  height: 46%;
   z-index: 1;
 }
 
@@ -133,8 +137,8 @@
   flex: none;
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
+  width: 54px;
+  height: 54px;
   padding: 0;
   border-radius: var(--r-squircle);
   border: 1px dashed rgb(var(--stroke-1) / var(--stroke-alpha-2));

@@ -42,10 +42,11 @@
   --glass-3: 236 238 241; /* wells, pressed states */
 
   /* alpha by elevation */
-  --glass-a-1: 0.66;
-  --glass-a-2: 0.62;
-  --glass-a-3: 0.56;
+  --glass-a-1: 0.56;
+  --glass-a-2: 0.52;
+  --glass-a-3: 0.46;
   --glass-a-elev: 0.9; /* raised thumbs/segments sit on near-opaque glass-1 */
+  --glass-a-sheet: 0.82; /* mobile sheets keep the wallpaper quiet without becoming opaque */
 
   /* Neutral overlays / dark chrome (as channels, alpha at use site) */
   --wallpaper-fallback: #101216; /* behind the wallpaper while it loads */
@@ -60,8 +61,8 @@
 
   --border: 0 0 0 / 0.1; /* placeholder, real: use --stroke below */
   --stroke-1: 20 22 27;
-  --stroke-alpha-1: 0.1;
-  --stroke-alpha-2: 0.06;
+  --stroke-alpha-1: 0.08;
+  --stroke-alpha-2: 0.05;
   --stroke-alpha-3: 0.22; /* control tracks (toggle/switch rails) */
   --stroke-hairline: 255 255 255;
 
@@ -70,10 +71,10 @@
   --scrim-alpha-top: 0.18;
 
   /* ---- Shadows ---- */
-  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.08), 0 2px 8px rgb(0 0 0 / 0.06);
-  --shadow-2: 0 6px 16px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.08);
-  --shadow-3: 0 16px 40px rgb(0 0 0 / 0.22), 0 4px 12px rgb(0 0 0 / 0.1);
-  --shadow-4: 0 28px 80px rgb(0 0 0 / 0.32), 0 8px 24px rgb(0 0 0 / 0.16);
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.06), 0 2px 8px rgb(0 0 0 / 0.045);
+  --shadow-2: 0 5px 14px rgb(0 0 0 / 0.1), 0 2px 6px rgb(0 0 0 / 0.06);
+  --shadow-3: 0 12px 32px rgb(0 0 0 / 0.17), 0 4px 12px rgb(0 0 0 / 0.08);
+  --shadow-4: 0 24px 64px rgb(0 0 0 / 0.24), 0 8px 24px rgb(0 0 0 / 0.12);
   --shadow-inset-1: inset 0 1px 0 rgb(255 255 255 / 0.6);
 
   /* Shared recipes (replaces per-surface literals) */
@@ -85,13 +86,20 @@
 
   /* ---- Radii ---- */
   --r-xs: 6px;
-  --r-sm: 10px;
-  --r-md: 14px;
-  --r-lg: 20px;
-  --r-xl: 28px;
-  --r-2xl: 40px;
+  --r-sm: 9px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+  --r-2xl: 32px;
   --r-pill: 999px;
   --r-squircle: 24%; /* app-icon tile corner (DESIGN.md "Icon tiles") */
+
+  /* Surface recipes: components can share the same quiet hierarchy without
+     inventing one-off radii or padding values. */
+  --surface-radius: var(--r-lg);
+  --control-radius: var(--r-sm);
+  --surface-gap: var(--sp-3);
+  --surface-pad: var(--sp-4);
 
   /* ---- Typography ---- */
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto,
@@ -200,9 +208,9 @@
     --glass-2: 26 29 35;
     --glass-3: 18 21 26;
 
-    --glass-a-1: 0.62;
-    --glass-a-2: 0.58;
-    --glass-a-3: 0.5;
+    --glass-a-1: 0.54;
+    --glass-a-2: 0.5;
+    --glass-a-3: 0.44;
 
     --stroke-alpha-1: 0.16;
     --stroke-alpha-2: 0.1;
@@ -210,10 +218,10 @@
 
     --scrim-alpha-top: 0.3;
 
-    --shadow-1: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 8px rgb(0 0 0 / 0.25);
-    --shadow-2: 0 6px 16px rgb(0 0 0 / 0.4), 0 2px 6px rgb(0 0 0 / 0.28);
-    --shadow-3: 0 16px 40px rgb(0 0 0 / 0.55), 0 4px 12px rgb(0 0 0 / 0.35);
-    --shadow-4: 0 28px 80px rgb(0 0 0 / 0.66), 0 8px 24px rgb(0 0 0 / 0.4);
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 0.24), 0 2px 8px rgb(0 0 0 / 0.2);
+    --shadow-2: 0 5px 14px rgb(0 0 0 / 0.32), 0 2px 6px rgb(0 0 0 / 0.22);
+    --shadow-3: 0 12px 32px rgb(0 0 0 / 0.46), 0 4px 12px rgb(0 0 0 / 0.28);
+    --shadow-4: 0 24px 64px rgb(0 0 0 / 0.58), 0 8px 24px rgb(0 0 0 / 0.34);
     --shadow-inset-1: inset 0 1px 0 rgb(255 255 255 / 0.08);
   }
 }
@@ -228,9 +236,9 @@
   --glass-2: 26 29 35;
   --glass-3: 18 21 26;
 
-  --glass-a-1: 0.62;
-  --glass-a-2: 0.58;
-  --glass-a-3: 0.5;
+  --glass-a-1: 0.54;
+  --glass-a-2: 0.5;
+  --glass-a-3: 0.44;
 
   --stroke-alpha-1: 0.16;
   --stroke-alpha-2: 0.1;
@@ -238,10 +246,10 @@
 
   --scrim-alpha-top: 0.3;
 
-  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.3), 0 2px 8px rgb(0 0 0 / 0.25);
-  --shadow-2: 0 6px 16px rgb(0 0 0 / 0.4), 0 2px 6px rgb(0 0 0 / 0.28);
-  --shadow-3: 0 16px 40px rgb(0 0 0 / 0.55), 0 4px 12px rgb(0 0 0 / 0.35);
-  --shadow-4: 0 28px 80px rgb(0 0 0 / 0.66), 0 8px 24px rgb(0 0 0 / 0.4);
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.24), 0 2px 8px rgb(0 0 0 / 0.2);
+  --shadow-2: 0 5px 14px rgb(0 0 0 / 0.32), 0 2px 6px rgb(0 0 0 / 0.22);
+  --shadow-3: 0 12px 32px rgb(0 0 0 / 0.46), 0 4px 12px rgb(0 0 0 / 0.28);
+  --shadow-4: 0 24px 64px rgb(0 0 0 / 0.58), 0 8px 24px rgb(0 0 0 / 0.34);
   --shadow-inset-1: inset 0 1px 0 rgb(255 255 255 / 0.08);
 }
 
@@ -255,9 +263,9 @@
   --glass-2: 250 251 252;
   --glass-3: 240 242 245;
 
-  --glass-a-1: 0.66;
-  --glass-a-2: 0.62;
-  --glass-a-3: 0.56;
+  --glass-a-1: 0.56;
+  --glass-a-2: 0.52;
+  --glass-a-3: 0.46;
 
   --stroke-alpha-1: 0.12;
   --stroke-alpha-2: 0.07;
@@ -265,10 +273,10 @@
 
   --scrim-alpha-top: 0.12;
 
-  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.08), 0 2px 8px rgb(0 0 0 / 0.05);
-  --shadow-2: 0 6px 16px rgb(0 0 0 / 0.1), 0 2px 6px rgb(0 0 0 / 0.06);
-  --shadow-3: 0 16px 40px rgb(0 0 0 / 0.16), 0 4px 12px rgb(0 0 0 / 0.08);
-  --shadow-4: 0 28px 80px rgb(0 0 0 / 0.24), 0 8px 24px rgb(0 0 0 / 0.12);
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.06), 0 2px 8px rgb(0 0 0 / 0.045);
+  --shadow-2: 0 5px 14px rgb(0 0 0 / 0.1), 0 2px 6px rgb(0 0 0 / 0.06);
+  --shadow-3: 0 12px 32px rgb(0 0 0 / 0.17), 0 4px 12px rgb(0 0 0 / 0.08);
+  --shadow-4: 0 24px 64px rgb(0 0 0 / 0.24), 0 8px 24px rgb(0 0 0 / 0.12);
   --shadow-inset-1: inset 0 1px 0 rgb(255 255 255 / 0.8);
 }
 
@@ -324,6 +332,7 @@
   --glass-a-2: 1;
   --glass-a-3: 1;
   --glass-a-elev: 1;
+  --glass-a-sheet: 1;
   --blur-xs: 0px;
   --blur-sm: 0px;
   --blur-md: 0px;

@@ -17,7 +17,7 @@
   align-items: center;
   gap: var(--sp-2);
   flex: none;
-  padding: var(--sp-3);
+  padding: var(--sp-4);
   border-bottom: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
 }
 
@@ -72,7 +72,7 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
 }
 
 .taskRow {
@@ -81,7 +81,7 @@
   gap: var(--sp-2);
   min-height: 44px;
   padding: var(--sp-1) var(--sp-2);
-  border-radius: var(--r-md);
+  border-radius: var(--control-radius);
   transition: background var(--dur-fast) var(--ease-out);
 }
 
@@ -218,7 +218,7 @@
   gap: var(--sp-1);
   height: 30px;
   padding: 0 var(--sp-3);
-  border-radius: var(--r-pill);
+  border-radius: var(--control-radius);
   font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
   color: var(--danger);
@@ -237,7 +237,7 @@
   gap: var(--sp-1);
   height: var(--ctrl-h-lg);
   padding: 0 var(--sp-4);
-  border-radius: var(--r-pill);
+  border-radius: var(--control-radius);
   font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
   letter-spacing: var(--tracking-tight);
@@ -277,7 +277,7 @@
   flex: none;
   width: 34px;
   height: var(--ctrl-h);
-  border-radius: var(--r-pill);
+  border-radius: var(--control-radius);
   color: rgb(var(--ink-2));
   transition:
     background var(--dur-fast) var(--ease-out),
@@ -400,7 +400,7 @@
   gap: var(--sp-2);
   margin: 0 var(--sp-2) var(--sp-2);
   padding: 8px var(--sp-3);
-  border-radius: var(--r-pill);
+  border-radius: var(--control-radius);
   font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
   color: rgb(var(--ink-1));

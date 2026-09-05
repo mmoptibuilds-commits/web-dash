@@ -500,7 +500,7 @@
   align-items: center;
   gap: var(--sp-1);
   padding: var(--sp-1);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-lg);
   background: rgb(var(--glass-1) / var(--glass-a-1));
   border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
   box-shadow: var(--shadow-3), var(--shadow-inset-1);
@@ -542,7 +542,7 @@
   align-items: center;
   gap: var(--sp-1);
   padding: var(--sp-1) var(--sp-3);
-  border-radius: var(--r-pill);
+  border-radius: var(--control-radius);
   border: 1px solid rgb(var(--stroke-1) / var(--stroke-alpha-2));
   background: rgb(var(--glass-2));
   color: rgb(var(--ink-2));
@@ -744,6 +744,12 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: calc(var(--safe-top) + var(--sp-4)) var(--sp-3)
+    calc(var(--safe-bottom) + var(--sp-4));
   background: rgb(var(--overlay) / 0.42);
   -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-sat, 1.2));
   backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-sat, 1.2));
@@ -751,20 +757,31 @@
 }
 
 .folderInner {
-  min-height: 100%;
+  box-sizing: border-box;
+  width: min(560px, calc(100vw - 32px));
+  min-height: min(360px, calc(100vh - 48px));
+  max-height: calc(100vh - 32px);
   display: flex;
   flex-direction: column;
-  padding: calc(var(--safe-top) + 8px) var(--sp-4) var(--safe-bottom);
+  margin: 0;
+  padding: var(--sp-4);
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  border-radius: var(--r-xl);
+  background: rgb(var(--glass-1) / var(--glass-a-1));
+  box-shadow: var(--shadow-4), var(--shadow-inset-1);
+  -webkit-backdrop-filter: blur(var(--blur-md)) saturate(var(--glass-sat, 1.5));
+  backdrop-filter: blur(var(--blur-md)) saturate(var(--glass-sat, 1.5));
+  overflow-y: auto;
 }
 
 .folderHeader {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
-  max-width: 1080px;
   width: 100%;
   margin: 0 auto;
-  padding: var(--sp-2) 0;
+  padding: 0 0 var(--sp-4);
+  border-bottom: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
 }
 
 .folderBack {
@@ -788,6 +805,7 @@
   min-width: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--sp-3);
 }
 .folderTitleEmoji {
@@ -840,15 +858,15 @@
 .folderBody {
   flex: 1;
   width: 100%;
-  max-width: 1080px;
   margin: 0 auto;
-  padding-top: var(--sp-4);
+  padding-top: var(--sp-5);
 }
 
 .folderGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
-  gap: var(--sp-4) var(--sp-3);
+  grid-template-columns: repeat(4, minmax(64px, 1fr));
+  gap: var(--sp-5) var(--sp-2);
+  padding: 0 var(--sp-3);
 }
 
 .folderItem {
@@ -987,5 +1005,43 @@
   }
   .editBar :global(.btn) {
     min-height: var(--touch-min);
+  }
+}
+
+@media (max-width: 639px) {
+  .folderInner {
+    width: min(100% - 24px, 420px);
+    min-height: min(340px, calc(100vh - 32px));
+    max-height: calc(100dvh - 24px - var(--safe-top) - var(--safe-bottom));
+    padding: var(--sp-4) var(--sp-3);
+    border-radius: var(--r-xl);
+  }
+
+  .folderHeader {
+    padding-bottom: var(--sp-3);
+  }
+
+  .folderTitleGroup {
+    gap: var(--sp-2);
+  }
+
+  .folderTitleEmoji {
+    font-size: var(--fs-2xl);
+  }
+
+  .folderTitle {
+    font-size: var(--fs-lg);
+  }
+
+  .folderActions :global(.btn) {
+    width: var(--ctrl-h);
+    min-width: var(--ctrl-h);
+    padding-inline: 0;
+    font-size: 0;
+    gap: 0;
+  }
+
+  .folderGrid {
+    padding-inline: var(--sp-1);
   }
 }

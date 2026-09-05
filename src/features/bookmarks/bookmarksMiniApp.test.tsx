@@ -80,8 +80,11 @@ describe('BookmarksMiniApp', () => {
     // Confirm deletes it.
     await user.click(screen.getByRole('button', { name: 'Delete GitHub' }))
     await screen.findByRole('alertdialog')
+    const removal = waitForElementToBeRemoved(() =>
+      screen.queryByRole('button', { name: 'Open GitHub' }),
+    )
     await user.click(screen.getByRole('button', { name: 'Delete' }))
-    await waitForElementToBeRemoved(() => screen.queryByRole('button', { name: 'Open GitHub' }))
+    await removal
     expect(delSpy).toHaveBeenCalledTimes(1)
     expect(await screen.findByText('No links yet')).toBeInTheDocument()
   })

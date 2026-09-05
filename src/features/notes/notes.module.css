@@ -19,7 +19,7 @@
   display: flex;
   flex-direction: column;
   flex: none;
-  width: 272px;
+  width: 248px;
   min-height: 0;
   border-right: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
 }
@@ -72,7 +72,7 @@
   min-width: 0;
   height: 36px;
   padding: 0 var(--sp-3);
-  border-radius: var(--r-pill);
+  border-radius: var(--control-radius);
   background: rgb(var(--glass-1) / 0.55);
   border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
   box-shadow: var(--shadow-inset-1);
@@ -287,7 +287,10 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: var(--sp-4);
+  width: 100%;
+  max-width: 720px;
+  margin-inline: auto;
+  padding: var(--sp-5) var(--sp-6);
 }
 
 .titleInput {
@@ -295,7 +298,7 @@
   background: transparent;
   border: none;
   font-size: var(--fs-2xl);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-medium);
   letter-spacing: var(--tracking-tighter);
   line-height: var(--lh-tight);
   color: rgb(var(--ink-1));
@@ -340,7 +343,7 @@
   gap: var(--sp-1);
   height: var(--ctrl-h-lg);
   padding: 0 var(--sp-4);
-  border-radius: var(--r-pill);
+  border-radius: var(--control-radius);
   font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
   letter-spacing: var(--tracking-tight);
@@ -381,7 +384,7 @@
   flex: none;
   width: 36px;
   height: var(--ctrl-h-lg);
-  border-radius: var(--r-pill);
+  border-radius: var(--control-radius);
   color: rgb(var(--ink-2));
   transition:
     background var(--dur-fast) var(--ease-out),
@@ -521,7 +524,7 @@
   gap: var(--sp-1);
   margin: 0 var(--sp-2) var(--sp-2);
   padding: 8px var(--sp-3);
-  border-radius: var(--r-pill);
+  border-radius: var(--control-radius);
   font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
   color: rgb(var(--ink-2));

@@ -53,7 +53,7 @@
   align-self: flex-start;
   gap: 2px;
   padding: 3px;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-md);
   background: rgb(var(--glass-3) / 0.9);
   border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
   box-shadow: var(--shadow-inset-1);
@@ -62,7 +62,7 @@
 .segOption {
   min-height: var(--ctrl-h-lg);
   padding: 0 var(--sp-4);
-  border-radius: var(--r-pill);
+  border-radius: var(--control-radius);
   font-size: var(--fs-sm);
   font-weight: var(--fw-semibold);
   color: rgb(var(--ink-2));
@@ -156,7 +156,7 @@
   gap: var(--sp-1);
   min-height: var(--ctrl-h-lg);
   padding: 0 var(--sp-3);
-  border-radius: var(--r-pill);
+  border-radius: var(--control-radius);
   font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
   color: rgb(var(--ink-2));
@@ -410,7 +410,7 @@
   gap: var(--sp-2);
   min-height: var(--ctrl-h-lg);
   padding: 0 var(--sp-4);
-  border-radius: var(--r-pill);
+  border-radius: var(--control-radius);
   font-size: var(--fs-sm);
   font-weight: var(--fw-semibold);
   color: rgb(var(--ink-1));
@@ -544,7 +544,7 @@
   gap: var(--sp-2);
   min-height: var(--ctrl-h-lg);
   padding: 0 var(--sp-4);
-  border-radius: var(--r-pill);
+  border-radius: var(--control-radius);
   font-size: var(--fs-sm);
   font-weight: var(--fw-semibold);
   color: rgb(var(--ink-1));
@@ -568,7 +568,7 @@
   gap: var(--sp-2);
   min-height: var(--ctrl-h-lg);
   padding: 0 var(--sp-4);
-  border-radius: var(--r-pill);
+  border-radius: var(--control-radius);
   font-size: var(--fs-sm);
   font-weight: var(--fw-semibold);
   color: #fff;

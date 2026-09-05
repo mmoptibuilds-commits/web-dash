@@ -24,23 +24,32 @@ the product.
   larger touch targets while fitting narrow viewports.
 - **Shared surfaces - `src/styles/global.css`,
   `src/features/dashboard/dashboard.module.css`,
-  `src/components/shell/windows.module.css`** - reduced pill-heavy controls,
-  tightened window/card radii, and fixed Dashboard hero contrast over dark
-  wallpapers.
+  `src/components/shell/windows.module.css`, `src/styles/tokens.css`** -
+  reduced pill-heavy controls, tightened window/card radii, softened fill and
+  shadow hierarchy, and fixed Dashboard hero contrast over dark wallpapers.
+- **Folder surface - `src/features/home/home.module.css`** - folders now open
+  as centered frosted cards with a compact four-column icon grid, matching the
+  supplied iOS-style folder reference on desktop and mobile.
 - **Settings preview - `src/features/settings/settings.module.css`** -
   replaced the saturated sample with a calm blue-to-ember horizon that better
   communicates the app's frosted material.
+- **Reduced-effects contract - `src/styles/tokens.css`** - sheet opacity is a
+  token and all new gradient surfaces inherit the shared alpha values, so the
+  accessibility setting can make the complete material stack opaque.
 - **Regression fixture - `src/features/settings/settingsRepo.test.ts`** -
   updated the clean-install default assertion for Lagoon.
 
 ### Evidence
 - `npm run check` - lint, typecheck, **126/126 Vitest tests**, and PWA build
   pass.
-- `npx playwright test --project=desktop --project=mobile` - **81 passed /
-  23 skipped / 0 failed** against the fresh production build.
+- `npm run test:e2e` - **81 passed / 23 skipped / 0 failed** against the fresh
+  production build, including the desktop/mobile shell, mini-app CRUD, PWA,
+  offline, reduced-effects, overflow, and visual-polish journeys.
 - Playwright screenshots were reviewed at desktop and phone sizes for Home,
-  Dashboard, Notes, Tasks, Calendar, Links, Calculator, and Settings against
-  the supplied local reference resources.
+  Dashboard, Notes, Tasks, Calendar, Links, Calculator, Settings, edit-mode
+  pickers, and folders against the supplied local reference resources. The
+  optional `agent-browser` CLI was unavailable on this host; repository
+  Playwright provided the browser verification path.
 ## 9 — PWA/offline and interaction accessibility hardening (done)
 
 Closed the remaining §8 follow-ups with evidence-bound browser checks. The
