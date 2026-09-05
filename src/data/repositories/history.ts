@@ -17,7 +17,7 @@ function entryId(kind: HistoryKind, text: string, url: string | null): string {
 }
 
 /** Record a dashboard-originated query (or URL typed) for local suggestions. */
-export async function recordHistory(kind: HistoryKind, text: string, url: string | null): Promise<void> {
+async function recordHistory(kind: HistoryKind, text: string, url: string | null): Promise<void> {
   const trimmed = text.trim()
   if (!trimmed) return
   const id = entryId(kind, trimmed, url)
@@ -52,19 +52,4 @@ export async function suggestHistory(
   return matched
     .sort((a, b) => b.count - a.count || b.lastUsedAt - a.lastUsedAt)
     .slice(0, limit)
-}
-
-/** Keep history bounded (default: newest 100 by activity). */
-export async function pruneHistory(keep = 100): Promise<void> {
-  const all = await db.history.toArray()
-  if (all.length <= keep) return
-  const sorted = all.sort(
-    (a, b) => b.lastUsedAt - a.lastUsedAt || b.count - a.count,
-  )
-  const drop = sorted.slice(keep).map((e) => e.id)
-  await db.history.bulkDelete(drop)
-}
-
-export async function clearHistory(): Promise<void> {
-  await db.history.clear()
 }

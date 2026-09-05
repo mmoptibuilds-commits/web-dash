@@ -381,11 +381,6 @@
   white-space: nowrap;
 }
 
-.widgetRowDone .widgetRowText {
-  color: rgb(var(--ink-3));
-  text-decoration: line-through;
-}
-
 .widgetEmpty {
   flex: 1;
   display: grid;

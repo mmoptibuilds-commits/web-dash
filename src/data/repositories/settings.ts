@@ -29,23 +29,3 @@ export async function updateSettings(
 export async function hasSettingsRow(): Promise<boolean> {
   return (await db.settings.count()) > 0
 }
-
-/** True when any durable app data already exists (used before seeding). */
-export async function hasAnyData(): Promise<boolean> {
-  const t = await db.transaction(
-    'r',
-    [db.settings, db.homePages, db.shortcuts, db.notes, db.tasks, db.dockItems],
-    async () => {
-      const counts = await Promise.all([
-        db.settings.count(),
-        db.homePages.count(),
-        db.shortcuts.count(),
-        db.notes.count(),
-        db.tasks.count(),
-        db.dockItems.count(),
-      ])
-      return counts.some((c) => c > 0)
-    },
-  )
-  return t
-}

@@ -26,10 +26,6 @@ export async function listNotes(): Promise<Note[]> {
   })
 }
 
-export async function getNote(id: string): Promise<Note | undefined> {
-  return db.notes.get(id)
-}
-
 /** Autosave body/title, bumping updatedAt only when content actually changes. */
 export async function updateNote(
   id: string,

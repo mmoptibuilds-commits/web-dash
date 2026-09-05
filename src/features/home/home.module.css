@@ -379,10 +379,6 @@
   gap: var(--sp-2);
 }
 
-.dropped {
-  display: none;
-}
-
 /* ---------- Edit toolbar (bottom, above dock) ---------- */
 
 .editBar {

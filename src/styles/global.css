@@ -96,27 +96,6 @@ h4 {
   border-radius: var(--r-xs);
 }
 
-/* ---- Text scale ---- */
-.t-2xs { font-size: var(--fs-2xs); }
-.t-xs { font-size: var(--fs-xs); }
-.t-sm { font-size: var(--fs-sm); }
-.t-md { font-size: var(--fs-md); }
-.t-lg { font-size: var(--fs-lg); }
-.t-xl { font-size: var(--fs-xl); }
-.t-2xl { font-size: var(--fs-2xl); }
-.t-3xl { font-size: var(--fs-3xl); }
-.t-4xl { font-size: var(--fs-4xl); }
-
-.t-strong { font-weight: 600; }
-.t-muted-2 { color: rgb(var(--ink-2)); }
-.t-muted-3 { color: rgb(var(--ink-3)); }
-.t-center { text-align: center; }
-.t-ellipsis {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /* ---- Buttons ---- */
 .btn {
   display: inline-flex;
@@ -202,12 +181,6 @@ h4 {
   height: 28px;
   padding: 0 var(--sp-3);
   font-size: var(--fs-xs);
-}
-
-.btn-lg {
-  height: 40px;
-  padding: 0 var(--sp-5);
-  font-size: var(--fs-md);
 }
 
 /* ---- Icon buttons ---- */
@@ -299,29 +272,6 @@ label.field-label {
   color: rgb(var(--ink-2));
   margin-bottom: var(--sp-1);
   letter-spacing: var(--tracking-tight);
-}
-
-.field-row {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-}
-
-/* ---- App icon tile (shared squircle) ---- */
-.app-tile {
-  border-radius: 24%;
-  display: grid;
-  place-items: center;
-  color: #fff;
-  overflow: hidden;
-  position: relative;
-  aspect-ratio: 1;
-  background: var(--tile-bg, rgb(var(--glass-2)));
-}
-
-/* ---- Hairline helpers ---- */
-.hairline-b {
-  border-bottom: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
 }
 
 /* ---- Scrollbars ---- */

@@ -45,19 +45,3 @@ export async function setDockOrder(orderedIds: string[]): Promise<void> {
     await Promise.all(orderedIds.map((id, i) => db.dockItems.update(id, { order: i })))
   })
 }
-
-/** Reset dock to app defaults (kept for a settings affordance). */
-export async function resetDockToDefault(): Promise<void> {
-  const apps: BuiltinAppId[] = [
-    'dashboard',
-    'notes',
-    'tasks',
-    'calendar',
-    'bookmarks',
-    'settings',
-  ]
-  await db.dockItems.clear()
-  await Promise.all(
-    apps.map((appId, i) => db.dockItems.put({ id: uid('dock'), order: i, appId, shortcutId: null })),
-  )
-}

@@ -11,10 +11,6 @@ export async function listPages(): Promise<HomePage[]> {
   return [...pages].sort((a, b) => a.index - b.index)
 }
 
-export async function getPage(id: string): Promise<HomePage | undefined> {
-  return db.homePages.get(id)
-}
-
 export async function createPage(name = 'Page'): Promise<HomePage> {
   const pages = await listPages()
   const maxIndex = pages.reduce((m, p) => Math.max(m, p.index), -1)

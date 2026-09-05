@@ -271,7 +271,7 @@
   gap: var(--sp-1);
 }
 
-.pinBtn[aria-pressed='true'] {
+.iconBtn[aria-pressed='true'] {
   background: rgb(var(--accent) / 0.16);
   color: var(--accent-strong);
 }

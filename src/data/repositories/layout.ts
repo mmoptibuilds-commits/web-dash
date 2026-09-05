@@ -67,16 +67,3 @@ export async function reorderPageItems(pageId: string, orderedItemIds: string[])
     )
   })
 }
-
-export async function moveItemAcrossPages(
-  itemId: string,
-  targetPageId: string,
-): Promise<void> {
-  const item = await db.layoutItems.get(itemId)
-  if (!item) return
-  const otherItems = await listItemsForPage(targetPageId)
-  await db.layoutItems.update(itemId, {
-    pageId: targetPageId,
-    order: otherItems.reduce((m, i) => Math.max(m, i.order), -1) + 1,
-  })
-}

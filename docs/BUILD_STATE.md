@@ -4,82 +4,117 @@
 **Session goal:** complete + verify the full V1 per the authoritative one-shot
 spec (`Web-dashboard-One-Shot-Claude-Code-Prompt.md`).
 
-## Current phase
-Phase 6 (harsh critique loop, ≤3 rounds) IN PROGRESS — a read-only workflow of
-four independent critics (UX/functional, accessibility/interaction, visual
-design code-grounded, spec/copy conformance) returns findings which an
-adversarial verify stage confirms; coordinator fixes confirmed defects, then
-re-runs unit + E2E. Then Phase 7 engineering review and Phase 8 release
-readiness.
+## Current phase — COMPLETE
+
+Phases 0→8 are done: scaffold → features → integration → functional E2E →
+responsive/visual QA → harsh critique loop → engineering review → release
+readiness. Final gate green: `npm run check` (lint 0, typecheck 0, **50/50
+vitest**, build + PWA) and full Playwright **35 passed / 3 intentional skips**
+(desktop 19/19, mobile 16/16).
 
 ## Completed milestones (git)
 - Phase 0/1 committed (`2c28da0`, `ab1b76b`): docs/contracts, Vite 8 + React 19
   + TS ~5.9.3 pin, tokens/global/glass/motion CSS, frozen domain/widget/app
   types, Dexie v1 (11 tables) + repositories + barrel + seed, ui store, theme,
   url/search/nav/run libs, widget registry, PWA config, test scaffold.
-- Phase 1 shell committed (`488128b`): `main`/`App` boot (theme sync, global
-  keys, mode switch), Home launcher (paged strip, ordered grid, tiles,
-  edit mode + dialogs, folder overlay), Dashboard (overview, floating windows,
-  mobile sheets), shell chrome (menubar, control-center-lite, dock, backdrop),
-  search overlay, all CSS modules. Typecheck/lint green.
-- Phase 2 lanes merged + integration committed (`d852b66`, `feat(integration)`): notes+tasks, calendar+bookmarks, settings (incl.
-  wallpaper + JSON backup/import). All three diffs additive; typecheck green
-  after each merge. Feature mini-apps wired into `AppContent`; registry now has
-  the full V1 addable list (clock/search/notes/tasks/calendar/links/photo/
-  embed); interim panel removed. PWA icon set generated (flame mark,
-  192/512/maskable-512/apple-180/favicon). `npm run check` green:
-  lint 0, typecheck 0, 12 files / 45 tests, build + PWA (15 precache entries).
-- Phase 4 E2E committed (`f87e1e6`): Playwright config (msedge channel,
-  desktop 1440×900 + mobile 390×844 projects, runs against `vite preview` so the
-  PWA/SW is exercised), shared helpers, 8 spec files covering all 16 spec flows
-  incl. reload-persistence and PWA manifest/offline. `e2e`/`test:e2e` scripts.
-- Phase 5 committed (`d110b35`): responsive width-sweep spec
-  (`e2e/responsive.spec.ts`) asserting no horizontal overflow and in-viewport
-  chrome at 360/390/768/1024/1280/1440, plus platform-correct window vs sheet
-  surfaces. Fixed a latent shell bug it caught: window traffic-light buttons
-  could be swallowed by the titlebar drag/pointer-capture handler (buttons now
-  exempt drag initiation). Screenshot sweep captured to `.shots/` (gitignored)
-  for human visual review across 6 widths × 8 states.
+- Phase 1 shell committed (`488128b`): `main`/`App` boot, Home launcher (paged
+  strip, ordered grid, tiles, edit mode + dialogs, folder overlay), Dashboard
+  (floating windows / mobile sheets), shell chrome (menubar, dock, backdrop),
+  search overlay, CSS modules.
+- Phase 2 lanes merged (`d852b66`): notes+tasks, calendar+bookmarks, settings
+  (wallpaper + JSON backup/import); full V1 widget list; PWA icons. First
+  `npm run check` green: 45 tests.
+- Phase 4 E2E committed (`f87e1e6`): Playwright (msedge channel, desktop
+  1440×900 + mobile 390×844, against `vite preview` so PWA/SW exercised), 8
+  specs covering the spec flows incl. reload persistence + PWA/offline.
+- Phase 5 committed (`d110b35`): responsive width sweep (360→1440, no overflow,
+  chrome in-viewport), window↔sheet breakpoint, screenshot sweep to `.shots/`.
+- Phase 6 committed (`a2e362d`): harsh critique loop (four independent critics
+  → adversarial verify → fix confirmed defects). Round 1 fixes: widget footers
+  sheet-aware (launch mini-app), tasks clear-completed + empty copy, pages/
+  history cascade + dedupe, copy + mono + settings toggles, danger-red token
+  sweep, dock configuration in Edit Mode (+ E2E selectors for radio ModeSwitch),
+  Home add-page activation + dot hit-area overlap.
 
-## Lane worktrees
-- `D:\web-dash-lanes\{notes-tasks,calendar-bookmarks,settings}` —
-  branches `lane/*` now merged into `build/v1-one-shot`. Coordinator owns the
-  integrated tree; no further writes on lane branches.
+## Phase 7 — engineering review (read-only reviewers + coordinator)
+Three independent reviewers (code/correctness, security, simplification) each
+verified before any change was applied.
+
+- **Correctness**
+  - ShortcutDialog stale-edit overwrite: the dialog persists above `Modal`, so a
+    second edit showed the previous draft and Save could clobber the wrong
+    shortcut. Now fields re-seed on the open transition, reading the latest
+    `initial` via an effect-synced ref (never written during render — a live
+    dexie refetch while typing can't wipe in-progress edits).
+  - Duplicate-create on Enter auto-repeat (folders / shortcuts / widget picker):
+    guarded with in-flight `busy` state on submit buttons + handlers.
+- **Security**
+  - Backup import validated **zero** row content: a crafted `shortcuts.url`
+    could store `javascript:` that later ran same-origin, and a malformed
+    `dockItems.appId` could brick the Dock at render. Added per-table row
+    validators for all 10 tables (settings enums + wallpaper shape; shortcuts
+    http(s)-only + `data:image/` uploads; history url null-or-safe; dock appId
+    in the frozen builtin set), run before the import transaction.
+  - `sameTab()` now gates on `isSafeUrl` (defense-in-depth closing the
+    `javascript:` sink for shortcuts/history/bookmarks/backups).
+  - 5 new unit tests cover the hostile-import rejections + a genuine round-trip.
+- **Simplification / dead code** (each symbol verified unreferenced in src+e2e)
+  - Removed orphaned `data/repositories/crud.ts` and 25+ dead repo helpers
+    (`getShortcut`, `getNote`, `getPage`, `getWidgetInstance`, `getWallpaper`,
+    `hasAnyData`, `setFolderIcon/Bg`, `reorderFolderShortcuts`,
+    `moveItemAcrossPages`, `pruneHistory`/`clearHistory`, …).
+  - Removed dead config `DashboardPanelPref` + `settings.dashboardPanels`
+    (no consumer) from the frozen type + defaults seed + backup validator +
+    test; removed `defaultHomePage`, `allBuiltinIds`, `wallpaperName`,
+    `isLikelyUrl`, `DroppedTile`, `useIsTablet`, `isWidgetType`.
+  - Removed dead CSS: `glass-e2/-raise/-plain`, `scrim-veil`, `hairline-top`;
+    global `.t-*` text scale, `.btn-lg`, `.field-row`, `.app-tile`,
+    `.hairline-b`; `.anim-slide-down` + `slide-down` keyframe; embed empty/bar
+    states; tasks-widget done compound; home `.dropped`.
+  - Wired two latent visual gaps the "dead CSS" audit exposed: the clock widget
+    root now establishes a `@container` so the date reveal actually fires on
+    wide tiles, and the notes pin pressed state is styled
+    (`.iconBtn[aria-pressed='true']`) instead of a dead `.pinBtn` selector.
+
+## Phase 8 — release readiness
+- README (run/build/install/PWA/test, incl. the E2E-vs-preview rebuild note)
+  and CHANGELOG written; QA_CHECKLIST finalized with per-item evidence and an
+  explicit human-acceptance remainder; PRODUCT_SPEC / ARCHITECTURE / ROADMAP
+  reviewed against the implementation.
+- Final gates re-run after all Phase 7 edits (build then Playwright per the
+  E2E-requires-rebuild note).
 
 ## Verification status
-- lint: PASS (0) · typecheck: PASS · test: 45 PASS · build: PASS (+PWA)
-- Playwright E2E (Phase 4): PASS — desktop 19/19, mobile 16/16 + 3 skips
-  (drag-reorder #7, JSON import/export #16, and the responsive width sweep which
-  runs once on desktop). PWA flows 14/15 pass on both projects.
-- Responsive sweep (Phase 5): PASS — no horizontal overflow at any width/state;
-  chrome inside viewport; window↔sheet surfaces follow the <1024px breakpoint.
-- Screenshots: 48 frames (6 viewports × 8 states) in `.shots/`. NOTE: this
-  build session's model has no image input, so pixel-level aesthetics were not
-  judged by eye here — frames are saved for the human acceptance gate; layout
-  integrity was verified by the automated DOM/geometry checks above.
+- lint: PASS (0) · typecheck: PASS · unit test: **50 PASS** (12 files) ·
+  build: PASS (+ PWA, 15 precache entries).
+- Playwright E2E (final, after Phase 7 fixes): **35 PASS / 3 skip** — desktop
+  19/19; mobile 16/16. Skips are by design: drag-reorder is desktop-only,
+  the width sweep runs once on the desktop project, JSON import/export is
+  desktop-only.
+- Screenshots: 48 frames (6 viewports × 8 states) in `.shots/` (gitignored).
+  NOTE: this build session's model has no image input, so pixel-level aesthetics
+  were not judged by eye here — frames are saved for the human acceptance gate;
+  layout integrity was machine-verified.
 
 ## Known integration notes
 - Dexie schema indexes added to v1 (unreleased): `layoutItems.refId`,
-  `tasks.done`, `dockItems.appId/shortcutId` (cascade + clearCompleted).
-- `wipeAllData` seeding-order bug (Settings → Reset) fixed on coordinator.
+  `tasks.done`, `dockItems.appId/shortcutId`.
 - Restored backups may contain `{kind:'user'}` wallpaper refs whose media is
   excluded from export; backdrop falls back to the builtin gradient if the
   referenced wallpaper row is absent.
 - Version string lives in Settings (`1.0.0`, mirrors package.json).
-- E2E: `SearchOverlay` resolves `defaultSearchEngine` one render after mount
-  (settings load async); tests wait on the engine hint before submitting. On
-  phone widths the menu-bar Home/Dashboard tabs are hidden — mobile switches
-  mode via the brand (Home) and the dock "Dashboard" launcher. Fresh IndexedDB
-  per test (new context) seeds the starter layout via `ensureBootData`.
+- E2E: `SearchOverlay` resolves `defaultSearchEngine` one render after mount;
+  tests wait on the engine hint. On phone widths the menu-bar tabs are hidden —
+  mobile switches via the brand (Home) and the dock "Dashboard" launcher. Fresh
+  IndexedDB per test seeds via `ensureBootData`.
 - Desktop window traffic lights sit inside the titlebar drag handler; presses
-  that start on a button are exempt from drag/pointer-capture so Close/Maximize
-  clicks always land (WindowsHost).
+  starting on a button are exempt from drag/pointer-capture (WindowsHost).
 
-## Next action
-1. Phase 6 (in progress): await critique-workflow result; apply each
-   adversarially-confirmed fix; re-run unit tests + `npm run check` + the full
-   desktop/mobile Playwright suites; up to 3 critique rounds until dry.
-2. Phase 7: engineering review — lint/typecheck/tests/build, code/security/
-   simplification review, dead-code removal, secrets check, no V2/V3 surface.
-3. Phase 8: release readiness — PWA manifest/SW verify, README, CHANGELOG, QA
-   checklist finalize, final commit.
+## Blocker / handoff items
+- **No git remote** is configured for this repo, so `git push` / a PR could not
+  run from here. Work is committed on `build/v1-one-shot` locally.
+- `.claude/` (skill tooling incl. a 14.5 MB `impeccable.exe`) is intentionally
+  tracked from the seed; a maintainer should decide whether that binary belongs
+  in a public repo before pushing. Secrets check: none present.
+- Human acceptance: eyeball `.shots/` and the two new visual states listed in
+  QA_CHECKLIST.

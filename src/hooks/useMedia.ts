@@ -23,10 +23,6 @@ export function useIsDesktop(): boolean {
   return useMediaQuery('(min-width: 1024px)')
 }
 
-export function useIsTablet(): boolean {
-  return useMediaQuery('(min-width: 768px) and (max-width: 1023px)')
-}
-
 export function usePrefersDark(): boolean {
   return useMediaQuery('(prefers-color-scheme: dark)')
 }

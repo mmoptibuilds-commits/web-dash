@@ -92,12 +92,6 @@ export function classifyInput(rawInput: string): AddressResult {
   return { kind: 'search', query: input }
 }
 
-/** True if the input is intended as a web destination (vs a search). */
-export function isLikelyUrl(rawInput: string): boolean {
-  const r = classifyInput(rawInput)
-  return r.kind === 'url'
-}
-
 /** Does a fully-qualified URL use a safe scheme? */
 export function isSafeUrl(url: string): boolean {
   try {

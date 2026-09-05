@@ -1,5 +1,4 @@
 import type { BuiltinWallpaperId } from '@/types/domain'
-import { builtinWallpaperIds } from '@/types/domain'
 
 /**
  * Built-in gradient wallpaper presets — original, wallpaper-aware and
@@ -64,13 +63,4 @@ const BUILTIN_BY_ID = new Map(BUILTIN_WALLPAPERS.map((w) => [w.id, w]))
 
 export function getBuiltinWallpaper(id: BuiltinWallpaperId): BuiltinWallpaper | undefined {
   return BUILTIN_BY_ID.get(id)
-}
-
-/** Used by the wallpaper picker to render preset swatches. */
-export function allBuiltinIds(): BuiltinWallpaperId[] {
-  return [...builtinWallpaperIds].filter((id) => BUILTIN_BY_ID.has(id))
-}
-
-export function wallpaperName(id: BuiltinWallpaperId): string {
-  return getBuiltinWallpaper(id)?.name ?? id
 }

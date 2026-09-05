@@ -1,4 +1,4 @@
-import type { AppSettings, HomePage, WallpaperRef } from '@/types/domain'
+import type { AppSettings, WallpaperRef } from '@/types/domain'
 import { now } from '@/types/domain'
 
 /** The single settings row id. */
@@ -16,18 +16,7 @@ export function defaultSettings(): AppSettings {
     iconSize: 'regular',
     showLabels: true,
     wallpaper: DEFAULT_WALLPAPER,
-    dashboardPanels: [
-      { key: 'notes', order: 0 },
-      { key: 'tasks', order: 1 },
-      { key: 'calendar', order: 2 },
-      { key: 'bookmarks', order: 3 },
-    ],
     createdAt: now(),
     updatedAt: now(),
   }
-}
-
-export function defaultHomePage(index: number, name = 'Home'): HomePage {
-  const t = now()
-  return { id: '', index, name, createdAt: t, updatedAt: t }
 }

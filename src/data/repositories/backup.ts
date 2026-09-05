@@ -1,4 +1,5 @@
 import { db } from '@/data/db/db'
+import { isSafeUrl } from '@/lib/url'
 import type { Table } from 'dexie'
 import type {
   AppSettings,
@@ -120,6 +121,165 @@ const ALL_STORES = [
 
 const KNOWN_TABLES = new Set<string>(TABLES.map((t) => t.name))
 
+/* ------------------------------------------------------------------ */
+/* Row validation — restore must not trust row contents                */
+/*                                                                    */
+/* The write paths all validate before storing (URLs via isSafeUrl,   */
+/* sizes/enums from the domain contract). A crafted backup bypasses   */
+/* those write paths, so every row is re-checked here before any      */
+/* table is cleared. A single bad row rejects the whole import, and   */
+/* the enclosing transaction has not started, so existing data is     */
+/* never touched on failure.                                          */
+/* ------------------------------------------------------------------ */
+
+const isObj = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null && !Array.isArray(v)
+const isStr = (v: unknown): v is string => typeof v === 'string'
+const isFin = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
+const isBool = (v: unknown): v is boolean => typeof v === 'boolean'
+const isStrArr = (v: unknown): v is string[] => Array.isArray(v) && v.every(isStr)
+const isNumOrNull = (v: unknown): boolean => v === null || isFin(v)
+/** True for an absolute http(s) URL — the only thing any stored `url` may be. */
+const isSafeWebUrl = (v: unknown): v is string => isStr(v) && isSafeUrl(v)
+const inValues =
+  (values: Set<string>) =>
+  (v: unknown): v is string =>
+    isStr(v) && values.has(v)
+
+const THEME_VALUES = new Set(['auto', 'light', 'dark'])
+const SEARCH_ENGINE_VALUES = new Set(['google', 'bing', 'duckduckgo'])
+const ICON_SIZE_VALUES = new Set(['small', 'regular', 'large'])
+const LAYOUT_KIND_VALUES = new Set(['shortcut', 'folder', 'widget'])
+const WIDGET_SIZE_VALUES = new Set(['small', 'medium', 'large'])
+const HISTORY_KIND_VALUES = new Set(['query', 'launch'])
+const SHORTCUT_ICON_TYPE_VALUES = new Set(['auto', 'emoji', 'upload'])
+/** Mirrors the frozen BuiltinAppId union in types/domain.ts. */
+const BUILTIN_APP_ID_VALUES = new Set([
+  'home',
+  'dashboard',
+  'notes',
+  'tasks',
+  'calendar',
+  'bookmarks',
+  'settings',
+])
+const DATA_IMAGE_URL_RE = /^data:image\//
+
+/** One validator per normal table. Returns a field description or null. */
+const ROW_VALIDATORS: Record<string, (row: unknown) => string | null> = {
+  settings: (row) => {
+    if (!isObj(row)) return 'row is not an object'
+    if (row.id !== 'main') return 'id must be "main"'
+    if (!inValues(THEME_VALUES)(row.theme)) return 'theme is not auto/light/dark'
+    if (!isBool(row.reducedEffects)) return 'reducedEffects is not a boolean'
+    if (!inValues(SEARCH_ENGINE_VALUES)(row.defaultSearchEngine))
+      return 'defaultSearchEngine is not google/bing/duckduckgo'
+    if (!inValues(ICON_SIZE_VALUES)(row.iconSize)) return 'iconSize is not small/regular/large'
+    if (!isBool(row.showLabels)) return 'showLabels is not a boolean'
+    const wp = row.wallpaper
+    if (!isObj(wp)) return 'wallpaper is not an object'
+    if (wp.kind !== 'builtin' && wp.kind !== 'user') return 'wallpaper.kind is not builtin/user'
+    if (wp.kind === 'builtin' && !isStr(wp.id)) return 'wallpaper.id is not a string'
+    if (wp.kind === 'user' && !isStr(wp.wallpaperId)) return 'wallpaper.wallpaperId is not a string'
+    return null
+  },
+  homePages: (row) => {
+    if (!isObj(row)) return 'row is not an object'
+    if (!isStr(row.id) || !isStr(row.name)) return 'id/name must be strings'
+    if (!isFin(row.index)) return 'index is not a number'
+    return null
+  },
+  layoutItems: (row) => {
+    if (!isObj(row)) return 'row is not an object'
+    if (!isStr(row.id) || !isStr(row.pageId) || !isStr(row.refId))
+      return 'id/pageId/refId must be strings'
+    if (!inValues(LAYOUT_KIND_VALUES)(row.kind)) return 'kind is not shortcut/folder/widget'
+    if (!isFin(row.order)) return 'order is not a number'
+    return null
+  },
+  shortcuts: (row) => {
+    if (!isObj(row)) return 'row is not an object'
+    if (!isStr(row.id) || !isStr(row.label)) return 'id/label must be strings'
+    // A javascript:/data: URL stored here would run same-origin when a tile is
+    // clicked (recordAndOpen → location.assign). This is the security gate.
+    if (!isSafeWebUrl(row.url)) return 'url is not a safe http(s) address'
+    const icon = row.icon
+    if (!isObj(icon)) return 'icon is not an object'
+    if (!inValues(SHORTCUT_ICON_TYPE_VALUES)(icon.type)) return 'icon.type is not auto/emoji/upload'
+    if (icon.type === 'emoji' && !isStr(icon.emoji)) return 'icon.emoji is not a string'
+    // Uploaded tile icons are data:image data-URLs rendered in <img>. Anything
+    // else (e.g. a remote URL) would let a crafted import phone home.
+    if (icon.type === 'upload' && !(isStr(icon.dataUrl) && DATA_IMAGE_URL_RE.test(icon.dataUrl)))
+      return 'icon.dataUrl is not a data:image URL'
+    return null
+  },
+  folders: (row) => {
+    if (!isObj(row)) return 'row is not an object'
+    if (!isStr(row.id) || !isStr(row.name)) return 'id/name must be strings'
+    if (!isStrArr(row.shortcutIds)) return 'shortcutIds must be an array of strings'
+    if (!isObj(row.icon) || row.icon.type !== 'emoji' || !isStr(row.icon.emoji))
+      return 'icon must be an emoji icon'
+    return null
+  },
+  widgetInstances: (row) => {
+    if (!isObj(row)) return 'row is not an object'
+    if (!isStr(row.id) || !isStr(row.type) || row.type.length === 0)
+      return 'id/type must be non-empty strings'
+    if (!inValues(WIDGET_SIZE_VALUES)(row.size)) return 'size is not small/medium/large'
+    if (!isObj(row.settings)) return 'settings is not an object'
+    return null
+  },
+  notes: (row) => {
+    if (!isObj(row)) return 'row is not an object'
+    if (!isStr(row.id) || !isStr(row.title) || !isStr(row.body))
+      return 'id/title/body must be strings'
+    if (!isBool(row.pinned)) return 'pinned is not a boolean'
+    return null
+  },
+  tasks: (row) => {
+    if (!isObj(row)) return 'row is not an object'
+    if (!isStr(row.id) || !isStr(row.text)) return 'id/text must be strings'
+    if (!isBool(row.done)) return 'done is not a boolean'
+    if (!isNumOrNull(row.doneAt)) return 'doneAt must be a number or null'
+    return null
+  },
+  history: (row) => {
+    if (!isObj(row)) return 'row is not an object'
+    if (!isStr(row.id) || !isStr(row.text)) return 'id/text must be strings'
+    if (!inValues(HISTORY_KIND_VALUES)(row.kind)) return 'kind is not query/launch'
+    // Launches become clickable suggestions; a non-http(s) URL here would run
+    // through recordAndOpen on click. Query rows carry url: null.
+    if (row.url !== null && !isSafeWebUrl(row.url)) return 'url is not a safe http(s) address'
+    if (!isFin(row.count)) return 'count is not a number'
+    return null
+  },
+  dockItems: (row) => {
+    if (!isObj(row)) return 'row is not an object'
+    if (!isStr(row.id)) return 'id must be a string'
+    if (!isFin(row.order)) return 'order is not a number'
+    // The dock renders BUILTIN_APPS[appId].icon for unpinned items — an
+    // unknown appId would throw on every surface and brick the app.
+    if (!inValues(BUILTIN_APP_ID_VALUES)(row.appId)) return 'appId is not a known app'
+    if (row.shortcutId !== null && !isStr(row.shortcutId)) return 'shortcutId must be null or a string'
+    return null
+  },
+}
+
+/** Returns a human message for the first invalid row, or null if all pass. */
+function validateBackupRows(data: Record<string, unknown>): string | null {
+  for (const tableName of Object.keys(data)) {
+    const rows = data[tableName]
+    if (!Array.isArray(rows)) continue // non-array already reported by the caller
+    const check = ROW_VALIDATORS[tableName]
+    if (!check) continue // unknown table already rejected by the caller
+    for (let i = 0; i < rows.length; i++) {
+      const problem = check(rows[i])
+      if (problem) return `Backup table “${tableName}” row ${i + 1}: ${problem}.`
+    }
+  }
+  return null
+}
+
 /**
  * Serialise the current normal app data as a versioned JSON backup.
  * Throws with a readable message if the read fails (IndexedDB unavailable,
@@ -186,6 +346,11 @@ export async function importBackupJson(
       return { ok: false, reason: `Backup table “${tableName}” is malformed.` }
     }
   }
+
+  // Row-level validation before any write. Rejecting here (transaction has not
+  // started) keeps existing data intact even for a mixed good/bad backup.
+  const rowProblem = validateBackupRows(rowData)
+  if (rowProblem) return { ok: false, reason: rowProblem }
 
   try {
     await db.transaction('rw', ALL_STORES, async () => {

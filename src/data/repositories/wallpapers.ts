@@ -56,10 +56,6 @@ export async function listWallpapers(): Promise<Wallpaper[]> {
   return [...items].sort((a, b) => b.addedAt - a.addedAt)
 }
 
-export async function getWallpaper(id: string): Promise<Wallpaper | undefined> {
-  return db.wallpapers.get(id)
-}
-
 export async function deleteWallpaper(id: string): Promise<void> {
   await db.wallpapers.delete(id)
 }

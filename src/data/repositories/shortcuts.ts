@@ -20,10 +20,18 @@ const MAX_LABEL = 80
 function validateUrl(rawUrl: string): { ok: true; url: string } | { ok: false; reason: string } {
   const trimmed = rawUrl.trim()
   if (!trimmed) return { ok: false, reason: 'Enter a web address.' }
-  if (!isSafeUrl(normalizeHttpUrl(trimmed))) {
+  // normalizeHttpUrl throws on inputs the URL parser rejects (e.g. embedded
+  // control chars); surface that as a friendly message, not a rejected promise.
+  let normalized: string
+  try {
+    normalized = normalizeHttpUrl(trimmed)
+  } catch {
+    return { ok: false, reason: 'That does not look like a valid web address.' }
+  }
+  if (!isSafeUrl(normalized)) {
     return { ok: false, reason: 'Only safe http(s) addresses are allowed.' }
   }
-  return { ok: true, url: normalizeHttpUrl(trimmed) }
+  return { ok: true, url: normalized }
 }
 
 /** Create a shortcut after normalizing + validating the URL. */
@@ -95,8 +103,4 @@ export async function deleteShortcut(id: string): Promise<void> {
 
 export async function listShortcuts(): Promise<Shortcut[]> {
   return db.shortcuts.toArray()
-}
-
-export async function getShortcut(id: string): Promise<Shortcut | undefined> {
-  return db.shortcuts.get(id)
 }

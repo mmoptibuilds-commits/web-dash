@@ -21,10 +21,6 @@ export async function createWidgetInstance(
   return instance
 }
 
-export async function getWidgetInstance(id: string): Promise<WidgetInstance | undefined> {
-  return db.widgetInstances.get(id)
-}
-
 export async function updateWidgetInstance(
   id: string,
   changes: Partial<Pick<WidgetInstance, 'size' | 'settings'>>,

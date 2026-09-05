@@ -19,10 +19,6 @@ export const WIDGET_TYPES = [
 
 export type WidgetType = (typeof WIDGET_TYPES)[number]
 
-export function isWidgetType(value: string): value is WidgetType {
-  return (WIDGET_TYPES as readonly string[]).includes(value)
-}
-
 /** Labels for the size picker in Edit Mode. */
 export const WIDGET_SIZE_LABELS: Record<WidgetSizeId, string> = {
   small: 'Small',

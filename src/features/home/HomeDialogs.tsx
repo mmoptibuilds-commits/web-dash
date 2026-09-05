@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link2, Plus, Trash2, FolderPlus, Image as ImageIcon, Type } from 'lucide-react'
 import { Modal } from '@/components/common/Modal'
 import { useHomePages } from '@/hooks/data'
@@ -54,33 +54,66 @@ export function ShortcutDialog({ open, onClose, pageId, initial, folderId }: Sho
   )
   const [bg, setBg] = useState<string | null>(initial?.bg ?? null)
   const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // The dialog stays mounted across open/close sessions (Modal returns null
+  // when closed but this component's state persists), so the fields are
+  // re-seeded from `initial` each time it OPENS. Without this, editing a second
+  // shortcut would show the previous session's draft and Save would silently
+  // overwrite the wrong shortcut. `initial` is mirrored into a ref inside an
+  // effect (never during render) and read by the reset effect below, so a
+  // live-query refetch while typing can't wipe in-progress edits mid-edit.
+  const initialRef = useRef(initial)
+  const prevOpen = useRef(false)
+  useEffect(() => {
+    initialRef.current = initial
+  })
+  useEffect(() => {
+    if (open && !prevOpen.current) {
+      const init = initialRef.current
+      setLabel(init?.label ?? '')
+      setUrl(init?.url ?? '')
+      setIconMode(init?.icon.type ?? 'auto')
+      setEmoji(init?.icon.type === 'emoji' ? init.icon.emoji : EMOJI_PRESETS[0])
+      setUpload(init?.icon.type === 'upload' ? init.icon.dataUrl : '')
+      setBg(init?.bg ?? null)
+      setError(null)
+    }
+    prevOpen.current = open
+  }, [open])
 
   const icon: ShortcutIcon =
     iconMode === 'emoji' ? { type: 'emoji', emoji } : iconMode === 'upload' ? { type: 'upload', dataUrl: upload } : { type: 'auto' }
 
   async function submit() {
+    if (busy) return // in-flight guard: double activation must not double-create
     setError(null)
     if (!upload && iconMode === 'upload') {
       setError('Choose an image to use as the icon.')
       return
     }
-    if (initial) {
-      const res = await updateShortcut(initial.id, { label, url, icon, bg })
-      if (!res.ok) setError(res.reason)
-      else onClose()
-    } else {
-      const res = await createShortcut({ label, url, icon, bg })
-      if (!res.ok) {
-        setError(res.reason)
-        return
-      }
-      if (folderId) {
-        await addShortcutToFolder(folderId, res.shortcut.id)
+    setBusy(true)
+    try {
+      if (initial) {
+        const res = await updateShortcut(initial.id, { label, url, icon, bg })
+        if (!res.ok) setError(res.reason)
+        else onClose()
       } else {
-        await addItemToPage(pageId, 'shortcut', res.shortcut.id)
+        const res = await createShortcut({ label, url, icon, bg })
+        if (!res.ok) {
+          setError(res.reason)
+          return
+        }
+        if (folderId) {
+          await addShortcutToFolder(folderId, res.shortcut.id)
+        } else {
+          await addItemToPage(pageId, 'shortcut', res.shortcut.id)
+        }
+        onClose()
       }
-      onClose()
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -225,7 +258,7 @@ export function ShortcutDialog({ open, onClose, pageId, initial, folderId }: Sho
         <button type="button" className="btn btn-ghost" onClick={onClose}>
           Cancel
         </button>
-        <button type="button" className="btn btn-primary" onClick={() => void submit()}>
+        <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void submit()}>
           {initial ? 'Save' : 'Add'}
         </button>
       </div>
@@ -249,6 +282,22 @@ export function NewFolderDialog({
   onCreated: (folder: Folder) => void
 }) {
   const [name, setName] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  async function create() {
+    if (busy) return // in-flight guard: holding Enter fires repeat keydowns
+    const trimmed = name.trim()
+    if (!trimmed) return
+    setBusy(true)
+    try {
+      const folder = await createFolder(trimmed)
+      await addItemToPage(pageId, 'folder', folder.id)
+      onCreated(folder)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <Modal open={open} onClose={onClose} title="New folder" width={360}>
       <input
@@ -257,11 +306,8 @@ export function NewFolderDialog({
         onChange={(e) => setName(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' && name.trim()) {
-            void (async () => {
-              const folder = await createFolder(name)
-              await addItemToPage(pageId, 'folder', folder.id)
-              onCreated(folder)
-            })()
+            e.preventDefault()
+            void create()
           }
         }}
         placeholder="Folder name"
@@ -275,14 +321,8 @@ export function NewFolderDialog({
         <button
           type="button"
           className="btn btn-primary"
-          disabled={!name.trim()}
-          onClick={() =>
-            void (async () => {
-              const folder = await createFolder(name)
-              await addItemToPage(pageId, 'folder', folder.id)
-              onCreated(folder)
-            })()
-          }
+          disabled={!name.trim() || busy}
+          onClick={() => void create()}
         >
           <FolderPlus size={15} aria-hidden />
           Create
@@ -305,6 +345,7 @@ export function WidgetPickerDialog({
   onClose: () => void
   pageId: string
 }) {
+  const [busy, setBusy] = useState(false)
   return (
     <Modal open={open} onClose={onClose} title="Add widget" width={460}>
       <p className={styles.dialogHint}>Pick a widget to place on this page.</p>
@@ -316,13 +357,19 @@ export function WidgetPickerDialog({
               key={def.type}
               type="button"
               className={styles.widgetPick}
-              onClick={() =>
+              onClick={() => {
+                if (busy) return // in-flight guard: double activation double-adds
+                setBusy(true)
                 void (async () => {
-                  const inst = await createWidgetInstance(def.type, def.defaultSize)
-                  await addItemToPage(pageId, 'widget', inst.id)
-                  onClose()
+                  try {
+                    const inst = await createWidgetInstance(def.type, def.defaultSize)
+                    await addItemToPage(pageId, 'widget', inst.id)
+                    onClose()
+                  } finally {
+                    setBusy(false)
+                  }
                 })()
-              }
+              }}
             >
               <span className={styles.widgetPickIcon}>
                 <Icon size={19} aria-hidden />

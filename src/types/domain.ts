@@ -26,12 +26,6 @@ export type WallpaperRef =
   | { kind: 'builtin'; id: BuiltinWallpaperId }
   | { kind: 'user'; wallpaperId: EntityId }
 
-export interface DashboardPanelPref {
-  /** Panel type id — mirrors a built-in dashboard panel key. */
-  key: 'notes' | 'tasks' | 'calendar' | 'bookmarks'
-  order: number
-}
-
 export interface AppSettings {
   id: 'main'
   /** Light / dark / auto. 'auto' follows the OS (default). */
@@ -43,8 +37,6 @@ export interface AppSettings {
   /** Whether shortcut labels render on home pages. */
   showLabels: boolean
   wallpaper: WallpaperRef
-  /** Ordered + enabled dashboard panels. */
-  dashboardPanels: DashboardPanelPref[]
   createdAt: number
   updatedAt: number
 }

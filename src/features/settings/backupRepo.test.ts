@@ -187,4 +187,124 @@ describe('backup repository', () => {
     expect(await db.tasks.get('task-1')).toBeDefined()
     expect(await db.history.get('query:hearth')).toBeDefined()
   })
+
+  it('rejects a backup row carrying a javascript: shortcut URL', async () => {
+    await addRowsAcrossTables()
+    const notesBefore = await db.notes.count()
+
+    const evil = JSON.stringify({
+      schemaVersion: BACKUP_SCHEMA_VERSION,
+      kind: BACKUP_KIND,
+      exportedAt: 1,
+      data: {
+        shortcuts: [
+          {
+            id: 'sc-evil',
+            label: 'Pwn',
+            url: 'javascript:alert(1)',
+            icon: { type: 'auto' },
+            bg: null,
+            createdAt: 1,
+            updatedAt: 1,
+          },
+        ],
+      },
+    })
+
+    const res = await importBackupJson(evil)
+    if (res.ok) throw new Error('expected javascript: shortcut import to fail')
+    expect(res.reason).toContain('shortcuts')
+    expect(await db.shortcuts.get('sc-evil')).toBeUndefined()
+    // Existing data untouched.
+    expect(await db.notes.count()).toBe(notesBefore)
+    expect(await db.notes.get('note-1')).toBeDefined()
+  })
+
+  it('rejects a launch history row with a non-http(s) URL', async () => {
+    await addRowsAcrossTables()
+
+    const evil = JSON.stringify({
+      schemaVersion: BACKUP_SCHEMA_VERSION,
+      kind: BACKUP_KIND,
+      exportedAt: 1,
+      data: {
+        history: [
+          { id: 'launch:evil', kind: 'launch', text: 'evil', url: 'javascript:alert(1)', count: 1, lastUsedAt: 1 },
+        ],
+      },
+    })
+
+    const res = await importBackupJson(evil)
+    if (res.ok) throw new Error('expected javascript: history import to fail')
+    expect(res.reason).toContain('history')
+    expect(await db.history.get('launch:evil')).toBeUndefined()
+  })
+
+  it('rejects a dock item with an unknown appId (would brick the shell)', async () => {
+    await addRowsAcrossTables()
+
+    const evil = JSON.stringify({
+      schemaVersion: BACKUP_SCHEMA_VERSION,
+      kind: BACKUP_KIND,
+      exportedAt: 1,
+      data: {
+        dockItems: [{ id: 'dock-evil', order: 0, appId: 'not-a-real-app', shortcutId: null }],
+      },
+    })
+
+    const res = await importBackupJson(evil)
+    if (res.ok) throw new Error('expected unknown-appId dock import to fail')
+    expect(res.reason).toContain('dockItems')
+    expect(await db.dockItems.get('dock-evil')).toBeUndefined()
+  })
+
+  it('rejects an icon upload that is not a data:image URL', async () => {
+    await addRowsAcrossTables()
+
+    const evil = JSON.stringify({
+      schemaVersion: BACKUP_SCHEMA_VERSION,
+      kind: BACKUP_KIND,
+      exportedAt: 1,
+      data: {
+        shortcuts: [
+          {
+            id: 'sc-exfil',
+            label: 'Exfil',
+            url: 'https://example.com',
+            icon: { type: 'upload', dataUrl: 'https://evil.example/tracker.png' },
+            bg: null,
+            createdAt: 1,
+            updatedAt: 1,
+          },
+        ],
+      },
+    })
+
+    const res = await importBackupJson(evil)
+    if (res.ok) throw new Error('expected remote icon import to fail')
+    expect(res.reason).toContain('data:image')
+  })
+
+  it('accepts a genuine full-table export over a wiped database (round-trip)', async () => {
+    await addRowsAcrossTables()
+    // Add a shortcut + dock pin the way the write paths do.
+    await db.shortcuts.put({
+      id: 'sc-1',
+      label: 'Example',
+      url: 'https://example.com',
+      icon: { type: 'auto' },
+      bg: null,
+      createdAt: 1,
+      updatedAt: 1,
+    })
+    await db.dockItems.put({ id: 'dock-1', order: 0, appId: 'dashboard', shortcutId: 'sc-1' })
+    const json = await exportBackupJson()
+
+    await wipeAllData()
+    const res = await importBackupJson(json)
+    expect(res).toEqual({ ok: true })
+
+    expect(await db.shortcuts.get('sc-1')).toMatchObject({ url: 'https://example.com' })
+    expect(await db.dockItems.get('dock-1')).toMatchObject({ appId: 'dashboard', shortcutId: 'sc-1' })
+  })
 })

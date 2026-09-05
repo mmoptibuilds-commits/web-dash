@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { db } from '@/data/db/db'
 import { getSettings, updateSettings } from '@/data/repositories/settings'
-import { defaultSettings, SETTINGS_ID } from '@/data/defaults'
+import { SETTINGS_ID } from '@/data/defaults'
 
 async function resetDatabase(): Promise<void> {
   await db.delete()
@@ -49,7 +49,6 @@ describe('settings persistence', () => {
     expect(settings.iconSize).toBe('small')
     expect(settings.showLabels).toBe(false)
     expect(settings.defaultSearchEngine).toBe('google')
-    expect(settings.dashboardPanels).toEqual(defaultSettings().dashboardPanels)
   })
 
   it('updates the updatedAt timestamp', async () => {

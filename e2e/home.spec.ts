@@ -1,12 +1,10 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import {
-  addShortcut,
   boot,
   cellOf,
   enterEdit,
   exitEdit,
   folderTile,
-  openApp,
   pageTitleButton,
   tile,
 } from './helpers'

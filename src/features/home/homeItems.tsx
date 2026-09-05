@@ -77,12 +77,3 @@ export function FolderTile({
     </button>
   )
 }
-
-/** Empty drop-target preview used while dragging an item in edit mode. */
-export function DroppedTile({ label }: { label: string }) {
-  return (
-    <div className={styles.dropped} aria-hidden>
-      {label}
-    </div>
-  )
-}

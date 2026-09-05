@@ -34,7 +34,7 @@ describe('notes repository', () => {
     const before = note.updatedAt
 
     await noteRepo.updateNote(note.id, { title: 'Edited', body: 'hello world' })
-    const edited = await noteRepo.getNote(note.id)
+    const edited = (await noteRepo.listNotes()).find((n) => n.id === note.id)
     expect(edited?.title).toBe('Edited')
     expect(edited?.body).toBe('hello world')
     expect(edited?.updatedAt).toBeGreaterThanOrEqual(before)
@@ -42,7 +42,7 @@ describe('notes repository', () => {
     // updateNote on a deleted id is a no-op (safe for post-delete autosave flush)
     await noteRepo.deleteNote(note.id)
     await expect(noteRepo.updateNote(note.id, { body: 'ghost' })).resolves.toBeUndefined()
-    expect(await noteRepo.getNote(note.id)).toBeUndefined()
+    expect((await noteRepo.listNotes()).some((n) => n.id === note.id)).toBe(false)
   })
 
   it('searches title and body case-insensitively', async () => {

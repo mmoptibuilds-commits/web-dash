@@ -15,7 +15,7 @@ const DATE = new Intl.DateTimeFormat(undefined, {
 export function ClockWidget(_props: WidgetComponentProps) {
   const now = useNow(15_000)
   return (
-    <div className={styles.clock} role="timer" aria-label={`${TIME.format(now)}, ${DATE.format(now)}`}>
+    <div className={`${styles.container} ${styles.clock}`} role="timer" aria-label={`${TIME.format(now)}, ${DATE.format(now)}`}>
       <span className={styles.clockTime}>{TIME.format(now)}</span>
       <span className={styles.clockDate}>{DATE.format(now)}</span>
     </div>
