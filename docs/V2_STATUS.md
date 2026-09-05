@@ -6,39 +6,6 @@ task list; this file records what changed, evidence, and open follow-ups.
 
 Branch: `build/v1-one-shot` (V2 continues on top of the V1 one-shot build).
 
-## 10 — Shell polish, stronger translucency, and embed interaction (done)
-
-The final presentation pass tightened the shell at phone and desktop widths,
-made Transparency visibly useful, and removed the interaction trap around
-embedded widgets while preserving the local-first V1 architecture.
-
-### What changed
-- **Status bar** — `MenuBar` is a compact MacBook-style status bar. Home /
-  Dashboard, Edit, Search, Control Center, and the live clock/date remain
-  operable at 320, 390, and 1440px without horizontal overflow.
-- **Glass control** — Transparency now interpolates shared glass alpha tokens
-  between clearly distinct solid and see-through endpoints. Changes apply
-  immediately, persist through reload, and still yield to Reduced Effects.
-- **Icon family** — dock app glyphs and shortcut fallbacks share a squircle,
-  optical sizing, highlight, and shadow recipe using the existing Lucide/CSS
-  stack.
-- **Embeds and windows** — embed controls remain pointer-operable above the
-  iframe and reflow at narrow tile widths; window content is bounded so the
-  dock and other mini-apps remain usable while an embed is open.
-- **Regression coverage** — `e2e/polish.spec.ts` covers the status bar,
-  transparency endpoints and reload, icon treatment, embed reflow, and opening
-  Notes and Calendar after adding an embed.
-
-### Evidence
-- `npm run check` — lint, typecheck, **126/126 Vitest tests**, and production
-  PWA build pass.
-- `npm run build` — production bundle generated with 16 precache entries.
-- `npx playwright test --project=desktop --project=mobile` — **81 passed / 23
-  skipped / 0 failed** against the fresh production build, including 8 polish
-  cases across both projects.
-- Visual screenshots reviewed at 1440×900 and 390×844; both show the compact
-  status bar, bounded content, and coherent icon treatment.
-
 ## 9 — PWA/offline and interaction accessibility hardening (done)
 
 Closed the remaining §8 follow-ups with evidence-bound browser checks. The
