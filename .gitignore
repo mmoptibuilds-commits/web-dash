@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+*.local
+
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
+
+# Playwright test artifacts
+test-results/
+playwright-report/
+blob-report/
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test coverage
+coverage/
+
+# Env — never commit secrets
+.env
+.env.*
+!.env.example
+
+# TypeScript
+*.tsbuildinfo
