@@ -84,7 +84,7 @@ export function MenuBar() {
       <div className={styles.left}>
         <button type="button" className={styles.brand} onClick={goHome} aria-label="Hearth home">
           <span className={styles.brandDot} aria-hidden />
-          <span className={styles.brandText}>Hearth</span>
+          <span className={styles.brandText}>mmoptibuilds</span>
         </button>
         <ModeSwitch />
       </div>
