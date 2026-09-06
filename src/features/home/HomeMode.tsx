@@ -43,7 +43,8 @@ import {
   FREE_CANVAS_W,
   SNAP,
   canonicalBoxForWidget,
-  clampBoxX,
+  clampBox,
+  boxesOverlap,
   itemBox,
   MIN_BOX,
   resolveMove,
@@ -406,6 +407,7 @@ interface PageProps {
   freeform: boolean
   showLabels: boolean
   iconScale: 'small' | 'regular' | 'large'
+  gridSnap: number
   shortcutById: Map<string, Shortcut>
   folderById: Map<string, Folder>
   onEditShortcut: (s: Shortcut) => void
@@ -426,6 +428,7 @@ function isFormTarget(t: EventTarget | null): boolean {
 
 function PagePane(props: PageProps) {
   const { page, isActive, editMode, freeform } = props
+  const snapStep = props.gridSnap > 0 ? props.gridSnap : SNAP
   const items = usePageItems(page.id)
   const ids = useMemo(
     () => (items ?? []).filter((i) => i.kind === 'widget').map((i) => i.refId),
@@ -443,6 +446,7 @@ function PagePane(props: PageProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [interaction, setInteraction] = useState<Interaction | null>(null)
   const [cw, setCw] = useState(FREE_CANVAS_W)
+  const [ch, setCh] = useState(520)
   const canvasRef = useRef<HTMLDivElement>(null)
   const gestureRef = useRef<Gesture | null>(null)
   const interactionRef = useRef<Interaction | null>(null)
@@ -458,7 +462,9 @@ function PagePane(props: PageProps) {
     if (!el) return
     const measure = () => {
       const w = el.offsetWidth
-      if (w > 0) setCw(w)
+      const pageHeight = el.parentElement?.clientHeight ?? window.innerHeight
+      if (w > 0) setCw(Math.min(w, FREE_CANVAS_W))
+      if (pageHeight > 0) setCh(Math.max(240, pageHeight - 32))
     }
     measure()
     const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null
@@ -473,7 +479,7 @@ function PagePane(props: PageProps) {
   }, [widgetInstances])
 
   const boxOf = (item: LayoutItem): Box =>
-    clampBoxX(itemBox(item, sizeById.get(item.refId)), cw)
+    clampBox(itemBox(item, sizeById.get(item.refId)), cw, ch)
 
   // A tile's *live* box: the transient drag/resize box while interacting.
   const liveBoxOf = (item: LayoutItem): Box =>
@@ -509,16 +515,6 @@ function PagePane(props: PageProps) {
     const g = gestureRef.current
     const canvas = canvasRef.current
     if (!g || !canvas) return
-    // Autoscroll the page while dragging near its top/bottom edge so tiles can
-    // be dropped below the fold (pointer stays put, content advances).
-    if (g.moved) {
-      const scroller = canvas.parentElement
-      if (scroller) {
-        const s = scroller.getBoundingClientRect()
-        if (e.clientY < s.top + 56) scroller.scrollTop -= 12
-        else if (e.clientY > s.bottom - 56) scroller.scrollTop += 12
-      }
-    }
     const rect = canvas.getBoundingClientRect()
     const dx = e.clientX - rect.left - g.originCX
     const dy = e.clientY - rect.top - g.originCY
@@ -540,8 +536,8 @@ function PagePane(props: PageProps) {
         w: g.base.w,
         h: g.base.h,
       }
-      const res = resolveMove(proposed, g.others, cw)
-      setLive({ id: g.id, mode: 'move', box: res.box, guides: res.guides })
+      const res = resolveMove(proposed, g.others, cw, ch, snapStep)
+      setLive({ id: g.id, mode: 'move', box: res.valid ? res.box : g.base, guides: res.guides })
     } else {
       const proposed: Box = {
         x: g.base.x,
@@ -550,7 +546,9 @@ function PagePane(props: PageProps) {
         h: g.base.h + dy,
       }
       const min = MIN_BOX[g.kind]
-      const box = resolveResize(proposed, min, cw)
+      const resized = resolveResize(proposed, min, cw, ch, snapStep)
+      const others = (items ?? []).filter((i) => i.id !== g.id).map((i) => boxOf(i))
+      const box = others.some((other) => boxesOverlap(resized, other)) ? g.base : resized
       setLive({ id: g.id, mode: 'resize', box })
     }
   }
@@ -616,7 +614,9 @@ function PagePane(props: PageProps) {
   const applyPreset = (item: LayoutItem, s: WidgetSizeId) => {
     const box = boxOf(item)
     const { w, h } = canonicalBoxForWidget(s)
-    void setItemBox(item.id, { x: box.x, y: box.y, w, h })
+    const resized = resolveResize({ x: box.x, y: box.y, w, h }, MIN_BOX.widget, cw, ch, snapStep)
+    const others = (items ?? []).filter((i) => i.id !== item.id).map((i) => boxOf(i))
+    if (!others.some((other) => boxesOverlap(resized, other))) void setItemBox(item.id, resized)
     void updateWidgetInstance(item.refId, { size: s })
   }
 
@@ -644,8 +644,9 @@ function PagePane(props: PageProps) {
         // press would never change the box. Clamp only — to the kind's minimum
         // and to the right/bottom canvas edge — monotonic in the arrow direction.
         const maxW = Math.max(min.w, cw - box.x)
+        const maxH = Math.max(min.h, ch - box.y)
         const w = isX ? Math.max(min.w, Math.min(box.w + delta, maxW)) : box.w
-        const h = isY ? Math.max(min.h, box.h + delta) : box.h
+        const h = isY ? Math.max(min.h, Math.min(box.h + delta, maxH)) : box.h
         void setItemBox(item.id, { x: box.x, y: box.y, w, h })
         return
       }
@@ -655,7 +656,7 @@ function PagePane(props: PageProps) {
         w: isX ? box.w + delta : box.w,
         h: isY ? box.h + delta : box.h,
       }
-      void setItemBox(item.id, resolveResize(next, min, cw))
+      void setItemBox(item.id, resolveResize(next, min, cw, ch, snapStep))
       return
     }
     // Precise nudges deliberately bypass the magnetic grid/guides (a 1px push
@@ -666,7 +667,9 @@ function PagePane(props: PageProps) {
       w: box.w,
       h: box.h,
     }
-    void setItemBox(item.id, { ...clampBoxX(next, cw), y: Math.max(0, next.y) })
+    const others = (items ?? []).filter((i) => i.id !== item.id).map((i) => boxOf(i))
+    const resolved = resolveMove(next, others, cw, ch, snapStep)
+    if (resolved.valid) void setItemBox(item.id, resolved.box)
   }
 
   const payloadCtxFor = (item: LayoutItem): PayloadCtx | null => {
@@ -764,7 +767,7 @@ function PagePane(props: PageProps) {
 
   // Freeform canvas height = tallest tile bottom + a little breathing room.
   const maxBottom = items.reduce((m, it) => Math.max(m, liveBoxOf(it).y + liveBoxOf(it).h), 0)
-  const canvasH = items.length === 0 ? 320 : Math.max(maxBottom + 16, 200)
+  const canvasH = items.length === 0 ? ch : Math.max(240, Math.min(ch, maxBottom + 16))
   const guides = interaction && interaction.mode === 'move' ? interaction.guides : []
   // The tile currently being dragged is drawn above every stored z so it rides
   // over tiles it crosses; the persisted z bump lands at drag-engage.
@@ -1032,6 +1035,7 @@ export function HomeMode() {
             freeform={freeform}
             showLabels={showLabels}
             iconScale={iconScale}
+            gridSnap={settings?.gridSnap ?? SNAP}
             shortcutById={shortcutById}
             folderById={folderById}
             onEditShortcut={(s) => setDialog({ type: 'shortcut', editing: s })}

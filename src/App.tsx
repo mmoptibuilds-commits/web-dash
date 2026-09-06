@@ -8,16 +8,11 @@ import { MenuBar } from '@/components/shell/MenuBar'
 import { Dock } from '@/components/shell/Dock'
 import { HomeMode } from '@/features/home/HomeMode'
 import { FolderView } from '@/features/home/FolderView'
-import { DashboardMode } from '@/features/dashboard/DashboardMode'
+import { WindowsHost } from '@/components/shell/WindowsHost'
+import { MobileSheetHost } from '@/features/dashboard/DashboardMode'
+import { AppLauncher } from '@/components/shell/AppLauncher'
 import { SearchOverlay } from '@/features/search/SearchOverlay'
 
-/**
- * Keeps <html data-theme / data-effects / data-glass> in sync with Settings and
- * the OS (auto). main.tsx applies the persisted values before first paint; this
- * effect only drives later changes. It skips until the settings row has loaded:
- * an early apply would run on the 0.5 default Translucency and wipe the inline
- * alphas main.tsx wrote for a non-default value (a brief visual flash on boot).
- */
 function ThemeSync() {
   const settings = useSettings()
   const prefersDark = usePrefersDark()
@@ -28,12 +23,12 @@ function ThemeSync() {
       settings.reducedEffects,
       settings.glass ?? 'standard',
       settings.glassTranslucency,
+      settings,
     )
   }, [settings, prefersDark])
   return null
 }
 
-/** Global shell shortcuts: ⌘K / Ctrl-K omnibox, Escape to dismiss chrome. */
 function useGlobalKeys() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -44,17 +39,14 @@ function useGlobalKeys() {
         s.setSearchOpen(!s.searchOpen)
         return
       }
-      if (e.key === 'Escape') {
-        // Let the field itself handle Escape when typing (rename, search…).
-        const t = e.target as HTMLElement | null
-        const editing =
-          t?.isContentEditable || t?.tagName === 'INPUT' || t?.tagName === 'TEXTAREA'
-        if (editing) return
-        const s = useUi.getState()
-        if (s.openFolderId) s.setOpenFolderId(null)
-        else if (s.controlCenterOpen) s.setControlCenter(false)
-        else if (s.searchOpen) s.setSearchOpen(false)
-      }
+      if (e.key !== 'Escape') return
+      const t = e.target as HTMLElement | null
+      if (t?.isContentEditable || t?.tagName === 'INPUT' || t?.tagName === 'TEXTAREA') return
+      const s = useUi.getState()
+      if (s.openFolderId) s.setOpenFolderId(null)
+      else if (s.launcherOpen) s.setLauncherOpen(false)
+      else if (s.controlCenterOpen) s.setControlCenter(false)
+      else if (s.searchOpen) s.setSearchOpen(false)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -62,24 +54,24 @@ function useGlobalKeys() {
 }
 
 export default function App() {
-  const mode = useUi((s) => s.mode)
+  const launcherOpen = useUi((s) => s.launcherOpen)
   const openFolderId = useUi((s) => s.openFolderId)
   const searchOpen = useUi((s) => s.searchOpen)
+  const hydrateWindows = useUi((s) => s.hydrateWindows)
   useGlobalKeys()
+
+  useEffect(() => { void hydrateWindows() }, [hydrateWindows])
 
   return (
     <>
       <ThemeSync />
       <Backdrop />
       <MenuBar />
-      {mode === 'home' ? (
-        <>
-          <HomeMode />
-          {openFolderId && <FolderView />}
-        </>
-      ) : (
-        <DashboardMode />
-      )}
+      <HomeMode />
+      <WindowsHost />
+      <MobileSheetHost />
+      {openFolderId && <FolderView />}
+      {launcherOpen && <AppLauncher />}
       <Dock />
       {searchOpen && <SearchOverlay />}
     </>

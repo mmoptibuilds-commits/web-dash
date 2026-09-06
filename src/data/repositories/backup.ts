@@ -4,6 +4,7 @@ import { planFreeformGeometry } from '@/data/layout/geometry'
 import type { Table } from 'dexie'
 import type {
   AppSettings,
+  AppWindowState,
   CurrencyRates,
   DockItem,
   Folder,
@@ -111,6 +112,12 @@ const TABLES: BackupTableHandle[] = [
     clear: () => db.currencyRates.clear(),
     put: (r) => db.currencyRates.bulkPut(r as CurrencyRates[]),
   },
+  {
+    name: 'windowStates',
+    read: () => db.windowStates.toArray(),
+    clear: () => db.windowStates.clear(),
+    put: (r) => db.windowStates.bulkPut(r as AppWindowState[]),
+  },
 ]
 
 /** Dexie store references used to scope the import transaction. */
@@ -126,6 +133,7 @@ const ALL_STORES = [
   db.history,
   db.dockItems,
   db.currencyRates,
+  db.windowStates,
 ] as unknown as readonly Table[]
 
 const KNOWN_TABLES = new Set<string>(TABLES.map((t) => t.name))
@@ -183,6 +191,8 @@ const ROW_VALIDATORS: Record<string, (row: unknown) => string | null> = {
     if (row.id !== 'main') return 'id must be "main"'
     if (!inValues(THEME_VALUES)(row.theme)) return 'theme is not auto/light/dark'
     if (!isBool(row.reducedEffects)) return 'reducedEffects is not a boolean'
+    if (row.appearanceProfile !== undefined && !inValues(new Set(['auto', 'desktop', 'mobile']))(row.appearanceProfile))
+      return 'appearanceProfile is not auto/desktop/mobile'
     if (row.glass !== undefined && !inValues(GLASS_VALUES)(row.glass))
       return 'glass is not subtle/standard/vibrant' // optional: older backups lack it
     // Optional: older backups lack glassTranslucency; when present it must be a
@@ -195,6 +205,23 @@ const ROW_VALIDATORS: Record<string, (row: unknown) => string | null> = {
     if (!inValues(SEARCH_ENGINE_VALUES)(row.defaultSearchEngine))
       return 'defaultSearchEngine is not google/bing/duckduckgo'
     if (!inValues(ICON_SIZE_VALUES)(row.iconSize)) return 'iconSize is not small/regular/large'
+    if (row.wallpaperDimming !== undefined && !(isFin(row.wallpaperDimming) && row.wallpaperDimming >= 0 && row.wallpaperDimming <= 0.8))
+      return 'wallpaperDimming is not a number in 0..0.8'
+    if (row.iconFamily !== undefined && !inValues(new Set(['system', 'monochrome', 'tinted']))(row.iconFamily))
+      return 'iconFamily is invalid'
+    if (row.iconShape !== undefined && !inValues(new Set(['squircle', 'rounded', 'circle', 'plain']))(row.iconShape))
+      return 'iconShape is invalid'
+    if (row.iconTreatment !== undefined && !inValues(new Set(['flat', 'material', 'contrast']))(row.iconTreatment))
+      return 'iconTreatment is invalid'
+    if (row.dockStyle !== undefined && !inValues(new Set(['glass', 'shelf']))(row.dockStyle))
+      return 'dockStyle is invalid'
+    if (row.dockSize !== undefined && !inValues(ICON_SIZE_VALUES)(row.dockSize)) return 'dockSize is invalid'
+    for (const key of ['dockMagnification', 'showDockIndicators', 'restoreWindowsOnReload', 'embedFullscreen', 'embedToolbar', 'reducedTransparency', 'highContrast'] as const)
+      if (row[key] !== undefined && !isBool(row[key])) return `${key} is not a boolean`
+    if (row.homeDensity !== undefined && !inValues(new Set(['comfortable', 'balanced', 'compact']))(row.homeDensity))
+      return 'homeDensity is invalid'
+    for (const key of ['canvasMaxWidth', 'gridSnap', 'defaultWindowWidth', 'defaultWindowHeight'] as const)
+      if (row[key] !== undefined && !(isFin(row[key]) && row[key] > 0)) return `${key} is not a positive number`
     if (!isBool(row.showLabels)) return 'showLabels is not a boolean'
     const wp = row.wallpaper
     if (!isObj(wp)) return 'wallpaper is not an object'
@@ -297,6 +324,15 @@ const ROW_VALIDATORS: Record<string, (row: unknown) => string | null> = {
     }
     if (!isNumOrNull(row.editedAt)) return 'editedAt must be a number or null'
     if (!isFin(row.updatedAt)) return 'updatedAt is not a number'
+    return null
+  },
+  windowStates: (row) => {
+    if (!isObj(row)) return 'row is not an object'
+    if (!inValues(BUILTIN_APP_ID_VALUES)(row.appId)) return 'appId is not a known app'
+    for (const key of ['x', 'y', 'w', 'h', 'lastOpenedAt', 'updatedAt'] as const)
+      if (!isFin(row[key])) return `${key} is not a number`
+    if (isFin(row.w) && isFin(row.h) && (row.w < 300 || row.h < 220)) return 'window is below the minimum size'
+    if (!isBool(row.maximized) || !isBool(row.minimized) || !isBool(row.open)) return 'window flags are invalid'
     return null
   },
 }

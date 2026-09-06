@@ -1,7 +1,7 @@
 {
   "name": "web-dashboard",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "description": "Personal web dashboard / browser start page / lightweight personal web OS. Local-first, installable PWA, no backend.",
   "engines": {

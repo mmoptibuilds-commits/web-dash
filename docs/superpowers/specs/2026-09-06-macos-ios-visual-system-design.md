@@ -1,3 +1,5 @@
+> **Superseded for v1.1.0.** This earlier CSS-only proposal preserved the separate Dashboard mode. The approved Hearth OS overhaul is documented in `docs/superpowers/specs/2026-09-06-hearth-os-v1-1-overhaul-design.md` and its implementation plan.
+
 # Hearth macOS/iOS Visual System
 
 ## Status

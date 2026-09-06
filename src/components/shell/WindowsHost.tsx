@@ -5,6 +5,8 @@ import { BUILTIN_APPS } from '@/types/apps'
 import { AppContent } from './appContent'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import type { BuiltinAppId } from '@/types/domain'
+import { useIsDesktop } from '@/hooks/useMedia'
+import { clampWindowState } from '@/data/repositories/windowStates'
 import styles from './windows.module.css'
 
 /** Height reserved by the menu bar so windows never slide under it. */
@@ -21,6 +23,14 @@ interface DragRef {
   moved: boolean
 }
 
+interface ResizeRef {
+  pointerId: number
+  startX: number
+  startY: number
+  originW: number
+  originH: number
+}
+
 function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v))
 }
@@ -34,7 +44,9 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
   const minimizeApp = useUi((s) => s.minimizeApp)
   const toggleMaximize = useUi((s) => s.toggleMaximize)
   const moveWindow = useUi((s) => s.moveWindow)
+  const resizeWindow = useUi((s) => s.resizeWindow)
   const drag = useRef<DragRef | null>(null)
+  const resize = useRef<ResizeRef | null>(null)
   const frameRef = useRef<HTMLElement>(null)
 
   /** A freshly opened window is appended frontmost — move keyboard focus to it. */
@@ -76,7 +88,12 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
         width: viewW - 16,
         height: viewH - MENU_BOTTOM - DOCK_RESERVE - 6,
       }
-    : { left: win.x, top: win.y, width: win.w, height: win.h }
+    : {
+        left: clamp(win.x, 8 - win.w + 120, Math.max(8, viewW - 88)),
+        top: clamp(win.y, MENU_BOTTOM + 4, Math.max(MENU_BOTTOM + 4, viewH - DOCK_RESERVE - 66)),
+        width: Math.min(win.w, viewW - 16),
+        height: Math.min(win.h, viewH - MENU_BOTTOM - DOCK_RESERVE - 10),
+      }
 
   const onTitleDown = (e: ReactPointerEvent<HTMLElement>) => {
     if (win.maximized) return
@@ -123,6 +140,26 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
         /* ignore */
       }
     }
+  }
+
+  const onResizeDown = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    if (e.button !== 0 || win.maximized) return
+    e.preventDefault()
+    focusApp(appId)
+    resize.current = { pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, originW: win.w, originH: win.h }
+    try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* optional */ }
+  }
+  const onResizeMove = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    const r = resize.current
+    if (!r || r.pointerId !== e.pointerId) return
+    const maxW = Math.max(300, viewW - Math.max(8, win.x) - 8)
+    const maxH = Math.max(220, viewH - Math.max(MENU_BOTTOM + 4, win.y) - DOCK_RESERVE - 6)
+    resizeWindow(appId, clamp(r.originW + e.clientX - r.startX, 300, maxW), clamp(r.originH + e.clientY - r.startY, 220, maxH))
+  }
+  const onResizeEnd = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    if (resize.current?.pointerId !== e.pointerId) return
+    resize.current = null
+    try { e.currentTarget.releasePointerCapture(e.pointerId) } catch { /* optional */ }
   }
 
   return (
@@ -182,13 +219,44 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
       <div className={styles.content}>
         <AppContent appId={appId} />
       </div>
+      {!maximized && (
+        <button
+          type="button"
+          className={styles.resizeHandle}
+          aria-label={`Resize ${app.name} window`}
+          onPointerDown={onResizeDown}
+          onPointerMove={onResizeMove}
+          onPointerUp={onResizeEnd}
+          onPointerCancel={onResizeEnd}
+        />
+      )}
     </section>
   )
 }
 
 /** Renders all open desktop windows (dashboard mode only). */
 export function WindowsHost() {
+  const desktop = useIsDesktop()
   const focusOrder = useUi((s) => s.focusOrder)
+  const windows = useUi((s) => s.windows)
+  const moveWindow = useUi((s) => s.moveWindow)
+  const resizeWindow = useUi((s) => s.resizeWindow)
+  useEffect(() => {
+    if (!desktop) return
+    const clampOpenWindows = () => {
+      const viewport = { width: window.innerWidth, height: window.innerHeight, top: MENU_BOTTOM + 4, bottom: window.innerHeight - DOCK_RESERVE - 6, inset: 8 }
+      for (const [appId, state] of Object.entries(windows)) {
+        if (!state || state.maximized) continue
+        const next = clampWindowState(state, viewport)
+        if (next.x !== state.x || next.y !== state.y) moveWindow(appId as BuiltinAppId, next.x, next.y)
+        if (next.w !== state.w || next.h !== state.h) resizeWindow(appId as BuiltinAppId, next.w, next.h)
+      }
+    }
+    clampOpenWindows()
+    window.addEventListener('resize', clampOpenWindows)
+    return () => window.removeEventListener('resize', clampOpenWindows)
+  }, [desktop, windows, moveWindow, resizeWindow])
+  if (!desktop) return null
   return (
     <div className={styles.stage}>
       {focusOrder.map((id) => (

@@ -34,8 +34,8 @@ export const BUILTIN_APPS: Record<BuiltinAppId, BuiltinAppDescriptor> = {
   },
   dashboard: {
     id: 'dashboard',
-    name: 'Dashboard',
-    description: 'Notes, tasks, calendar and more.',
+    name: 'Apps',
+    description: 'Open the Launchpad app inventory.',
     icon: LayoutDashboard,
     kind: 'nav',
   },

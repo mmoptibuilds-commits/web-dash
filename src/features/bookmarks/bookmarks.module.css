@@ -415,7 +415,9 @@
 .linkList {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -427,7 +429,7 @@
   display: flex;
   align-items: center;
   gap: var(--sp-2);
-  min-height: 38px;
+  min-height: 36px;
   padding: 0 var(--sp-1);
   border-radius: var(--r-md);
   text-align: left;

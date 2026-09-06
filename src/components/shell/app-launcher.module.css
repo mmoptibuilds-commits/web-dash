@@ -1,0 +1,94 @@
+.overlay {
+  position: fixed;
+  inset: calc(var(--menu-h) + var(--safe-top)) 0 calc(var(--dock-h) + var(--dock-pad) + var(--safe-bottom)) 0;
+  z-index: var(--z-command);
+  display: grid;
+  place-items: start center;
+  padding: clamp(16px, 7vh, 72px) var(--sp-4);
+  background: rgb(var(--overlay) / 0.24);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  animation: launcher-in 180ms var(--ease-out) both;
+}
+.panel {
+  width: min(760px, 100%);
+  max-height: min(680px, 100%);
+  overflow: auto;
+  padding: clamp(18px, 3vw, 30px);
+  border-radius: var(--r-xl);
+  background: rgb(var(--glass-1) / var(--glass-a-1));
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  box-shadow: var(--shadow-4), var(--shadow-inset-1);
+  -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(var(--glass-sat, 1.4));
+  backdrop-filter: blur(var(--blur-lg)) saturate(var(--glass-sat, 1.4));
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-6);
+}
+.eyebrow {
+  margin-bottom: 3px;
+  color: rgb(var(--ink-3));
+  font-size: var(--fs-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+.title {
+  font-size: var(--fs-2xl);
+  letter-spacing: var(--tracking-tighter);
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+}
+.app {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 14px 8px 13px;
+  border-radius: var(--r-lg);
+  color: rgb(var(--ink-1));
+  text-align: center;
+  transition: background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+.app:hover,
+.app:focus-visible {
+  background: rgb(var(--glass-3) / 0.52);
+}
+.app:active {
+  transform: scale(0.96);
+}
+.name {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+}
+.description {
+  min-height: 2.4em;
+  color: rgb(var(--ink-3));
+  font-size: var(--fs-2xs);
+  line-height: var(--lh-snug);
+}
+@keyframes launcher-in {
+  from { opacity: 0; transform: scale(0.98) translateY(-8px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .overlay, .app { animation: none; transition: none; }
+}
+@media (max-width: 520px) {
+  .overlay {
+    padding: 12px var(--sp-2);
+  }
+  .panel {
+    padding: var(--sp-4);
+  }
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .description { display: none; }
+}

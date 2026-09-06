@@ -88,9 +88,9 @@
   --r-xs: 6px;
   --r-sm: 9px;
   --r-md: 12px;
-  --r-lg: 18px;
-  --r-xl: 24px;
-  --r-2xl: 32px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --r-2xl: 24px;
   --r-pill: 999px;
   --r-squircle: 24%; /* app-icon tile corner (DESIGN.md "Icon tiles") */
 
@@ -194,6 +194,21 @@
   --z-sheet: 90; /* mobile sheets */
   --z-command: 95; /* search overlay + control-center popover: above windows/sheets */
   --z-toast: 100;
+}
+
+/* A profile changes chrome proportions without pretending the browser has
+   changed device class. The auto profile keeps the responsive breakpoint in
+   charge; explicit profiles are useful for kiosk/tablet presentations. */
+:root[data-appearance-profile='desktop'] {
+  --menu-h: 44px;
+  --dock-h: 72px;
+  --titlebar-h: 36px;
+}
+
+:root[data-appearance-profile='mobile'] {
+  --menu-h: 50px;
+  --dock-h: 82px;
+  --titlebar-h: 42px;
 }
 
 /* ============================ Dark theme ============================ */
@@ -337,6 +352,30 @@
   --blur-sm: 0px;
   --blur-md: 0px;
   --blur-lg: 0px;
+}
+
+/* Reduced transparency is separate from reduced motion/effects: it keeps the
+   interface calm while preserving ordinary transitions and wallpaper choice. */
+:root[data-transparency='reduced'] {
+  --glass-a-1: 0.9;
+  --glass-a-2: 0.88;
+  --glass-a-3: 0.84;
+  --glass-a-elev: 0.96;
+  --glass-a-sheet: 0.94;
+  --blur-xs: 4px;
+  --blur-sm: 8px;
+  --blur-md: 12px;
+  --blur-lg: 18px;
+}
+:root[data-contrast='high'] {
+  --stroke-alpha-1: 0.28;
+  --stroke-alpha-2: 0.18;
+  --ink-2: 44 48 56;
+}
+:root[data-home-density='compact'] { --grid-gap: 12px; }
+:root[data-home-density='comfortable'] { --grid-gap: 24px; }
+:root[data-theme='dark'][data-contrast='high'] {
+  --ink-2: 224 228 235;
 }
 
 /* The in-app "Reduce motion & blur" setting must also stop motion (not just

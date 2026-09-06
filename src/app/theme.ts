@@ -1,4 +1,4 @@
-import type { GlassPreset, ThemePreference } from '@/types/domain'
+import type { AppSettings, GlassPreset, ThemePreference } from '@/types/domain'
 
 export type ResolvedTheme = 'light' | 'dark'
 
@@ -27,14 +27,24 @@ export function applyThemeAttributes(
   reducedEffects: boolean,
   glass: GlassPreset = 'standard',
   translucency = 0.5,
+  visual?: Partial<Pick<AppSettings, 'appearanceProfile' | 'iconFamily' | 'iconShape' | 'iconTreatment' | 'reducedTransparency' | 'highContrast' | 'wallpaperDimming' | 'homeDensity' | 'canvasMaxWidth'>>,
 ): void {
   const root = document.documentElement
   root.dataset.theme = theme
   root.dataset.effects = reducedEffects ? 'reduced' : 'full'
   root.dataset.glass = glassAttr(reducedEffects, glass)
+  root.dataset.appearanceProfile = visual?.appearanceProfile ?? root.dataset.appearanceProfile ?? 'auto'
+  root.dataset.iconFamily = visual?.iconFamily ?? root.dataset.iconFamily ?? 'system'
+  root.dataset.iconShape = visual?.iconShape ?? root.dataset.iconShape ?? 'squircle'
+  root.dataset.iconTreatment = visual?.iconTreatment ?? root.dataset.iconTreatment ?? 'material'
+  root.dataset.transparency = visual?.reducedTransparency ? 'reduced' : 'full'
+  root.dataset.contrast = visual?.highContrast ? 'high' : 'normal'
+  root.dataset.homeDensity = visual?.homeDensity ?? root.dataset.homeDensity ?? 'balanced'
+  root.style.setProperty('--home-canvas-max', `${visual?.canvasMaxWidth ?? 1120}px`)
+  root.style.setProperty('--wallpaper-dimming', String(visual?.wallpaperDimming ?? 0.12))
   const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
   meta?.setAttribute('content', theme === 'dark' ? '#15181d' : '#f2f3f5')
-  applyGlassAlpha(root, reducedEffects, translucency)
+  applyGlassAlpha(root, reducedEffects || Boolean(visual?.reducedTransparency), translucency)
 }
 
 /** Fill alphas the Transparency setting may override. */
@@ -45,8 +55,8 @@ const GLASS_ALPHA_TOKENS = ['--glass-a-1', '--glass-a-2', '--glass-a-3', '--glas
  *
  * The per-theme defaults already live in tokens.css, so we read each token's
  * computed base after the data attributes are set (never duplicate the numbers)
- * and scale it about the baseline: slider 0 (solid) → 1.45×, 0.5 (tuned
- * default) → 1×, 1 (most see-through) → 0.55×, clamped so fills never go fully
+ * and scale it about the baseline: slider 0 (solid) → 0.95, 0.5 (tuned
+ * default) → theme baseline, 1 (most see-through) → 0.18.
  * invisible or fully opaque. At the baseline we write nothing — CSS owns the
  * exact tuned value. Reduced Effects never gets inline alphas; its
  * `[data-effects='reduced']` block forces the solid fills instead.
@@ -58,7 +68,7 @@ function applyGlassAlpha(root: HTMLElement, reducedEffects: boolean, translucenc
   const computed = getComputedStyle(root)
   const value = Math.min(1, Math.max(0, translucency))
   const solidAlpha = 0.95
-  const clearAlpha = 0.345
+  const clearAlpha = 0.18
   for (const prop of GLASS_ALPHA_TOKENS) {
     const base = Number.parseFloat(computed.getPropertyValue(prop))
     if (!Number.isFinite(base)) continue

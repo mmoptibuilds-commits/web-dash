@@ -14,15 +14,20 @@ function usesSheets(): boolean {
  */
 export function launchApp(appId: BuiltinAppId): void {
   const ui = useUi.getState()
+  if (appId === 'dashboard') {
+    ui.setMode('home')
+    ui.setLauncherOpen(true)
+    return
+  }
   if (!isWindowApp(appId)) {
-    ui.setMode(appId === 'home' ? 'home' : 'dashboard')
+    ui.setMode('home')
     return
   }
   if (usesSheets()) {
-    ui.setMode('dashboard')
+    ui.setMode('home')
     ui.openMobile(appId)
   } else {
-    ui.setMode('dashboard')
+    ui.setMode('home')
     ui.openApp(appId)
   }
 }
@@ -32,5 +37,7 @@ export function goHome(): void {
 }
 
 export function goDashboard(): void {
-  useUi.getState().setMode('dashboard')
+  // Compatibility alias for older callers. v1.1 keeps Home as the only
+  // workspace and exposes Apps through the Launchpad overlay.
+  useUi.getState().setLauncherOpen(true)
 }

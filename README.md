@@ -1,127 +1,67 @@
-# Hearth — Personal Dashboard
+# Hearth OS
 
-A local-first, installable PWA that doubles as a browser start page and a
-lightweight personal web OS. **Home Mode** is a macOS-inspired launcher of
-horizontally paged pages; **Dashboard Mode** is a denser workspace with
-Notes / Tasks / Calendar / Links mini-apps in floating windows (desktop) or
-full-screen sheets (mobile).
+Hearth is a local-first, installable personal desktop for the browser. Home is the desktop: wallpaper, shortcuts, folders, widgets, Apps, status bar, and dock stay mounted while apps open over them.
 
-No account. No backend. No ads. No analytics. Everything is stored in your
-browser's IndexedDB and never leaves your machine unless you export a backup.
+Hearth has no account, backend, ads, or analytics. Data is stored in IndexedDB for the current browser origin and leaves the device only when you export a backup.
 
-> Built against the frozen V1 contract in
-> [`docs/PRODUCT_SPEC.md`](docs/PRODUCT_SPEC.md) and
-> `Web-dashboard-One-Shot-Claude-Code-Prompt.md` (repo root). See
-> [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for how the code is organized
-> and [`docs/ROADMAP.md`](docs/ROADMAP.md) for what is intentionally V2/V3.
+## v1.1.0 — Hearth OS visual overhaul
 
-## Features
+- Home is the permanent workspace; there is no separate Dashboard page.
+- Apps opens a Launchpad overlay without hiding Home.
+- Desktop apps use floating windows with traffic lights, focus order, minimize/restore, maximize, resize, and viewport bounds.
+- Narrow screens use full-height iOS-style app sheets; Home stays underneath.
+- Window geometry and Hearth-owned open state persist in Dexie. Reload restoration is opt-in.
+- Links lists scroll inside the widget when its tile is small; the Home surface never becomes a website-like vertical scroll.
+- Embed widgets have separate toolbar and bounded content regions, plus a browser-controlled fullscreen action.
+- Home placement uses a hard width/height contract and collision-free move resolution.
+- Icons, dock, status bar, windows, folders, widgets, and settings share one restrained platform-inspired system.
+- Appearance settings cover icons, shapes, treatments, dock behavior, layout density, transparency, contrast, motion, window restore, and embed controls.
 
-- **Home Mode** — multiple swipeable pages (indicators, prev/next + keyboard on
-  desktop), an ordered snap-grid of tiles, folders, a configurable dock,
-  on-page widgets, wallpapers, and an Edit Mode for moving / resizing / adding /
-  removing content.
-- **Dashboard Mode** — Notes (autosave, pin, search), Tasks, Calendar
-  (month view), and Links, all over the same shared data store. Core widgets
-  are also available on Home.
-- **Built-in widgets** — clock/date, search, notes, tasks, calendar, links,
-  photo, and a simple embed (with a clear fallback when a site blocks framing).
-- **Search / omnibox** — type a URL to navigate, or a query to search Google,
-  Bing, or DuckDuckGo; suggestions come only from your local history.
-- **Wallpapers** — gradient presets plus uploaded image / animated / video
-  backgrounds (size-checked, stored locally, pauses when hidden, honors
-  reduced-motion).
-- **Settings** — Simple and Advanced levels; appearance, wallpaper, search
-  engine, layout, reduced effects, and JSON backup/export/import.
-- **PWA** — installable, works offline after first load, auto-updates.
+The interface is macOS/iOS-inspired but uses Hearth's own icon abstraction, palette, and typography. The supplied Figma community files were used as visual references only; no Apple or Figma asset is shipped.
 
-## Requirements
+## Run locally
 
-- Node.js ≥ 20
-- npm
-- (E2E only) Microsoft Edge — the Playwright suite targets the system
-  `msedge` channel, so no Chromium download is needed.
-
-## Quick start (development)
+Requirements: Node.js 20+ and npm.
 
 ```sh
 npm install
 npm run dev
 ```
 
-Open the printed URL (usually http://localhost:5173). First run seeds a starter
-Home layout (search + clock widgets, a few shortcut tiles, a Dev folder, and
-the default dock).
+The first run creates a starter Home page with widgets, shortcuts, a folder, and an Apps dock item.
 
-## Build & preview (production)
+## Build and verify
 
 ```sh
-npm run build     # type-check + bundle + generate the PWA service worker
-npm run preview   # serve the production build locally (used by the E2E suite)
-```
-
-## Install as an app (PWA)
-
-The production build is a valid installable PWA. Serve `dist/` over HTTPS (or
-`http://localhost`) with any static host — `npm run preview`, `npx serve dist`,
-Netlify/Vercel/GitHub Pages, etc. — then open it in Chromium/Edge and use the
-browser's **Install** action (there is deliberately no in-app install button).
-After the first load it works offline.
-
-## Data & backups
-
-All data lives in the browser's IndexedDB for the origin you opened. It is
-**per-browser and per-device** — clearing the site's data erases it. Use
-**Settings → Advanced → Backup** to export a versioned JSON backup, and import
-it to restore (or move) your data. Large wallpaper/video media blobs may be
-excluded from exports by design.
-
-## Testing
-
-```sh
-npm run test     # unit/component tests (Vitest + Testing Library, jsdom)
-npm run typecheck
 npm run lint
-npm run check    # lint + typecheck + tests + build (canonical gate)
-npm run e2e      # Playwright against a fresh production build (see note)
-npm run test:e2e # build, then run Playwright
+npm run typecheck
+npm run test
+npm run build
+npm run check
 ```
 
-> **Note:** the Playwright suite runs against `vite preview` (a **production
-> build**), not the dev server — this is so the PWA/service-worker behavior is
-> exercised. After editing `src/`, run `npm run build` (or `test:e2e`) before
-> re-running E2E, or you'll be testing a stale bundle. The suite is split into
-> `desktop` (1440×900) and `mobile` (390×844) projects and covers all 16 spec
-> flows including reload persistence and offline app-shell behavior.
+Playwright uses the production preview:
 
-## Project layout
-
-```
-src/
-  components/   shell chrome + shared UI (menubar, dock, windows, modal)
-  features/     Home (pages/grid/dialogs), mini-apps, widgets, search, settings
-  data/         db (Dexie schema/seed) + repositories (the only data-access path)
-  lib/          url/search/nav/run/focus/id helpers (pure logic)
-  state/        ui.ts — ephemeral UI state (Zustand); persistent state stays in Dexie
-  hooks/        data hooks over the repositories
-  styles/       design tokens + global CSS
+```sh
+npm run test:e2e
 ```
 
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the layering rules.
+Build again before E2E after changing `src/`; the suite intentionally tests the production bundle and service worker.
 
-## Known limitations & deferrals
+## Data and embeds
 
-Deliberate V1 limits and V2/V3 items are listed in
-[`docs/ROADMAP.md`](docs/ROADMAP.md) and the V2/V3 section of
-[`docs/PRODUCT_SPEC.md`](docs/PRODUCT_SPEC.md) — e.g. calendar events,
-Markdown/rich notes, sync/cloud backup, custom/API widgets, native apps, and
-weather are all **out of V1 scope**.
+Settings → Advanced → Data exports and restores normal IndexedDB tables as versioned JSON. Wallpaper media blobs remain excluded.
 
-## Documentation
+An embedded page is sandboxed. Its URL, widget configuration, and Hearth window geometry can persist, but Hearth cannot read or write the embedded page's internal scroll position when the page is cross-origin. Use Open to move a site to a normal browser tab when it refuses framing.
 
-- [`docs/PRODUCT_SPEC.md`](docs/PRODUCT_SPEC.md) — frozen V1 behavior
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — stack, layering, tables
-- [`docs/ROADMAP.md`](docs/ROADMAP.md) — V2/V3 deferrals
-- [`docs/QA_CHECKLIST.md`](docs/QA_CHECKLIST.md) — tested acceptance evidence
-- [`docs/BUILD_STATE.md`](docs/BUILD_STATE.md) — build session log
-- [`CHANGELOG.md`](CHANGELOG.md) — release notes
+## Code layout
+
+```
+src/components/     shell chrome, launcher, windows, shared glyphs
+src/features/       Home, mini-apps, widgets, search, Settings
+src/data/            Dexie schema, migrations, repositories, geometry
+src/state/           immediate shell state; durable state remains in Dexie
+src/styles/          tokens, materials, global primitives, motion
+```
+
+Repository boundaries are documented in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Product behavior is in [docs/PRODUCT_SPEC.md](docs/PRODUCT_SPEC.md), visual rules are in [DESIGN.md](DESIGN.md), and the release record is in [docs/BUILD_STATE.md](docs/BUILD_STATE.md).

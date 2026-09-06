@@ -402,3 +402,48 @@
     padding-inline: var(--sp-1);
   }
 }
+
+/* Hearth OS v1.1: a quieter system bar with a real context control. */
+.bar {
+  background: rgb(var(--glass-1) / var(--glass-a-1));
+  border-bottom-color: rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.08);
+}
+.brandDot {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--r-sm);
+  background: var(--accent);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), var(--shadow-1);
+}
+.appsButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--touch-min);
+  padding: 0 9px;
+  border-radius: var(--r-sm);
+  color: rgb(var(--ink-2));
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+}
+.appsButton:hover,
+.appsButton[aria-expanded='true'] {
+  color: rgb(var(--ink-1));
+  background: rgb(var(--glass-3) / 0.68);
+}
+.context {
+  min-width: 0;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: rgb(var(--ink-3));
+  font-size: var(--fs-xs);
+}
+@media (max-width: 520px) {
+  .context { display: none; }
+  .appsButton span { display: none; }
+  .appsButton { width: var(--touch-min); justify-content: center; padding: 0; }
+  .clockDate { display: none; }
+}

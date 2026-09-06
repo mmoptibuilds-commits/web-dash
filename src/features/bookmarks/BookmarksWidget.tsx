@@ -8,13 +8,11 @@ import { Favicon } from './Favicon'
 import { sortShortcuts } from './utils'
 import styles from './bookmarks.module.css'
 
-const MAX_ROWS = 6
-
 /** Bookmarks widget — compact, display-only list from the shared shortcut store. */
 export function BookmarksWidget(_props: WidgetComponentProps) {
   const shortcuts = useShortcuts()
 
-  const rows = useMemo(() => sortShortcuts(shortcuts ?? []).slice(0, MAX_ROWS), [shortcuts])
+  const rows = useMemo(() => sortShortcuts(shortcuts ?? []), [shortcuts])
   const count = shortcuts?.length ?? 0
   const ready = shortcuts !== undefined
 
@@ -23,7 +21,7 @@ export function BookmarksWidget(_props: WidgetComponentProps) {
       <div className={styles.wHead}>
         <Bookmark size={14} aria-hidden />
         <span className={styles.wTitle}>Links</span>
-        {ready && count > MAX_ROWS && <span className={styles.wCount}>{count} total</span>}
+        {ready && <span className={styles.wCount}>{count} total</span>}
       </div>
 
       {ready && rows.length === 0 && <div className={styles.wEmpty}>No links yet</div>}

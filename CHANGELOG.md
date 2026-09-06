@@ -1,92 +1,34 @@
 # Changelog
 
-All notable changes to **Hearth** are recorded here. Hearth is a local-first,
-installable PWA personal dashboard / start page (web-dashboard V1). See
-[`README.md`](README.md) to run it and [`docs/ROADMAP.md`](docs/ROADMAP.md) for
-what is deliberately deferred.
+All notable Hearth releases are recorded here.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/), and
-this project adheres to [Semantic Versioning](https://semver.org/). Until the
-first tagged release the log lives under `[Unreleased]`.
+## [1.1.0] — Hearth OS visual and structural overhaul
 
-## [Unreleased]
+### Changed
 
-### Fixed — V2 overhaul (work-in-progress)
-- **Edit-Mode "Add to dock" popover was inert.** `.dock` is `pointer-events:
-  none` (so the full-width fixed strip never blocks the page) and only `.bar`
-  opted back in with `auto`; the Edit-Mode add popover (`.addPop`) inherited
-  `none`, so every candidate row was painted but not clickable — clicks fell
-  through to the Home page beneath and the outside-close handler dismissed the
-  popover ("UI appears but nothing inside is clickable; clicking dismisses the
-  screen"). Fixed by giving `.addPop` `pointer-events: auto`. Regression:
-  `e2e/dock-edit.spec.ts` (fails pre-fix, passes post-fix, desktop + mobile).
-- Dock launcher counting in the new spec is CSS-scoped to the real
-  `<button aria-label="Open …">` elements because dnd-kit gives each tile's
-  wrapper div a `role="button"` in Edit Mode whose accessible name duplicates
-  the launcher's (an accessibility issue tracked for the a11y sweep).
-
-### Added — v1.0.0 (initial build)
-
-**Shell & modes**
-- Installable PWA (Vite + vite-plugin-pwa): app shell, auto-update service
-  worker, offline support after first load, manifest with icon set
-  (`public/`), no in-app install button.
-- macOS-inspired Home launcher with horizontally paged, snap-scrolling pages;
-  prev/next + dot indicators; tappable page title opening the Pages manager.
-- Dashboard mode: Notes / Tasks / Calendar / Links mini-apps as floating
-  windows on desktop and full-height sheets on mobile.
-- Menubar (app menu, mode switcher, search, clock, control center), dock with
-  badge counts and context menus, empty-state + first-run guidance.
-
-**Home Mode**
-- Ordered snap grid (`LayoutItem.order`), span-by-size tiles, edit mode with
-  drag-to-rearrange, per-tile resize, remove-with-confirm.
-- Shortcuts (label + URL + icon, record-and-open navigation), folders with
-  cascade delete and full-screen folder view, multiple pages.
-- Widgets (typed registry over stable `WidgetInstance` rows): search, notes,
-  tasks, calendar, clock/date, links, photo, and an embed widget with a clear
-  fallback when a site blocks framing.
-- Design tokens + CSS modules only (no Tailwind); light/dark/system theme with
-  touch-target enlargements and reduced-motion support.
-
-**Dashboard mini-apps**
-- Notes: autosave, pin, search, delete. Tasks: add/complete/clear, filters.
-  Calendar: month view. Links: grid over the shared shortcut store.
-- Data lives in a shared store — bookmarking from the browser app and the Links
-  mini-app write the same rows.
-
-**Search / omnibox**
-- Type a URL to navigate same-tab, or a query to search Google / Bing /
-  DuckDuckGo (configurable). Suggestions come only from local history.
-
-**Wallpapers & appearance**
-- Gradient presets plus uploaded image / animated / video backgrounds with
-  size checking, video pause-when-hidden, and reduced-motion handling.
-- Simple and Advanced Settings levels; appearance, wallpaper, search engine,
-  grid/label/icon options, reduced effects.
-
-**Backup**
-- Versioned JSON export/import for normal (non-blob) tables; import validation;
-  large media blobs excluded from exports by design.
-
-### Fixed
-- Page-activation races in the Home pager (instant jump vs. smooth scroll;
-  `onScrollSync` guard while a new page id has not yet materialized).
-- Dot-indicator hit-area overlap that could make a tap on a page dot land on
-  the neighboring page's pill.
-- Window close action swallowing events in the Dashboard shell.
-
-### Engineering
-- Repositories layer (`data/repositories`) is the only data-access path; no
-  component touches `db.` directly.
-- Domain types in `types/domain.ts` as the frozen, versioned contract.
-- Ephemeral UI state in a single Zustand store; persistent state in Dexie.
-- 45 unit/component tests (Vitest + Testing Library), 35 E2E scenarios across
-  desktop (1440×900) and mobile (390×844) Playwright projects covering all 16
-  spec flows, including reload persistence and offline app-shell behavior.
-- `npm run check` (lint + typecheck + tests + build) is green.
+- Home is now the permanent desktop surface. Apps opens a Launchpad overlay instead of navigating to a Dashboard page.
+- Desktop app windows remain visible together, retain focus/z-order, and expose traffic-light close, minimize, maximize, and resize controls.
+- Narrow screens use safe-area-aware app sheets while Home remains mounted underneath.
+- Status bar and dock proportions were tightened; random app gradients and oversized capsule styling were removed.
+- A shared glyph presentation layer now supports system, monochrome, and tinted families with squircle, rounded, circle, or plain containers and flat, material, or contrast treatments.
+- Settings now controls appearance profile, icon presentation, dock behavior, Home density/canvas limits, transparency, contrast, motion, window restoration, and embed chrome.
+- Window records use Dexie schema v4. Geometry is stored through a repository and reload restoration is opt-in.
+- Home placement is bounded and collision-free. Moves resolve to the nearest valid slot, while resize is limited by the usable viewport and per-kind minimums.
+- The Links widget keeps all links reachable in an internal scroll region after resize.
+- Embed widgets separate host controls from external content, wrap their toolbar at narrow widths, and expose browser fullscreen when permitted.
+- The shell, document, and Home surface remain viewport-locked; content-heavy app bodies own their own scroll.
 
 ### Documentation
-- PRODUCT_SPEC (frozen V1 contract), ARCHITECTURE, ROADMAP (V2/V3 deferrals),
-  QA_CHECKLIST, BUILD_STATE, plus repo-root README and DESIGN.
-- Repo-root one-shot build spec + AGENTS.md parallel-work ownership rules.
+
+- README, DESIGN, product spec, architecture, roadmap, QA checklist, build state, and V2 status now describe Hearth OS v1.1.
+- The earlier visual-system record is marked superseded by the approved Hearth OS overhaul design.
+
+### Compatibility
+
+- Existing Home pages, shortcuts, folders, widgets, wallpapers, notes, tasks, dock items, and settings remain readable.
+- Older settings and backup rows receive defaults for new fields.
+- No Apple or Figma community asset is copied into the product. No new WebGL or GSAP dependency is required.
+
+## [1.0.0] — Initial release
+
+The initial release shipped Hearth as a local-first PWA with Home pages, Dashboard mini-apps, widgets, wallpapers, settings, backups, and offline app-shell support.

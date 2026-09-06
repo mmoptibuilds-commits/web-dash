@@ -1,27 +1,29 @@
-# ROADMAP — Hearth
+# Hearth OS roadmap
 
-## V1 (this build — frozen scope)
-Local-first installable PWA web OS: Home launcher (pages, ordered-grid edit
-mode, shortcuts, folders, dock, wallpapers, built-in widgets) + Dashboard mode
-(Notes, Tasks, Calendar month view, Links manager) with desktop
-mini-windows / mobile sheets; menu bar + Control Center Lite; local-history
-search omnibox with URL detection; two-level Settings; JSON backup; starter
-seed; PWA + offline shell. $0 spend, no backend, no account.
+## Shipped in v1.1
 
-## V2 (deferred — do not build in V1)
-- Google authentication / Supabase / cross-device sync; Google Drive backup
-- Richer notes (Markdown/preview); calendar events/reminders
-- In-app notification center; custom API/data widgets; Smart Folders
-- Advanced window snapping/resizing; richer glass motion/depth
-- More configurable Control Center; non-Apple visual preset
-- Browser-extension new-tab replacement + (permissioned) browser-history
+- permanent Home desktop with Launchpad overlay;
+- multi-window desktop shell and iOS-style narrow sheets;
+- persistent window geometry with opt-in reload restore;
+- collision-free, viewport-bounded Home placement;
+- contained Links and Embed widgets;
+- icon family/shape/treatment choices;
+- measured dock, system status bar, shared materials, transparency and contrast controls;
+- Dexie v4 migration, backup coverage, responsive/a11y verification, and release documentation.
 
-## V3 (deferred)
-- Weather; native Android APK; refraction/shader glass
-- Plugin/widget marketplace; arbitrary-code widget SDK
-- Multi-user/community + social/sharing; cloud wallpaper library;
-  theme marketplace; heavy SEO
+## Next
 
-**Guardrail:** no V2/V3 code paths in the V1 tree except where ARCHITECTURE.md
-names a sync-ready seam (single versioned store, repository boundary) — no
-half-built features waiting for a future version.
+- richer calendar events and reminders;
+- richer Notes formatting and attachments;
+- more first-party widgets with explicit bounded-scroll contracts;
+- additional local icon packs authored for Hearth;
+- performance profiling on large Home layouts.
+
+## Deferred
+
+- cloud sync and cross-device backup;
+- authentication and multi-user data;
+- third-party plugin marketplace;
+- arbitrary iframe rewriting or cross-origin embed state control;
+- WebGL/shader/refraction materials;
+- native platform packaging.

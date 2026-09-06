@@ -1,3 +1,5 @@
+> **Superseded for v1.1.0.** Use `docs/superpowers/plans/2026-09-06-hearth-os-v1-1-overhaul.md` for the approved structural and visual release plan.
+
 # Hearth macOS/iOS Visual System Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

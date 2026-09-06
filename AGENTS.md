@@ -1,48 +1,9 @@
-# AGENTS.md — shared rules for coding agents on Hearth
+# Hearth OS contributor notes
 
-Read **CLAUDE.md**, **DESIGN.md**, **docs/ARCHITECTURE.md** and the relevant
-product sections in **docs/PRODUCT_SPEC.md** before writing code.
+Hearth v1.1 is a viewport-locked personal desktop. Home is always mounted; Apps opens Launchpad; app content opens in windows or narrow sheets. The document, shell, and Home do not scroll. Content-heavy app bodies may own bounded internal scrolling.
 
-## Non-negotiables
+Keep Dexie as the only persistent store and route table access through repositories. New schema changes require a versioned migration, backup validation, defaults, and tests. Keep window state in windowStates; keep immediate chrome state in Zustand.
 
-1. **One writer per worktree.** You work only inside your assigned git
-   worktree on your own branch. Never edit the coordinator checkout.
-2. **Respect file ownership.** Your lane owns only the paths listed in your
-   task. Everything else is read-only to you. If a shared/coordinator-owned
-   file needs changing (types, widget registry, repositories, tokens, DB
-   schema, package config, `state/ui.ts`, `hooks/data.ts`), do NOT edit it —
-   report the proposed change to the coordinator instead.
-3. **Run verification before handoff.** From your worktree, run at minimum:
-   `npm run typecheck`, `npm run lint`, `npm run test` (your tests), and make
-   sure you have not broken anything that already existed. Fix failures you
-   caused; report pre-existing failures without touching them.
-4. **Commit coherent work** on your lane branch with clear messages. Do not
-   leave the worktree dirty at handoff.
-5. **No secrets** anywhere. **No scope creep** — V1 only, no V2/V3 features.
-6. **Do not fake it.** If you cannot fully implement a required piece, ship
-   the rest, and report precisely what is missing/unverified.
+Use the shared geometry contract for every Home placement path. A committed tile cannot overlap another tile or escape the measured canvas. Use shared design tokens and the Glyph presentation layer. Do not add copied Apple/Figma assets, random per-app gradients, WebGL, or new UI frameworks for routine styling.
 
-## Feature content contract (the shape every mini-app feature must export)
-
-A feature directory `src/features/<name>/` must expose from its `index`:
-
-- `<Name>MiniApp` — full experience; must fill `100% × 100%` of its parent and
-  manage its own scrolling. No outer window chrome/card — the shell supplies
-  that. Desktop mini-windows and mobile sheets both render this.
-- `<Name>Widget` (features that appear on Home) — compact widget for the
-  registry; a `React.FC<WidgetComponentProps>` (see widget registry). Render a
-  self-contained glass panel that fills the tile and looks right at the tile's
-  size. Read `features/widgets/builtins/ClockWidget.tsx` +
-  `SearchWidget.tsx` for the house recipe (CSS-module panel, tokens, empty
-  state).
-- Unit tests for core behavior, co-located under your directory
-  (`src/**/*.test.ts(x)` is picked up by vitest).
-
-Only add files under your owned directory. Do not register widgets in the
-registry — the coordinator wires them in after your lane merges.
-
-## Handoff report format
-
-In your final message report: files created/changed, exact verification
-commands + results, any coordinator-owned changes you need, and known
-limitations. Keep it factual and terse.
+Run npm run lint, npm run typecheck, npm test, npm run build, and git diff --check before handoff. Run Playwright against a fresh production build when changing shell, responsive, PWA, window, widget, or embed behavior.

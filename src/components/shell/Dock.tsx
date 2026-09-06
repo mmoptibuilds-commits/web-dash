@@ -16,7 +16,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Plus, X } from 'lucide-react'
-import { useDock, useShortcuts } from '@/hooks/data'
+import { useDock, useShortcuts, useSettings } from '@/hooks/data'
 import { BUILTIN_APPS } from '@/types/apps'
 import {
   addAppToDock,
@@ -28,7 +28,7 @@ import { useUi } from '@/state/ui'
 import { launchApp } from '@/state/nav'
 import { recordAndOpen } from '@/lib/nav'
 import { hostOf } from '@/lib/url'
-import { ShortcutGlyph, hueFor } from '@/components/common/Glyph'
+import { ShortcutGlyph, SystemGlyph } from '@/components/common/Glyph'
 import type { BuiltinAppId, DockItem, Shortcut } from '@/types/domain'
 import styles from './dock.module.css'
 
@@ -43,18 +43,7 @@ interface Resolved {
 
 function AppGlyph({ appId, name }: { appId: BuiltinAppId; name: string }) {
   const Icon = BUILTIN_APPS[appId].icon
-  const h = hueFor(name)
-  return (
-    <span
-      className={styles.glyph}
-      data-icon-family="hearth"
-      style={{
-        backgroundImage: `linear-gradient(150deg, hsl(${h} 52% 52%), hsl(${(h + 42) % 360} 56% 38%))`,
-      }}
-    >
-      <Icon size={26} strokeWidth={1.7} aria-hidden />
-    </span>
-  )
+  return <SystemGlyph icon={Icon} label={name} size={44} />
 }
 
 function DockTile({
@@ -132,9 +121,10 @@ export function Dock() {
   const dock = useDock()
   const shortcuts = useShortcuts()
   const editMode = useUi((s) => s.editMode)
-  const mode = useUi((s) => s.mode)
   const windows = useUi((s) => s.windows)
   const mobileAppId = useUi((s) => s.mobileAppId)
+  const launcherOpen = useUi((s) => s.launcherOpen)
+  const settings = useSettings()
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -155,7 +145,7 @@ export function Dock() {
     if (restoreFocus) requestAnimationFrame(() => addChipRef.current?.focus())
   }
 
-  const canAdd = editMode && mode === 'home'
+  const canAdd = editMode
   const open = adding && canAdd
 
   // The "Add to dock" popover is transient UI — drop it whenever the user
@@ -163,8 +153,8 @@ export function Dock() {
   useEffect(
     () =>
       useUi.subscribe((s, prev) => {
-        if (prev.editMode !== s.editMode || prev.mode !== s.mode) {
-          if (!s.editMode || s.mode !== 'home') setAdding(false)
+        if (prev.editMode !== s.editMode) {
+          if (!s.editMode) setAdding(false)
         }
       }),
     [],
@@ -244,17 +234,12 @@ export function Dock() {
   const addableShortcuts = shortcuts.filter((s) => !pinnedIds.has(s.id))
 
   const activeIds = new Set<string>()
-  if (mode === 'home') {
-    for (const r of resolved) {
-      if (!r.shortcut && r.item.appId === 'home') activeIds.add(r.id)
-    }
-  } else {
-    for (const r of resolved) {
-      if (r.shortcut) continue
-      const open =
-        Object.prototype.hasOwnProperty.call(windows, r.item.appId) || mobileAppId === r.item.appId
-      if (open) activeIds.add(r.id)
-    }
+  for (const r of resolved) {
+    if (r.shortcut) continue
+    const open = r.item.appId === 'dashboard'
+      ? launcherOpen
+      : Object.prototype.hasOwnProperty.call(windows, r.item.appId) || mobileAppId === r.item.appId
+    if (open) activeIds.add(r.id)
   }
 
   const onDragEnd = (e: DragEndEvent) => {
@@ -286,7 +271,7 @@ export function Dock() {
   const nothingToAdd = addableApps.length === 0 && addableShortcuts.length === 0
 
   return (
-    <nav className={styles.dock} aria-label="Dock">
+    <nav className={styles.dock} aria-label="Dock" data-dock-style={settings?.dockStyle ?? 'glass'} data-dock-size={settings?.dockSize ?? 'regular'} data-dock-magnify={settings?.dockMagnification !== false} data-dock-indicators={settings?.showDockIndicators !== false}>
       <div ref={barRef} className={styles.stack}>
         {open && (
           <div

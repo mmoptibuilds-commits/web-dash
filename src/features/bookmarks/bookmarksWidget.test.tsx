@@ -43,7 +43,7 @@ describe('BookmarksWidget', () => {
     expect(await screen.findByText('No links yet')).toBeInTheDocument()
   })
 
-  it('caps the visible list and reports the real total', async () => {
+  it('keeps every link reachable and reports the real total', async () => {
     await seedLinks(['Bravo', 'Alpha', 'Delta', 'Charlie', 'Foxtrot', 'Echo', 'Hotel', 'Golf'])
     render(<BookmarksWidget instance={stubInstance} />)
 
@@ -51,8 +51,8 @@ describe('BookmarksWidget', () => {
     const openButtons = screen
       .getAllByRole('button')
       .filter((b) => (b.getAttribute('aria-label') ?? '').startsWith('Open '))
-    expect(openButtons).toHaveLength(6)
-    // Alphabetical: Alpha, Bravo, Charlie, Delta, Echo, Foxtrot (no Golf/Hotel).
-    expect(screen.queryByRole('button', { name: 'Open Golf' })).not.toBeInTheDocument()
+    expect(openButtons).toHaveLength(8)
+    expect(screen.getByRole('button', { name: 'Open Golf' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Open Hotel' })).toBeInTheDocument()
   })
 })
