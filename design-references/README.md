@@ -9,6 +9,9 @@ Contains the existing macOS/iOS UI-kit exports, screenshots and icon-template ma
 
 Use it to study proportion, spacing, hierarchy, platform patterns and visual density. Do not assume every included asset is licensed for redistribution in the product.
 
+### `v1.2/`
+Contains the six visual references extracted from the user-supplied v1.2 requirements PDF, plus a small reference map. Use these for side-by-side implementation and visual QA of the status bar, Control Center, desktop composition and responsive Settings experience. They are reference-only and are intentionally stored separately from runtime assets.
+
 ### `macos-liquidglass-motion-reference.html`
 Standalone visual/interaction reference supplied for the overhaul.
 
