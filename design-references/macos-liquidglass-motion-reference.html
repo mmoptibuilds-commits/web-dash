@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>macOS Sonoma Desktop</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    :root {
+      --mac-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --text-white: #ffffff;
+      --text-secondary: rgba(255, 255, 255, 0.72);
+      --text-muted: rgba(255, 255, 255, 0.46);
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: var(--mac-font);
+      color: var(--text-white);
+      background-color: #030614;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Master Desktop Root (Required by ybouane/liquidglass) */
+    #desktop-root {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Background Wallpaper Canvas */
+    #wallpaper-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Base Liquid Glass Element Styling (Native fallback + WebGL companion) */
+    .liquid-glass-elem {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(20, 32, 64, 0.42) 45%, rgba(10, 18, 42, 0.58) 100%);
+      backdrop-filter: blur(48px) saturate(210%) contrast(105%);
+      -webkit-backdrop-filter: blur(48px) saturate(210%) contrast(105%);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-top: 1.2px solid rgba(255, 255, 255, 0.5);
+      border-left: 1px solid rgba(255, 255, 255, 0.32);
+      box-shadow: 
+        inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.38),
+        inset 0 -1px 2px 0 rgba(0, 0, 0, 0.25),
+        0 18px 40px rgba(0, 0, 0, 0.45);
+      position: absolute;
+      border-radius: 22px;
+    }
+
+    /* Injected WebGL canvas from liquidglass sits at z-index 0; contents stay on top */
+    .liquid-glass-elem > *:not(canvas) {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Top Menu Bar */
+    .menu-bar {
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 25px;
+      border-radius: 0;
+      background: rgba(14, 20, 42, 0.4);
+      border: none;
+      border-bottom: 0.5px solid rgba(255, 255, 255, 0.16);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 14px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: -0.15px;
+      z-index: 1000;
+    }
+
+    .menu-bar-left, .menu-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      height: 100%;
+    }
+
+    .menu-bar-left span {
+      cursor: default;
+    }
+
+    .menu-finder-brand {
+      font-weight: 700;
+    }
+
+    .apple-logo-svg {
+      width: 13px;
+      height: 15px;
+      fill: #ffffff;
+      margin-right: 1px;
+    }
+
+    .menu-glyph {
+      width: 15px;
+      height: 15px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      fill: #ffffff;
+      color: #ffffff;
+    }
+
+    .mic-recording-dot {
+      width: 6.5px;
+      height: 6.5px;
+      border-radius: 50%;
+      background-color: #ff9f0a;
+      box-shadow: 0 0 5px #ff9f0a;
+      display: inline-block;
+    }
+
+    .menu-clock-text {
+      font-weight: 500;
+      letter-spacing: -0.1px;
+    }
+
+    /* Top Left Calendar Widget */
+    .widget-calendar {
+      top: 46px;
+      left: 32px;
+      width: 158px;
+      height: 158px;
+      padding: 13px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      z-index: 10;
+    }
+
+    .calendar-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      color: rgba(255, 255, 255, 0.9);
+      text-transform: uppercase;
+    }
+
+    .calendar-matrix {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      row-gap: 3.5px;
+      column-gap: 1px;
+      text-align: center;
+      font-size: 10.5px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .calendar-day-head {
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding-bottom: 2px;
+    }
+
+    .calendar-cell {
+      height: 15.5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .calendar-cell.active-date {
+      background: #ffffff;
+      color: #0b1328;
+      border-radius: 50%;
+      font-weight: 700;
+    }
+
+    /* Top Left World Clock Widget */
+    .widget-clocks {
+      top: 46px;
+      left: 206px;
+      width: 340px;
+      height: 158px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      z-index: 10;
+    }
+
+    .clock-station {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 58px;
+    }
+
+    .clock-bezel {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1.2px solid rgba(255, 255, 255, 0.3);
+      position: relative;
+      margin-bottom: 8px;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35);
+    }
+
+    .clock-numeral {
+      position: absolute;
+      font-size: 6.5px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.65);
+    }
+    .num-12 { top: 2px; left: 50%; transform: translateX(-50%); }
+    .num-3  { right: 3px; top: 50%; transform: translateY(-50%); }
+    .num-6  { bottom: 2px; left: 50%; transform: translateX(-50%); }
+    .num-9  { left: 3px; top: 50%; transform: translateY(-50%); }
+
+    .clock-needle {
+      position: absolute;
+      transform-origin: bottom center;
+      left: 50%;
+      border-radius: 1px;
+    }
+
+    .clock-needle.hour-needle {
+      width: 2px;
+      height: 13px;
+      top: 14px;
+      background: #ffffff;
+      margin-left: -1px;
+    }
+
+    .clock-needle.minute-needle {
+      width: 1.4px;
+      height: 19px;
+      top: 8px;
+      background: #ffffff;
+      margin-left: -0.7px;
+    }
+
+    .clock-needle.second-needle {
+      width: 1px;
+      height: 21px;
+      top: 6px;
+      background: #ff9f0a;
+      margin-left: -0.5px;
+    }
+
+    .clock-central-pivot {
+      position: absolute;
+      width: 3.5px;
+      height: 3.5px;
+      border-radius: 50%;
+      background: #ff9f0a;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .clock-city-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: #ffffff;
+      text-align: center;
+      line-height: 1.1;
+      margin-bottom: 2px;
+    }
+
+    .clock-relative-time {
+      font-size: 8.5px;
+      font-weight: 400;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.15;
+    }
+
+    /* Desktop Preview Folders (Top Right) */
+    .desktop-folders-group {
+      position: absolute;
+      top: 44px;
+      right: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      align-items: center;
+      z-index: 5;
+    }
+
+    .desktop-folder-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 86px;
+      cursor: default;
+    }
+
+    .desktop-folder-svg {
+      width: 58px;
+      height: 48px;
+      filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+      margin-bottom: 6px;
+    }
+
+    .desktop-folder-title {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: #ffffff;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+      text-align: center;
+      line-height: 1.25;
+    }
+
+    /* Center Spotlight Search Pill & Buttons */
+    .spotlight-capsule {
+      top: 36.8%;
+      left: calc(50% - 265px);
+      width: 312px;
+      height: 44px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 12px;
+      z-index: 40;
+    }
+
+    .spotlight-capsule svg {
+      width: 17px;
+      height: 17px;
+      fill: none;
+      stroke: var(--text-secondary);
+      stroke-width: 2.2;
+    }
+
+    .spotlight-input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #ffffff;
+      font-size: 15px;
+      font-family: var(--mac-font);
+      width: 100%;
+    }
+
+    .spotlight-input::placeholder {
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    .spotlight-action-btn {
+      top: 36.8%;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 40;
+      transition: transform 0.12s ease;
+    }
+
+    .spotlight-action-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .spotlight-action-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: #ffffff;
+      stroke-width: 2;
+    }
+
+    .btn-pos-1 { left: calc(50% - 265px + 326px); }
+    .btn-pos-2 { left: calc(50% - 265px + 326px + 52px); }
+    .btn-pos-3 { left: calc(50% - 265px + 326px + 104px); }
+    .btn-pos-4 { left: calc(50% - 265px + 326px + 156px); }
+
+    /* Bottom Left Weather Widget */
+    .widget-weather {
+      bottom: 218px;
+      left: 32px;
+      width: 334px;
+      height: 156px;
+      padding: 15px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      z-index: 10;
+    }
+
+    .weather-top-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .weather-location {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .weather-temp {
+      font-size: 38px;
+      font-weight: 300;
+      line-height: 1;
+      letter-spacing: -1.2px;
+    }
+
+    .weather-condition-summary {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      text-align: right;
+    }
+
+    .weather-icon-symbol {
+      width: 28px;
+      height: 28px;
+      margin-bottom: 2px;
+    }
+
+    .weather-desc-label {
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .weather-range-label {
+      font-size: 10px;
+      color: var(--text-secondary);
+    }
+
+    .weather-hourly-timeline {
+      display: flex;
+      justify-content: space-between;
+      border-top: 0.5px solid rgba(255, 255, 255, 0.16);
+      padding-top: 9px;
+    }
+
+    .timeline-hour-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .timeline-hour-txt {
+      font-size: 9.5px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .timeline-weather-glyph {
+      width: 15px;
+      height: 15px;
+    }
+
+    .timeline-temp-txt {
+      font-size: 10.5px;
+      font-weight: 600;
+    }
+
+    /* Bottom Left Podcast Widget */
+    .widget-podcast {
+      bottom: 52px;
+      left: 32px;
+      width: 160px;
+      height: 152px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      z-index: 10;
+    }
+
+    .podcast-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .podcast-album-artwork {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 7.5px;
+      font-weight: 900;
+      text-align: center;
+      line-height: 1.05;
+      padding: 3px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.35);
+    }
+
+    .podcast-signal-svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: #ffffff;
+      stroke-width: 2;
+      opacity: 0.9;
+    }
+
+    .podcast-details {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .podcast-release-date {
+      font-size: 9.5px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .podcast-episode-heading {
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.25;
+      max-height: 28px;
+      overflow: hidden;
+    }
+
+    .podcast-duration-badge {
+      font-size: 10px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 500;
+    }
+
+    /* Bottom Left Contact Widget */
+    .widget-contact {
+      bottom: 52px;
+      left: 206px;
+      width: 160px;
+      height: 152px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      z-index: 10;
+    }
+
+    .mom-avatar-bubble {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1.5px solid rgba(255, 255, 255, 0.28);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mom-avatar-bubble svg {
+      width: 26px;
+      height: 26px;
+      fill: none;
+      stroke: #ffffff;
+      stroke-width: 1.8;
+    }
+
+    .mom-action-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    /* Bottom Dock Shelf */
+    .dock-shelf {
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      height: 64px;
+      padding: 0 10px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 1000;
+    }
+
+    .dock-tile {
+      width: 46px;
+      height: 46px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.12s cubic-bezier(0.2, 0.8, 0.2, 1);
+      transform-origin: bottom center;
+    }
+
+    .dock-tile svg {
+      width: 100%;
+      height: 100%;
+      border-radius: 11px;
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.4));
+    }
+
+    .dock-vertical-splitter {
+      width: 1px;
+      height: 38px;
+      background: rgba(255, 255, 255, 0.2);
+      margin: 0 3px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="desktop-root">
+
+    <!-- 1. Background Wallpaper Canvas (Direct child of root, sampled by LiquidGlass) -->
+    <canvas id="wallpaper-canvas"></canvas>
+
+    <!-- 2. Desktop Folders (Non-glass direct child, sampled by LiquidGlass) -->
+    <div class="desktop-folders-group">
+      <div class="desktop-folder-unit">
+        <svg class="desktop-folder-svg" viewBox="0 0 100 80">
+          <defs>
+            <linearGradient id="folder-blue" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#4ab3f8" />
+              <stop offset="100%" stop-color="#147ed4" />
+            </linearGradient>
+          </defs>
+          <path d="M5,15 L36,15 L45,25 L95,25 A5,5 0 0,1 100,30 L100,75 A5,5 0 0,1 95,80 L5,80 A5,5 0 0,1 0,75 L0,20 A5,5 0 0,1 5,15 Z" fill="url(#folder-blue)" />
+          <rect x="25" y="38" width="50" height="30" rx="3.5" fill="#ffffff" opacity="0.95" />
+          <rect x="30" y="44" width="40" height="5" rx="1.5" fill="#f59e0b" />
+          <rect x="30" y="52" width="28" height="3" rx="1" fill="#94a3b8" />
+          <rect x="30" y="58" width="34" height="3" rx="1" fill="#94a3b8" />
+        </svg>
+        <span class="desktop-folder-title">Cookbook Projects</span>
+      </div>
+
+      <div class="desktop-folder-unit">
+        <svg class="desktop-folder-svg" viewBox="0 0 100 80">
+          <path d="M5,15 L36,15 L45,25 L95,25 A5,5 0 0,1 100,30 L100,75 A5,5 0 0,1 95,80 L5,80 A5,5 0 0,1 0,75 L0,20 A5,5 0 0,1 5,15 Z" fill="url(#folder-blue)" />
+          <rect x="24" y="37" width="52" height="32" rx="4" fill="#9333ea" />
+          <polygon points="46,47 58,53 46,59" fill="#ffffff" />
+        </svg>
+        <span class="desktop-folder-title">Lectures</span>
+      </div>
+    </div>
+
+    <!-- 3. Top Menu Bar (Direct Glass Element) -->
+    <header class="liquid-glass-elem menu-bar" data-config='{"cornerRadius": 0, "zRadius": 0, "blurAmount": 0.22, "refraction": 0.2, "edgeHighlight": 0.04}'>
+      <div class="menu-bar-left">
+        <svg class="apple-logo-svg" viewBox="0 0 170 170">
+          <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.04-7.7-7.85-12-14.42-6.1-9.35-10.9-20.1-14.42-32.25-3.52-12.15-5.28-23.73-5.28-34.73 0-14.42 3.65-26.4 10.95-35.95 7.3-9.55 16.5-14.4 27.6-14.55 4.93 0 10.45 1.34 16.55 4.02 6.1 2.68 9.94 4.08 11.52 4.2 2.01-.25 5.92-1.63 11.72-4.14 5.8-2.52 11.07-3.7 15.82-3.56 12.37.5 22.37 5.14 30 13.92-10.83 6.56-16.14 15.54-15.93 26.94.22 8.93 3.63 16.54 10.23 22.84 6.6 6.3 14.5 9.87 23.7 10.7-2.35 7.23-5.32 14.73-8.91 22.51zM119.22 31.84c0-7.3 2.66-14.1 7.98-20.4 5.32-6.3 11.82-10.3 19.5-12 1.01 7.52-.77 14.5-5.34 20.94-4.57 6.44-11.23 10.39-19.98 11.86-.5-1.07-.86-1.74-1.16-2.4-.67-1.34-1-2.52-1-3.54z" />
+        </svg>
+        <span class="menu-finder-brand">Finder</span>
+        <span>File</span>
+        <span>Edit</span>
+        <span>View</span>
+        <span>Go</span>
+        <span>Window</span>
+        <span>Help</span>
+      </div>
+
+      <div class="menu-bar-right">
+        <span class="menu-glyph" title="Battery">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="2" y="7" width="16" height="10" rx="2.2" />
+            <path d="M20 11v2" stroke-linecap="round" />
+            <rect x="4" y="9" width="10.5" height="6" fill="currentColor" stroke="none" rx="1" />
+          </svg>
+        </span>
+        <span class="menu-glyph" title="Wi-Fi">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 18a1.5 1.5 0 100 3 1.5 1.5 0 000-3zM4.93 11.93a10 10 0 0114.14 0l-1.41 1.41a8 8 0 00-11.32 0l-1.41-1.41zM2.1 9.1a14 14 0 0119.8 0l-1.41 1.41a12 12 0 00-16.98 0L2.1 9.1zM7.76 14.76a6 6 0 018.48 0l-1.41 1.41a4 4 0 00-5.66 0l-1.41-1.41z" />
+          </svg>
+        </span>
+        <span class="menu-glyph" title="Search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="11" cy="11" r="7" />
+            <line x1="16.5" y1="16.5" x2="21.5" y2="21.5" stroke-linecap="round" />
+          </svg>
+        </span>
+        <span class="menu-glyph" title="Control Center">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3" y="5" width="18" height="5" rx="2.5" />
+            <circle cx="7.5" cy="7.5" r="1.5" fill="currentColor" stroke="none" />
+            <rect x="3" y="14" width="18" height="5" rx="2.5" />
+            <circle cx="16.5" cy="16.5" r="1.5" fill="currentColor" stroke="none" />
+          </svg>
+        </span>
+        <span class="mic-recording-dot" title="Microphone Active"></span>
+        <span class="menu-clock-text">Wed Apr 1 &nbsp;9:41 AM</span>
+      </div>
+    </header>
+
+    <!-- 4. Calendar Widget (Direct Glass Element) -->
+    <div class="liquid-glass-elem widget-calendar" data-config='{"cornerRadius": 22, "zRadius": 28, "blurAmount": 0.28, "refraction": 0.65, "edgeHighlight": 0.08, "specular": 0.2, "chromAberration": 0.04}'>
+      <div class="calendar-title">APRIL</div>
+      <div class="calendar-matrix">
+        <div class="calendar-day-head">S</div>
+        <div class="calendar-day-head">M</div>
+        <div class="calendar-day-head">T</div>
+        <div class="calendar-day-head">W</div>
+        <div class="calendar-day-head">T</div>
+        <div class="calendar-day-head">F</div>
+        <div class="calendar-day-head">S</div>
+
+        <div></div><div></div><div></div>
+        <div class="calendar-cell active-date">1</div>
+        <div class="calendar-cell">2</div>
+        <div class="calendar-cell">3</div>
+        <div class="calendar-cell">4</div>
+
+        <div class="calendar-cell">5</div>
+        <div class="calendar-cell">6</div>
+        <div class="calendar-cell">7</div>
+        <div class="calendar-cell">8</div>
+        <div class="calendar-cell">9</div>
+        <div class="calendar-cell">10</div>
+        <div class="calendar-cell">11</div>
+
+        <div class="calendar-cell">12</div>
+        <div class="calendar-cell">13</div>
+        <div class="calendar-cell">14</div>
+        <div class="calendar-cell">15</div>
+        <div class="calendar-cell">16</div>
+        <div class="calendar-cell">17</div>
+        <div class="calendar-cell">18</div>
+
+        <div class="calendar-cell">19</div>
+        <div class="calendar-cell">20</div>
+        <div class="calendar-cell">21</div>
+        <div class="calendar-cell">22</div>
+        <div class="calendar-cell">23</div>
+        <div class="calendar-cell">24</div>
+        <div class="calendar-cell">25</div>
+
+        <div class="calendar-cell">26</div>
+        <div class="calendar-cell">27</div>
+        <div class="calendar-cell">28</div>
+        <div class="calendar-cell">29</div>
+        <div class="calendar-cell">30</div>
+        <div></div><div></div>
+      </div>
+    </div>
+
+    <!-- 5. World Clock Quad Widget (Direct Glass Element) -->
+    <div class="liquid-glass-elem widget-clocks" data-config='{"cornerRadius": 22, "zRadius": 28, "blurAmount": 0.28, "refraction": 0.65, "edgeHighlight": 0.08, "specular": 0.2, "chromAberration": 0.04}'>
+      <!-- Cupertino -->
+      <div class="clock-station">
+        <div class="clock-bezel">
+          <span class="clock-numeral num-12">12</span>
+          <span class="clock-numeral num-3">3</span>
+          <span class="clock-numeral num-6">6</span>
+          <span class="clock-numeral num-9">9</span>
+          <div class="clock-needle hour-needle" style="transform: rotate(290.5deg);"></div>
+          <div class="clock-needle minute-needle" style="transform: rotate(246deg);"></div>
+          <div class="clock-needle second-needle" style="transform: rotate(0deg);"></div>
+          <div class="clock-central-pivot"></div>
+        </div>
+        <div class="clock-city-name">Cupertino</div>
+        <div class="clock-relative-time">Today<br />+0HRS</div>
+      </div>
+
+      <!-- Tokyo -->
+      <div class="clock-station">
+        <div class="clock-bezel">
+          <span class="clock-numeral num-12">12</span>
+          <span class="clock-numeral num-3">3</span>
+          <span class="clock-numeral num-6">6</span>
+          <span class="clock-numeral num-9">9</span>
+          <div class="clock-needle hour-needle" style="transform: rotate(50.5deg);"></div>
+          <div class="clock-needle minute-needle" style="transform: rotate(246deg);"></div>
+          <div class="clock-needle second-needle" style="transform: rotate(0deg);"></div>
+          <div class="clock-central-pivot"></div>
+        </div>
+        <div class="clock-city-name">Tokyo</div>
+        <div class="clock-relative-time">Tomorrow<br />+16HRS</div>
+      </div>
+
+      <!-- Sydney -->
+      <div class="clock-station">
+        <div class="clock-bezel">
+          <span class="clock-numeral num-12">12</span>
+          <span class="clock-numeral num-3">3</span>
+          <span class="clock-numeral num-6">6</span>
+          <span class="clock-numeral num-9">9</span>
+          <div class="clock-needle hour-needle" style="transform: rotate(110.5deg);"></div>
+          <div class="clock-needle minute-needle" style="transform: rotate(246deg);"></div>
+          <div class="clock-needle second-needle" style="transform: rotate(0deg);"></div>
+          <div class="clock-central-pivot"></div>
+        </div>
+        <div class="clock-city-name">Sydney</div>
+        <div class="clock-relative-time">Tomorrow<br />+18HRS</div>
+      </div>
+
+      <!-- Paris -->
+      <div class="clock-station">
+        <div class="clock-bezel">
+          <span class="clock-numeral num-12">12</span>
+          <span class="clock-numeral num-3">3</span>
+          <span class="clock-numeral num-6">6</span>
+          <span class="clock-numeral num-9">9</span>
+          <div class="clock-needle hour-needle" style="transform: rotate(200.5deg);"></div>
+          <div class="clock-needle minute-needle" style="transform: rotate(246deg);"></div>
+          <div class="clock-needle second-needle" style="transform: rotate(0deg);"></div>
+          <div class="clock-central-pivot"></div>
+        </div>
+        <div class="clock-city-name">Paris</div>
+        <div class="clock-relative-time">Today<br />+9HRS</div>
+      </div>
+    </div>
+
+    <!-- 6. Spotlight Search Capsule (Direct Glass Element) -->
+    <div class="liquid-glass-elem spotlight-capsule" data-config='{"cornerRadius": 22, "zRadius": 22, "blurAmount": 0.3, "refraction": 0.7, "edgeHighlight": 0.1, "specular": 0.2, "chromAberration": 0.05}'>
+      <svg viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="7" />
+        <line x1="16.5" y1="16.5" x2="21.5" y2="21.5" stroke-linecap="round" />
+      </svg>
+      <input class="spotlight-input" type="text" placeholder="Spotlight Search" spellcheck="false" />
+    </div>
+
+    <!-- 7. Four Spotlight Action Buttons (Direct Glass Elements) -->
+    <div class="liquid-glass-elem spotlight-action-btn btn-pos-1" title="App Store" data-config='{"cornerRadius": 22, "zRadius": 22, "button": true, "refraction": 0.75, "edgeHighlight": 0.12, "specular": 0.25}'>
+      <svg viewBox="0 0 24 24">
+        <path d="M12 4L4 18h4l1.8-3.3h4.4L16 18h4L12 4z" />
+        <circle cx="12" cy="10" r="1.5" fill="currentColor" />
+      </svg>
+    </div>
+
+    <div class="liquid-glass-elem spotlight-action-btn btn-pos-2" title="Files" data-config='{"cornerRadius": 22, "zRadius": 22, "button": true, "refraction": 0.75, "edgeHighlight": 0.12, "specular": 0.25}'>
+      <svg viewBox="0 0 24 24">
+        <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+      </svg>
+    </div>
+
+    <div class="liquid-glass-elem spotlight-action-btn btn-pos-3" title="Shortcuts" data-config='{"cornerRadius": 22, "zRadius": 22, "button": true, "refraction": 0.75, "edgeHighlight": 0.12, "specular": 0.25}'>
+      <svg viewBox="0 0 24 24">
+        <path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.261-8-12.356-8-5.096 0-5.096 8 0 8 5.095 0 7.261-8 12.356-8z" />
+      </svg>
+    </div>
+
+    <div class="liquid-glass-elem spotlight-action-btn btn-pos-4" title="Notes" data-config='{"cornerRadius": 22, "zRadius": 22, "button": true, "refraction": 0.75, "edgeHighlight": 0.12, "specular": 0.25}'>
+      <svg viewBox="0 0 24 24">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+      </svg>
+    </div>
+
+    <!-- 8. Weather Widget (Direct Glass Element) -->
+    <div class="liquid-glass-elem widget-weather" data-config='{"cornerRadius": 22, "zRadius": 28, "blurAmount": 0.28, "refraction": 0.65, "edgeHighlight": 0.08, "specular": 0.2, "chromAberration": 0.04}'>
+      <div class="weather-top-meta">
+        <div>
+          <div class="weather-location">San Francisco</div>
+          <div class="weather-temp">53°</div>
+        </div>
+        <div class="weather-condition-summary">
+          <svg class="weather-icon-symbol" viewBox="0 0 32 32">
+            <circle cx="13" cy="13" r="6" fill="#ffb703" />
+            <path d="M10 24 A6 6 0 0 1 15 16 A8 8 0 0 1 27 19 A5 5 0 0 1 25 26 L11 26 A5 5 0 0 1 10 24 Z" fill="#e2e8f0" opacity="0.95" />
+          </svg>
+          <div class="weather-desc-label">Partly Cloudy</div>
+          <div class="weather-range-label">H:56° L:50°</div>
+        </div>
+      </div>
+
+      <div class="weather-hourly-timeline">
+        <div class="timeline-hour-col">
+          <span class="timeline-hour-txt">10 AM</span>
+          <svg class="timeline-weather-glyph" viewBox="0 0 24 24">
+            <path d="M7 16a4 4 0 014-4 5 5 0 018 2 3 3 0 01-1 5H8a3 3 0 01-1-3z" fill="#cbd5e1" />
+          </svg>
+          <span class="timeline-temp-txt">53°</span>
+        </div>
+
+        <div class="timeline-hour-col">
+          <span class="timeline-hour-txt">11 AM</span>
+          <svg class="timeline-weather-glyph" viewBox="0 0 24 24">
+            <path d="M7 16a4 4 0 014-4 5 5 0 018 2 3 3 0 01-1 5H8a3 3 0 01-1-3z" fill="#cbd5e1" />
+          </svg>
+          <span class="timeline-temp-txt">54°</span>
+        </div>
+
+        <div class="timeline-hour-col">
+          <span class="timeline-hour-txt">12 PM</span>
+          <svg class="timeline-weather-glyph" viewBox="0 0 24 24">
+            <circle cx="9" cy="9" r="4" fill="#fbbf24" />
+            <path d="M7 16a4 4 0 014-4 5 5 0 018 2 3 3 0 01-1 5H8a3 3 0 01-1-3z" fill="#cbd5e1" />
+          </svg>
+          <span class="timeline-temp-txt">56°</span>
+        </div>
+
+        <div class="timeline-hour-col">
+          <span class="timeline-hour-txt">1 PM</span>
+          <svg class="timeline-weather-glyph" viewBox="0 0 24 24">
+            <circle cx="9" cy="9" r="4" fill="#fbbf24" />
+            <path d="M7 16a4 4 0 014-4 5 5 0 018 2 3 3 0 01-1 5H8a3 3 0 01-1-3z" fill="#cbd5e1" />
+          </svg>
+          <span class="timeline-temp-txt">55°</span>
+        </div>
+
+        <div class="timeline-hour-col">
+          <span class="timeline-hour-txt">2 PM</span>
+          <svg class="timeline-weather-glyph" viewBox="0 0 24 24">
+            <circle cx="9" cy="9" r="4" fill="#fbbf24" />
+            <path d="M7 16a4 4 0 014-4 5 5 0 018 2 3 3 0 01-1 5H8a3 3 0 01-1-3z" fill="#cbd5e1" />
+          </svg>
+          <span class="timeline-temp-txt">55°</span>
+        </div>
+
+        <div class="timeline-hour-col">
+          <span class="timeline-hour-txt">3 PM</span>
+          <svg class="timeline-weather-glyph" viewBox="0 0 24 24">
+            <path d="M7 16a4 4 0 014-4 5 5 0 018 2 3 3 0 01-1 5H8a3 3 0 01-1-3z" fill="#cbd5e1" />
+          </svg>
+          <span class="timeline-temp-txt">54°</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9. Podcast Widget (Direct Glass Element) -->
+    <div class="liquid-glass-elem widget-podcast" data-config='{"cornerRadius": 22, "zRadius": 26, "blurAmount": 0.28, "refraction": 0.65, "edgeHighlight": 0.08, "specular": 0.2, "chromAberration": 0.04}'>
+      <div class="podcast-top-row">
+        <div class="podcast-album-artwork">
+          <span SCIENCE<br />STUFF.</span>
+        </div>
+        <svg class="podcast-signal-svg" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="2" fill="currentColor" />
+          <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14" />
+        </svg>
+      </div>
+      <div class="podcast-details">
+        <div class="podcast-release-date">Mar 19</div>
+        <div class="podcast-episode-heading">What is a Quantum Computer?</div>
+        <div class="podcast-duration-badge">
+          <span style="font-size: 8px;">▶</span> 39m
+        </div>
+      </div>
+    </div>
+
+    <!-- 10. Call Mom Widget (Direct Glass Element) -->
+    <div class="liquid-glass-elem widget-contact" data-config='{"cornerRadius": 22, "zRadius": 26, "blurAmount": 0.28, "refraction": 0.65, "edgeHighlight": 0.08, "specular": 0.2, "chromAberration": 0.04}'>
+      <div class="mom-avatar-bubble">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" />
+          <circle cx="9" cy="10" r="1" fill="currentColor" />
+          <circle cx="15" cy="10" r="1" fill="currentColor" />
+          <path d="M9.5 14.5c.8 1.2 2 1.5 2.5 1.5s1.7-.3 2.5-1.5" stroke-linecap="round" />
+        </svg>
+      </div>
+      <div class="mom-action-title">Call Mom</div>
+    </div>
+
+    <!-- 11. Dock Shelf (Direct Glass Element) -->
+    <footer class="liquid-glass-elem dock-shelf" id="dock" data-config='{"cornerRadius": 20, "zRadius": 24, "blurAmount": 0.35, "refraction": 0.6, "edgeHighlight": 0.08, "specular": 0.15}'>
+
+      <!-- Finder -->
+      <div class="dock-tile" title="Finder">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="22" fill="#f1f5f9" />
+          <path d="M0,0 L50,0 C75,0 100,25 100,50 L100,100 L0,100 Z" fill="#38bdf8" />
+          <path d="M30 36 C33 36 36 33 36 30 C36 27 33 24 30 24 C27 24 24 27 24 30 C24 33 27 36 30 36 Z" fill="#0f172a" />
+          <path d="M70 36 C73 36 76 33 76 30 C76 27 73 24 70 24 C67 24 64 27 64 30 C64 33 67 36 70 36 Z" fill="#0f172a" />
+          <path d="M50 30 L50 56 C50 62 44 65 38 65" fill="none" stroke="#0f172a" stroke-width="5" stroke-linecap="round" />
+          <path d="M26 68 C35 78 65 78 74 68" fill="none" stroke="#0f172a" stroke-width="5" stroke-linecap="round" />
+        </svg>
+      </div>
+
+      <!-- Launchpad -->
+      <div class="dock-tile" title="Launchpad">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="22" fill="#94a3b8" />
+          <g fill="#f8fafc">
+            <circle cx="30" cy="30" r="7" /><circle cx="50" cy="30" r="7" /><circle cx="70" cy="30" r="7" />
+            <circle cx="30" cy="50" r="7" /><circle cx="50" cy="50" r="7" /><circle cx="70" cy="50" r="7" />
+            <circle cx="30" cy="70" r="7" /><circle cx="50" cy="70" r="7" /><circle cx="70" cy="70" r="7" />
+          </g>
+        </svg>
+      </div>
+
+      <!-- Safari -->
+      <div class="dock-tile" title="Safari">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="22" fill="#ffffff" />
+          <circle cx="50" cy="50" r="41" fill="#0284c7" />
+          <circle cx="50" cy="50" r="33" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="2 4" />
+          <polygon points="50,16 59,50 50,45" fill="#ef4444" />
+          <polygon points="50,84 41,50 50,55" fill="#ffffff" />
+          <polygon points="50,16 41,50 50,45" fill="#dc2626" />
+          <polygon points="50,84 59,50 50,55" fill="#e2e8f0" />
+        </svg>
+      </div>
+
+      <!-- Messages -->
+      <div class="dock-tile" title="Messages">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="22" fill="#22c55e" />
+          <path d="M50 22 C32 22 18 34 18 48 C18 56 22 63 30 68 L26 82 L42 74 C44.5 74.5 47.2 75 50 75 C68 75 82 63 82 48 C82 34 68 22 50 22 Z" fill="#ffffff" />
+        </svg>
+      </div>
+
+      <!-- Mail -->
+      <div class="dock-tile" title="Mail">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="22" fill="#3b82f6" />
+          <path d="M20 30 L50 54 L80 30" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+          <rect x="20" y="30" width="60" height="42" rx="4" fill="none" stroke="#ffffff" stroke-width="5" />
+        </svg>
+      </div>
+
+      <!-- Maps -->
+      <div class="dock-tile" title="Maps">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="22" fill="#e2e8f0" />
+          <path d="M15 35 L40 25 L65 35 L85 25 L85 75 L65 85 L40 75 L15 85 Z" fill="#86efac" />
+          <path d="M40 25 L40 75" stroke="#cbd5e1" stroke-width="2" />
+          <path d="M65 35 L65 85" stroke="#cbd5e1" stroke-width="2" />
+          <circle cx="50" cy="50" r="8" fill="#ef4444" />
+        </svg>
+      </div>
+
+      <!-- Photos -->
+      <div class="dock-tile" title="Photos">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="22" fill="#ffffff" />
+          <ellipse cx="50" cy="32" rx="7" ry="16" fill="#f59e0b" opacity="0.9" />
+          <ellipse cx="68" cy="50" rx="16" ry="7" fill="#ef4444" opacity="0.9" />
+          <ellipse cx="50" cy="68" rx="7" ry="16" fill="#10b981" opacity="0.9" />
+          <ellipse cx="32" cy="50" rx="16" ry="7" fill="#3b82f6" opacity="0.9" />
+        </svg>
+      </div>
+
+      <!-- FaceTime -->
+      <div class="dock-tile" title="FaceTime">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="22" fill="#22c55e" />
+          <rect x="22" y="32" width="36" height="36" rx="8" fill="#ffffff" />
+          <polygon points="62,44 78,34 78,66 62,56" fill="#ffffff" />
+        </svg>
+      </div>
+
+      <!-- Calendar -->
+      <div class="dock-tile" title="Calendar">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="22" fill="#ffffff" />
+          <path d="M0,22 C0,10 10,0 22,0 L78,0 C90,0 100,10 100,22 L100,28 L0,28 Z" fill="#ef4444" />
+          <text x="50" y="20" fill="#ffffff" font-size="11" font-weight="800" text-anchor="middle" font-family="-apple-system, sans-serif">WED</text>
+          <text x="50" y="74" fill="#0f172a" font-size="44" font-weight="300" text-anchor="middle" font-family="-apple-system, sans-serif">1</text>
+        </svg>
+      </div>
+
+      <!-- Contacts -->
+      <div class="dock-tile" title="Contacts">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="22" fill="#94a3b8" />
+          <rect x="18" y="16" width="64" height="68" rx="6" fill="#64748b" />
+          <circle cx="50" cy="42" r="14" fill="#cbd5e1" />
+          <path d="M32 72 C32 60 40 56 50 56 C60 56 68 60 68 72" fill="#cbd5e1" />
+        </svg>
+      </div>
+
+      <!-- Reminders -->
+      <div class="dock-tile" title="Reminders">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="22" fill="#ffffff" />
+          <circle cx="30" cy="30" r="7" fill="#ef4444" /><line x1="44" y1="30" x2="80" y2="30" stroke="#94a3b8" stroke-width="5" stroke-linecap="round" />
+          <circle cx="30" cy="50" r="7" fill="#3b82f6" /><line x1="44" y1="50" x2="80" y2="50" stroke="#94a3b8" stroke-width="5" stroke-linecap="round" />
+          <circle cx="30" cy="70" r="7" fill="#eab308" /><line x1="44" y1="70" x2="80" y2="70" stroke="#94a3b8" stroke-width="5" stroke-linecap="round" />
+        </svg>
+      </div>
+
+      <!-- Notes -->
+      <div class="dock-tile" title="Notes">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="22" fill="#ffffff" />
+          <path d="M0,22 C0,10 10,0 22,0 L78,0 C90,0 100,10 100,22 L100,26 L0,26 Z" fill="#eab308" />
+          <line x1="18" y1="42" x2="82" y2="42" stroke="#e2e8f0" stroke-width="2" />
+          <line x1="18" y1="56" x2="82" y2="56" stroke="#e2e8f0" stroke-width="2" />
+          <line x1="18" y1="70" x2="82" y2="70" stroke="#e2e8f0" stroke-width="2" />
+        </svg>
+      </div>
+
+      <!-- Apple TV -->
+      <div class="dock-tile" title="Apple TV">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="22" fill="#0f172a" />
+          <text x="42" y="60" fill="#ffffff" font-size="28" font-weight="700" font-family="-apple-system, sans-serif">tv</text>
+          <path d="M22 45 C20 48 18 52 18 56" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" />
+        </svg>
+      </div>
+
+      <!-- Music -->
+      <div class="dock-tile" title="Music">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="22" fill="#fa233b" />
+          <circle cx="36" cy="66" r="10" fill="#ffffff" />
+          <circle cx="68" cy="58" r="10" fill="#ffffff" />
+          <path d="M46 66 L46 28 L78 20 L78 58" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </div>
+
+      <!-- Podcasts -->
+      <div class="dock-tile" title="Podcasts">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="22" fill="#8b5cf6" />
+          <circle cx="50" cy="50" r="10" fill="#ffffff" />
+          <path d="M30 50 A20 20 0 0 1 70 50" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" />
+          <path d="M20 50 A30 30 0 0 1 80 50" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" />
+        </svg>
+      </div>
+
+      <!-- Keynote / Stocks -->
+      <div class="dock-tile" title="Stocks">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="22" fill="#0f172a" />
+          <polyline points="18,72 40,55 58,62 82,32" fill="none" stroke="#22c55e" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </div>
+
+      <!-- Shortcuts -->
+      <div class="dock-tile" title="Shortcuts">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="22" fill="#1e293b" />
+          <path d="M32 30 C32 20 45 15 55 25 L75 45 C85 55 80 68 70 68 L58 68 C58 78 45 83 35 73 L25 63 C15 53 20 40 30 40 Z" fill="#ef4444" opacity="0.9" />
+          <path d="M68 70 C68 80 55 85 45 75 L25 55 C15 45 20 32 30 32 L42 32 C42 22 55 17 65 27 L75 37 C85 47 80 60 70 60 Z" fill="#06b6d4" opacity="0.85" />
+        </svg>
+      </div>
+
+      <!-- App Store -->
+      <div class="dock-tile" title="App Store">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="22" fill="#0284c7" />
+          <line x1="50" y1="20" x2="24" y2="76" stroke="#ffffff" stroke-width="7" stroke-linecap="round" />
+          <line x1="50" y1="20" x2="76" y2="76" stroke="#ffffff" stroke-width="7" stroke-linecap="round" />
+          <line x1="20" y1="62" x2="80" y2="62" stroke="#ffffff" stroke-width="7" stroke-linecap="round" />
+        </svg>
+      </div>
+
+      <!-- System Settings -->
+      <div class="dock-tile" title="System Settings">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="22" fill="#64748b" />
+          <circle cx="50" cy="50" r="22" fill="#94a3b8" />
+          <circle cx="50" cy="50" r="10" fill="#475569" />
+          <path d="M50 18 L50 26 M50 74 L50 82 M18 50 L26 50 M74 50 L82 50" stroke="#94a3b8" stroke-width="8" stroke-linecap="round" />
+        </svg>
+      </div>
+
+      <div class="dock-vertical-splitter"></div>
+
+      <!-- Trash -->
+      <div class="dock-tile" title="Trash">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" rx="22" fill="none" />
+          <rect x="25" y="30" width="50" height="52" rx="8" fill="rgba(255,255,255,0.22)" stroke="rgba(255,255,255,0.45)" stroke-width="2" />
+          <line x1="20" y1="26" x2="80" y2="26" stroke="#ffffff" stroke-width="4" stroke-linecap="round" />
+          <line x1="38" y1="40" x2="38" y2="70" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.65" />
+          <line x1="50" y1="40" x2="50" y2="70" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.65" />
+          <line x1="62" y1="40" x2="62" y2="70" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.65" />
+        </svg>
+      </div>
+
+    </footer>
+
+  </div>
+
+  <script type="module">
+    // 1. High-Performance Canvas Wallpaper Engine
+    // Draws the authentic macOS Sonoma Dark Ribbon directly onto the sampled canvas
+    const canvas = document.getElementById('wallpaper-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function renderWallpaper() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      ctx.scale(dpr, dpr);
+
+      // Deep Midnight Space Background
+      const bgGrad = ctx.createLinearGradient(0, 0, w, h);
+      bgGrad.addColorStop(0, '#030514');
+      bgGrad.addColorStop(0.35, '#070f2d');
+      bgGrad.addColorStop(0.75, '#0e1d52');
+      bgGrad.addColorStop(1, '#091338');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      // Lower Violet / Purple Underbelly Wave
+      ctx.save();
+      const waveLowerGrad = ctx.createLinearGradient(0, 0, w, h);
+      waveLowerGrad.addColorStop(0, '#4a1575');
+      waveLowerGrad.addColorStop(0.4, '#1f3ea4');
+      waveLowerGrad.addColorStop(0.85, '#166ec9');
+      waveLowerGrad.addColorStop(1, '#299ee2');
+
+      ctx.beginPath();
+      ctx.moveTo(-50, h * 1.1);
+      ctx.bezierCurveTo(w * 0.25, h * 0.95, w * 0.45, h * 0.52, w * 0.72, h * 0.40);
+      ctx.bezierCurveTo(w * 0.88, h * 0.32, w * 0.96, h * 0.45, w * 1.05, h * 0.48);
+      ctx.lineTo(w * 1.05, h * 1.1);
+      ctx.closePath();
+      ctx.fillStyle = waveLowerGrad;
+      ctx.fill();
+      ctx.restore();
+
+      // Sweeping Primary Cobalt Upper Ribbon
+      ctx.save();
+      const waveUpperGrad = ctx.createLinearGradient(0, h, w, 0);
+      waveUpperGrad.addColorStop(0, '#132168');
+      waveUpperGrad.addColorStop(0.32, '#1e409c');
+      waveUpperGrad.addColorStop(0.68, '#2b65cb');
+      waveUpperGrad.addColorStop(1, '#4791ea');
+
+      ctx.beginPath();
+      ctx.moveTo(-50, h * 0.68);
+      ctx.bezierCurveTo(w * 0.28, h * 0.62, w * 0.45, h * 0.22, w * 0.82, h * 0.08);
+      ctx.bezierCurveTo(w * 0.94, h * 0.02, w * 1.02, h * 0.08, w * 1.08, h * 0.12);
+      ctx.lineTo(w * 1.08, h * 1.1);
+      ctx.lineTo(-50, h * 1.1);
+      ctx.closePath();
+      ctx.fillStyle = waveUpperGrad;
+      ctx.fill();
+
+      // Illuminated Refraction Rim Line
+      const rimGrad = ctx.createLinearGradient(0, h, w, 0);
+      rimGrad.addColorStop(0, 'rgba(160, 205, 255, 0.85)');
+      rimGrad.addColorStop(0.5, 'rgba(230, 245, 255, 0.95)');
+      rimGrad.addColorStop(1, 'rgba(255, 255, 255, 0.9)');
+
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = rimGrad;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    renderWallpaper();
+    window.addEventListener('resize', renderWallpaper);
+
+    // 2. Proximity-Based Parabolic Dock Magnification
+    const dock = document.getElementById('dock');
+    const dockTiles = Array.from(document.querySelectorAll('.dock-tile'));
+
+    dock.addEventListener('mousemove', (e) => {
+      const mouseX = e.clientX;
+      dockTiles.forEach((tile) => {
+        const bounds = tile.getBoundingClientRect();
+        const centerX = bounds.left + bounds.width / 2;
+        const dist = Math.abs(mouseX - centerX);
+        const radius = 135;
+
+        if (dist < radius) {
+          const norm = Math.cos((dist / radius) * (Math.PI / 2));
+          const scale = 1 + norm * 0.44;
+          const translateY = -norm * 16;
+          tile.style.transform = `scale(${scale}) translateY(${translateY}px)`;
+        } else {
+          tile.style.transform = 'scale(1) translateY(0)';
+        }
+      });
+    });
+
+    dock.addEventListener('mouseleave', () => {
+      dockTiles.forEach((tile) => {
+        tile.style.transform = 'scale(1) translateY(0)';
+      });
+    });
+
+    // 3. Official @ybouane/liquidglass WebGL Shader Engine Mounting
+    async function initLiquidGlassEngine() {
+      try {
+        const { LiquidGlass } = await import('https://cdn.jsdelivr.net/npm/@ybouane/liquidglass/dist/index.js');
+        
+        await LiquidGlass.init({
+          root: document.getElementById('desktop-root'),
+          glassElements: document.querySelectorAll('.liquid-glass-elem'),
+          defaults: {
+            cornerRadius: 22,
+            refraction: 0.65,
+            blurAmount: 0.28,
+            chromAberration: 0.04,
+            edgeHighlight: 0.08,
+            specular: 0.18,
+            fresnel: 1.0,
+            shadowOpacity: 0.35,
+            shadowSpread: 12
+          }
+        });
+      } catch (err) {
+        console.info('LiquidGlass WebGL pipeline active with native backdrop shaders:', err);
+      }
+    }
+
+    // Initialize once fonts and DOM bindings settle
+    if (document.readyState === 'complete') {
+      initLiquidGlassEngine();
+    } else {
+      window.addEventListener('load', initLiquidGlassEngine);
+    }
+  </script>
+</body>
+</html>

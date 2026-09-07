@@ -1,81 +1,70 @@
-# QA CHECKLIST — Hearth V1 (finalized)
+# QA CHECKLIST — Hearth current baseline + V1.11 gates
 
-Each box is ticked only where verified **with evidence** (a named E2E spec run
-against the production build, a unit test, or a command result) — not by
-inspection. Coverage is annotated inline; anything that is only partially
-machine-verified says so, and a short "human acceptance" section at the end
-lists what still needs eyes on it.
+## Latest recorded green baseline
 
-**Final evidence run (2026-09-05, branch `build/v1-one-shot`):**
-`npm run check` → lint 0 · typecheck 0 · **126/126 vitest** · build + PWA OK.
-`npx playwright test --project=desktop --project=mobile` (vite preview) →
-**73 passed / 23 intentional skips / 0 failed** across the two projects. Skips
-are by design: mobile-inapplicable desktop checks, desktop-only width sweep and
-backup flow, and touch-inapplicable freeform drag checks.
+The newest completed visual-polish ledger entry records:
 
-## Functional
-- [x] Clean first launch → starter layout (seed content present) — `shell.spec #1`
-- [x] Home ↔ Dashboard mode switch, both directions — `shell.spec #2`
-- [x] Add / edit / remove shortcut (label, URL, icon, bg) — `home.spec #3`
-- [x] Safe-URL rule on bad input — shortcut create/update reject
-      javascript:/data:/non-http (unit); crafted hostile imports rejected by
-      per-table backup row validators (`backupRepo.test`, 5 security tests)
-- [x] URL shortcut opens the right destination, same tab, safe local URL —
-      `search-nav.spec #4`
-- [x] Search query → correct Google / Bing / DuckDuckGo URL per default engine —
-      `search-nav.spec #5a/#5b/#5c`; URL-like input navigates — `search-nav.spec #4`
-- [x] Create a second home page; rename + navigate between pages — `home.spec #6`
-- [x] Page reorder / delete — repo-layer semantics + delete-page cascade (unit:
-      `pages` + delete-shortcut/folder/widget cascades)
-- [x] Edit Mode: dnd reorder keeps order after reload; remove item; Done exits —
-      `home.spec #7` (desktop; touch-drag intentionally skipped on mobile)
-- [x] Folder create / rename / open / close / add-remove shortcut — open/close +
-      open contained shortcut `home.spec #8`; membership ops unit-tested
-- [x] Dock: pinned items launch the app; visible across pages — `shell.spec #1/#2`
-      + starter layout; dock add/remove/order unit-tested (`dockRepo`)
-- [x] Notes CRUD + autosave + pin + search; **reload → persists** — `apps.spec #9`
-- [x] Tasks add / check / uncheck / delete / clear; **reload → persists** —
-      `apps.spec #10`
-- [x] Calendar month nav + today highlight; responsive — `apps.spec #11` +
-      `responsive.spec`
-- [x] Widgets render on Home; order persists across reload — `home.spec #7`,
-      `shell.spec #1`, widget unit tests
-- [x] Wallpaper: gradient preset change persists — `settings.spec #12`;
-      referenced-media-missing falls back to builtin (BUILD_STATE note)
-- [x] Settings persist: theme, search engine, reduced effects, labels, icon size —
-      `settings.spec #13`
-- [x] JSON backup export → import with confirm — `settings.spec #16` (desktop);
-      schema/row validation on import — `backupRepo.test`
-- [x] PWA: production build serves a valid manifest + active worker; offline
-      reload serves cached shell with local data — `pwa.spec #14/#15`
+- [x] `npm run check` — lint + typecheck + **126/126 Vitest tests** + PWA build passed.
+- [x] `npm run test:e2e` — **81 passed / 23 skipped / 0 failed** desktop+mobile against the production build.
+- [x] Existing responsive/mobile/PWA/offline/accessibility/reduced-effects/performance coverage completed as documented in `docs/V2_STATUS.md`.
 
-## Quality / visual
-- [x] No horizontal overflow at 360 / 390 / 768 / 1024 / 1280 / 1440 — `responsive.spec`
-      (desktop width sweep) + mobile project run
-- [x] Chrome stays in-viewport; windows ↔ sheets follow the <1024px breakpoint —
-      `responsive.spec` + `apps.spec` mobile
-- [x] Reduced Effects + reduced-motion honored — effects gate on `data-effects`;
-      global reduced-motion kill-switch in CSS; `settings.spec #13` toggles the
-      persisted pref
-- [x] E2E flows passed without uncaught page errors — 35 passing, traces retained on failure only
-- [x] No secrets tracked; no paid-service dependency; no backend — git tree clean
-      of keys, `npm run check` offline
+The 2026-09-07 repository-preparation commit is documentation/reference-only; it does not claim a fresh runtime test execution.
 
-## Engineering
-- [x] `npm run check` green — lint 0 · typecheck 0 · 50/50 tests · build + PWA
-- [x] Critical E2E suite passes — Playwright 35/35 + 3 by-design skips
-- [x] No V2/V3 creep — ROADMAP splits V2/V3; removed dead `DashboardPanelPref`
-      config, orphaned `crud.ts`, unused repo getters/helpers + dead CSS
-- [x] Code / security / simplification review findings addressed — correctness
-      (dialog stale-edit reset, duplicate-create guard), security (backup import
-      row validation, `sameTab` safe-scheme gate), all dead code removed (see
-      BUILD_STATE Phase 7)
-- [x] Shared contracts untouched by lanes — frozen types edited only by
-      coordinator during review
+## Baseline behaviors V1.11 must preserve
 
-## Human acceptance (still needs eyes)
-- [ ] Screenshot sweep aesthetics — 48 frames in `.shots/` (gitignored); layout
-      integrity is machine-verified, pixel-level polish is not judged here.
-- [ ] Visual once-over of pinned-note pressed state (accent-fill on the pin
-      button now that `.iconBtn[aria-pressed='true']` is wired) and the clock
-      widget date reveal on wide tiles (`@container` now active).
+- [ ] Clean launch and existing seed data/features remain functional.
+- [ ] Desktop freeform layout/edit/resize/move persistence remains correct after reload/import.
+- [ ] Mobile paged Home and full-screen/sheet app behavior remains intentional and touch-safe.
+- [ ] Dock launch/edit/reorder/narrow-phone behavior remains correct.
+- [ ] Notes/Tasks/Calendar/Links/Calculator CRUD/calculation behavior persists.
+- [ ] Search/URL same-tab safety and local history behavior remains correct.
+- [ ] Wallpaper/settings/backup persistence remains correct.
+- [ ] PWA production install/offline/update path remains correct.
+
+## V1.11 visual/structural acceptance
+
+- [ ] Outer desktop shell does not page-scroll at supported viewport sizes/heights.
+- [ ] Outer mobile shell does not become an accidental long webpage.
+- [ ] Long mini-app, Settings and embed content scrolls only inside bounded intended regions.
+- [ ] No horizontal overflow at 360 / 390 / 768 / 1024 / 1280 / 1440 widths.
+- [ ] Desktop reads as one coherent macOS-like environment rather than a generic website.
+- [ ] Mobile switches to an intentionally iOS-like layout/control model rather than squeezing desktop UI.
+- [ ] Widget proportions/radii/spacing are varied, restrained and content-led; excessive pills/card nesting removed.
+- [ ] App artwork uses reviewed production assets; system/control glyphs remain a separate consistent family.
+
+## Liquid Glass acceptance
+
+- [ ] WebGL Liquid Glass is limited to deliberate high-value surfaces and does not create a WebGL context per widget.
+- [ ] Refraction is visibly correct over supported wallpaper/content backgrounds without clipping/stacking artifacts.
+- [ ] CSS/solid fallback works when WebGL is unavailable/disabled or Reduced Effects is enabled.
+- [ ] Idle scenes do not continuously rerasterize expensive static DOM.
+- [ ] Dynamic/video scenes remain usable and smooth on target desktop and phone hardware/classes.
+- [ ] Resize, wallpaper changes, stacked surfaces and app/window transitions recover correctly.
+- [ ] Any exposed Off/Performance/Balanced/High/Custom settings persist and actually change the renderer.
+- [ ] Custom parameter ranges are bounded and cannot produce unreadable/broken UI.
+
+## Dock motion acceptance
+
+- [ ] Pointer proximity produces continuous neighboring magnification rather than isolated hover pops.
+- [ ] Motion is restrained, bottom-anchored and stable with labels/tooltips.
+- [ ] Click/tap, keyboard focus and Edit Mode/reorder continue to work.
+- [ ] Mobile/touch has a deliberate alternative and no hover-only dependency.
+- [ ] Reduced motion collapses/simplifies dock motion appropriately.
+
+## Accessibility and performance
+
+- [ ] `prefers-reduced-motion` and in-app Reduced Effects remain functional across all new material/motion paths.
+- [ ] Keyboard focus remains visible and dialogs/sheets retain focus management.
+- [ ] Touch targets remain usable at narrow widths.
+- [ ] No new uncaught console/page errors during the standard journey.
+- [ ] Production JS/CSS/performance budgets are reviewed after adding any new material dependency.
+
+## Final V1.11 verification commands
+
+```sh
+npm run check
+npm run build
+npx playwright test --project=desktop --project=mobile
+```
+
+Then visually review desktop and phone screenshots/states against `DESIGN.md` and the reference set. Do not tick visual/material items from code inspection alone.
