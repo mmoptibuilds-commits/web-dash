@@ -11,10 +11,10 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Hearth — Personal Dashboard',
+        name: 'Hearth — Personal Desktop',
         short_name: 'Hearth',
         description:
-          'A local-first personal web dashboard, start page, and lightweight personal web OS.',
+          'A local-first personal desktop and lightweight personal web OS.',
         theme_color: '#15181d',
         background_color: '#0f1115',
         display: 'standalone',

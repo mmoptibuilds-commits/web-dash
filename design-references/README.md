@@ -1,47 +1,35 @@
 # Design references
 
-This directory contains **reference material only**. Nothing here is automatically a production asset, dependency, or source file for Hearth.
+This directory contains **reference-only** material for Hearth OS. Nothing here is runtime code unless a later implementation task deliberately exports/reviews an asset into a production location.
 
 ## Source roles
 
-| Source | Role in V1.11 | Do not use it as |
-| --- | --- | --- |
-| Existing `web-dash` application | Functionality, data model, architecture, accessibility and test source of truth | Something to replace with a prototype |
-| `assets/` in this directory | Local visual/UI-kit/reference material collected for design comparison | A directory to import wholesale into the shipped bundle |
-| `macos-liquidglass-motion-reference.html` | Dock motion, widget proportions, material tuning and spatial-density reference | Production architecture, final icons, wallpaper source or exact hard-coded layout |
-| Figma iOS App Icons, frame `401:3` | App-icon artwork reference/export source | System/control glyph set |
-| `ybouane/liquidglass` | Preferred WebGL Liquid Glass implementation reference for selective V1.11 surfaces | A reason to apply WebGL to every card/widget |
+### `assets/`
+Contains the existing macOS/iOS UI-kit exports, screenshots and icon-template material that previously lived in the repository root `assets/` directory. The tree was moved here intact to keep reference material separate from runtime assets.
 
-## External references
+Use it to study proportion, spacing, hierarchy, platform patterns and visual density. Do not assume every included asset is licensed for redistribution in the product.
 
-- Figma app icons: `https://www.figma.com/design/KkioCa05PlAtIHUNT3xovg/iOS-App-icons-vector--Community-?node-id=401-3`
-- LiquidGlass: `https://github.com/ybouane/liquidglass`
-
-The LiquidGlass README describes the package as MIT-licensed. Before publicly shipping any Figma Community or Apple-origin reference artwork, verify the creator/source license for the specific asset being promoted into production.
-
-## HTML reference rules
-
-The HTML prototype is intentionally committed because it contains useful concrete behavior, especially the proximity-based dock magnification and restrained widget geometry. It also contains hand-drawn SVG approximations of familiar app icons, hard-coded desktop positions, a demo wallpaper and a direct CDN import. **Do not copy those pieces into the application as-is.**
+### `macos-liquidglass-motion-reference.html`
+Standalone visual/interaction reference supplied for the overhaul.
 
 Use it for:
-- dock proximity/magnification behavior and motion feel;
-- widget/card proportions and restrained radii;
-- selective glass tuning ideas;
-- overall density and spatial relationships.
+- proximity-based dock magnification;
+- widget proportions and shape language;
+- spatial density;
+- glass/material tuning ideas.
 
-Do not use it for:
-- replacing the React/Dexie/Zustand application architecture;
-- final app icon artwork;
-- hard-coded production positioning;
-- a production wallpaper;
-- a blanket WebGL-on-everything strategy.
+Do **not** use it as the application architecture. Do not copy its hand-drawn app SVGs, hard-coded desktop positions, wallpaper implementation or demo data into production.
 
-## Promoting a reference into runtime
+### Figma app-icon reference
+`https://www.figma.com/design/KkioCa05PlAtIHUNT3xovg/iOS-App-icons-vector--Community-?node-id=401-3`
 
-1. Confirm the asset or library license is appropriate for the intended use.
-2. Export/copy only the exact needed asset or implementation piece.
-3. Give the runtime copy a stable, descriptive name outside `design-references/`.
-4. Wire it through the existing component/token architecture.
-5. Add visual, responsive, accessibility and performance verification.
+Use reviewed/exported app artwork only where licensing permits. App artwork and system/control glyphs are separate systems. Production should store only the exact app icons actually used by Hearth rather than importing the complete collection.
 
-Keeping this directory reference-only prevents future agents from accidentally bundling the entire research set.
+### Liquid Glass implementation reference
+`https://github.com/ybouane/liquidglass`
+
+This is the preferred reference for the next selective WebGL/refraction material pass. It is **not currently vendored or installed** in Hearth. If adopted, wrap it behind a central material boundary with CSS/solid fallbacks, Reduced Effects handling, WebGL/context limits and performance testing.
+
+## Rule of precedence
+
+The existing React application is always the source of truth for functionality. References inform visual/motion implementation; they never replace working architecture.

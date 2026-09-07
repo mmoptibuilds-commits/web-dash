@@ -12,6 +12,7 @@ import {
   resolveResize,
   snapTo,
   type Box,
+  boxesOverlap,
 } from './geometry'
 
 function box(x: number, y: number, w: number, h: number): Box {
@@ -182,8 +183,8 @@ describe('resolveMove', () => {
     const others = [box(500, 100, 360, 240)]
     // Left edge 5px off the neighbour's left edge → snaps to it (grid would give 192).
     const r = resolveMove(box(495, 0, 170, 110), others, canvasW)
-    expect(r.box.x).toBe(500)
-    expect(r.box.y).toBe(0) // no y guide nearby; y grid-snaps to its own value
+    expect(r.box.x).toBe(310) // nearest valid slot is immediately left of the neighbour
+    expect(r.box.y).toBe(0)
     expect(r.guides).toEqual([{ axis: 'x', at: 500 }])
   })
 
@@ -191,7 +192,7 @@ describe('resolveMove', () => {
     const others = [box(0, 0, 170, 240)]
     // Bottom edge 2px above the neighbour's bottom → snaps down to match it.
     const r = resolveMove(box(0, 128, 170, 110), others, canvasW)
-    expect(r.box.y).toBe(130)
+    expect(r.box.y).toBe(260) // the snapped position would overlap; resolve below it
     expect(r.box.x).toBe(0)
     expect(r.guides).toContainEqual({ axis: 'y', at: 240 })
   })
@@ -215,6 +216,17 @@ describe('resolveMove', () => {
     // moving left at ~176 is 4px from 180 but 76px from 100 → picks 180.
     const r = resolveMove(box(176, 0, 50, 50), others, canvasW)
     expect(r.box.x).toBe(180)
+  })
+
+  it('resolves an occupied move to a bounded, non-overlapping slot', () => {
+    const other = box(320, 120, 360, 240)
+    const result = resolveMove(box(350, 150, 170, 110), [other], 1120, 520)
+    expect(result.valid).toBe(true)
+    expect(result.box.x).toBeGreaterThanOrEqual(0)
+    expect(result.box.y).toBeGreaterThanOrEqual(0)
+    expect(result.box.x + result.box.w).toBeLessThanOrEqual(1120)
+    expect(result.box.y + result.box.h).toBeLessThanOrEqual(520)
+    expect(boxesOverlap(result.box, other)).toBe(false)
   })
 })
 
@@ -243,5 +255,10 @@ describe('resolveResize', () => {
     // Growth that still fits stays on the lattice and inside the canvas.
     const fit = resolveResize(box(100, 0, 200, 96), min, canvasW)
     expect(fit).toEqual(box(100, 0, 200, 96))
+  })
+
+  it('caps height at the bottom edge', () => {
+    const r = resolveResize(box(0, 420, 220, 220), min, 400, 520)
+    expect(r.y + r.h).toBeLessThanOrEqual(520)
   })
 })

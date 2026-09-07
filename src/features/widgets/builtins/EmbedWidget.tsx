@@ -1,8 +1,9 @@
-import { useState } from 'react'
-import { ExternalLink, Link2, Pencil, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { ExternalLink, Link2, Maximize2, Minimize2, Pencil, X } from 'lucide-react'
 import type { WidgetComponentProps } from '../registry'
 import { updateWidgetInstance } from '@/data/repositories/widgets'
 import { classifyInput, hostOf, isSafeUrl, normalizeHttpUrl } from '@/lib/url'
+import { useSettings } from '@/hooks/data'
 import styles from './builtins.module.css'
 
 /** Sites we embed in a frame and navigate the whole tab for are distinct;
@@ -10,13 +11,22 @@ import styles from './builtins.module.css'
 const FRAME_SANDBOX = 'allow-scripts allow-same-origin allow-forms allow-popups'
 
 export function EmbedWidget({ instance, editMode }: WidgetComponentProps) {
-  const data = (instance.settings ?? {}) as { url?: string }
+  const data = (instance.settings ?? {}) as { url?: string; toolbar?: boolean }
+  const appSettings = useSettings()
   const storedUrl = data.url && isSafeUrl(data.url) ? normalizeHttpUrl(data.url) : ''
   // The draft starts from the stored URL; edits stay local until applied, and
   // cancelling (stopEditing) re-syncs from the stored value.
   const [draft, setDraft] = useState(storedUrl)
   const [editing, setEditing] = useState(!storedUrl)
   const [error, setError] = useState<string | null>(null)
+  const [fullscreen, setFullscreen] = useState(false)
+  const embedRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const onFullscreen = () => setFullscreen(document.fullscreenElement === embedRef.current)
+    document.addEventListener('fullscreenchange', onFullscreen)
+    return () => document.removeEventListener('fullscreenchange', onFullscreen)
+  }, [])
 
   function apply(ev: React.FormEvent) {
     ev.preventDefault()
@@ -89,22 +99,43 @@ export function EmbedWidget({ instance, editMode }: WidgetComponentProps) {
     )
   }
 
+  const toggleEmbedFullscreen = async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen()
+      else await embedRef.current?.requestFullscreen()
+    } catch {
+      // Browser policy may deny fullscreen; the bounded widget remains usable.
+    }
+  }
+
+  // Instance settings can hide a toolbar for one embed, while the global
+  // preference controls the default shell treatment for every embed.
+  const showToolbar = data.toolbar !== false && appSettings?.embedToolbar !== false
+  const allowFullscreen = appSettings?.embedFullscreen !== false
+
   return (
-    <div className={styles.embed} data-testid="embed-widget">
-      <iframe
-        className={styles.embedFrame}
-        src={storedUrl}
-        title={`Embedded site — ${storedUrl}`}
-        sandbox={FRAME_SANDBOX}
-        referrerPolicy="no-referrer"
-        loading="lazy"
-        allow="fullscreen"
-      />
-      <div className={styles.embedTop} data-testid="embed-toolbar">
+    <div ref={embedRef} className={styles.embed} data-testid="embed-widget">
+      <div className={styles.embedBody}>
+        <iframe
+          className={styles.embedFrame}
+          src={storedUrl}
+          title={`Embedded site — ${storedUrl}`}
+          sandbox={FRAME_SANDBOX}
+          referrerPolicy="no-referrer"
+          loading="lazy"
+          allow="fullscreen"
+        />
+      </div>
+      {showToolbar && <div className={styles.embedTop} data-testid="embed-toolbar">
         <span className={styles.embedHost} data-testid="embed-domain">
           <Link2 size={12} aria-hidden /> {hostOf(storedUrl)}
         </span>
         <span className={styles.embedActions}>
+          {allowFullscreen && (
+            <button type="button" className={styles.embedOpenBtn} aria-label={fullscreen ? 'Exit fullscreen embed' : 'Open embed fullscreen'} onClick={() => void toggleEmbedFullscreen()}>
+              {fullscreen ? <Minimize2 size={12} aria-hidden /> : <Maximize2 size={12} aria-hidden />}
+            </button>
+          )}
           {editMode && (
             <button
               type="button"
@@ -125,7 +156,7 @@ export function EmbedWidget({ instance, editMode }: WidgetComponentProps) {
             <ExternalLink size={12} aria-hidden /> Open
           </a>
         </span>
-      </div>
+      </div>}
       <span className={styles.embedNote}>If blank, the site blocks embedding</span>
     </div>
   )

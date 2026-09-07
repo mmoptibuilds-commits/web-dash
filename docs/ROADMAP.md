@@ -1,40 +1,40 @@
-# ROADMAP — Hearth
+# Hearth OS roadmap
 
-## Shipped baseline
+## Shipped — v1.1.0
 
-The original V1 and subsequent overhaul are already on the default branch: local-first PWA, Home/Dashboard modes, desktop windows/mobile sheets, desktop freeform geometry, dock/folders/widgets/wallpapers, Notes/Tasks/Calendar/Links, Calculator + offline currency rates, backup, Reduced Effects, accessibility/performance/PWA hardening and reference-led visual polish.
+- permanent Home desktop + Launchpad overlay;
+- concurrent desktop windows and narrow-screen sheets;
+- persistent window geometry/lifecycle state with opt-in restore;
+- collision-free bounded Home placement;
+- contained app/widget/embed scrolling;
+- configurable icon/dock/material/layout/contrast/motion presentation;
+- Dexie v4 migration and backup coverage;
+- local-first PWA architecture.
 
-See `docs/CURRENT_STATE.md` and `docs/V2_STATUS.md` for evidence.
+## Next — visual/material refinement
 
-## V1.11 — active next milestone
+Prioritize polish without rebuilding the product:
 
-A focused visual/UX/material overhaul that **preserves the existing architecture and features**:
+- selective `ybouane/liquidglass` WebGL refraction for high-value shell surfaces only;
+- central material adapter with CSS/solid fallbacks, Reduced Effects and performance gating;
+- refined proximity-based dock animation inspired by the committed HTML study;
+- reviewed/exported Figma app-icon artwork where licensing permits;
+- widget shape/radius/typography/optical-spacing polish;
+- full desktop/mobile Playwright + visual/performance verification after the material pass.
 
-- selective real Liquid Glass/refraction on high-value shell surfaces using `ybouane/liquidglass`, with CSS/solid fallbacks and performance tiers;
-- persistent glass presets/settings only when fully wired;
-- proximity-based, spring-refined dock magnification with keyboard/touch/edit-mode compatibility;
-- reviewed/exported Figma app icons and a separate consistent system/control glyph language;
-- stronger macOS-like desktop and iOS-like phone structure;
-- viewport-bound outer shell; bounded internal scrolling for embeds/apps/settings panes;
-- widget/radius/spacing/typography hierarchy overhaul with fewer pills and less generic card styling;
-- full responsive, accessibility, Reduced Effects, motion, performance and PWA regression verification.
+## Later product improvements
 
-V1.11 should remain $0 additional spend and low-maintenance. Do not add cloud infrastructure to accomplish a visual overhaul.
+- richer calendar events/reminders;
+- richer Notes formatting/attachments;
+- more first-party widgets with explicit bounded-scroll contracts;
+- additional Hearth-authored icon packs;
+- performance profiling for very large Home layouts.
 
-## Later product work
+## Deferred
 
-Still deferred unless explicitly reprioritized:
-- authentication and cross-device sync;
-- Google Drive/cloud backup;
-- richer Markdown/rich notes;
-- calendar events/reminders/notification center;
-- custom API/data widgets and Smart Folders;
-- browser extension/history permissions;
-- deeper configurable Control Center/window management;
-- weather/native apps;
-- plugin/widget marketplace, arbitrary-code SDK, multi-user/community/social features;
-- public theme/wallpaper marketplaces and heavy SEO.
-
-## Guardrail
-
-Later-product infrastructure must not leak into V1.11. The visual/material work can create a clean central seam where required, but no speculative backend or plugin architecture.
+- cloud sync/cross-device backup;
+- authentication/multi-user product;
+- analytics;
+- third-party plugin marketplace/arbitrary-code widgets;
+- arbitrary iframe rewriting or cross-origin embed state control;
+- native platform packaging.

@@ -1,64 +1,53 @@
-# CLAUDE.md — Hearth current engineering contract
+# Hearth OS engineering contract
 
-**Hearth** is a local-first, installable personal web OS/start page: macOS-inspired on desktop and intentionally iOS-inspired on phone. The current codebase is beyond the original frozen V1 and includes the completed V2-era freeform/responsive/calculator/accessibility work recorded in `docs/V2_STATUS.md`.
+Hearth is a local-first Vite/React/TypeScript PWA, package version **1.1.0**. Home is the permanent viewport surface; Apps opens Launchpad; desktop apps use bounded floating windows and narrow devices use sheets.
 
-## Source precedence
+## Read first
 
-Read `AGENTS.md`, `DESIGN.md`, `docs/CURRENT_STATE.md`, `docs/V1_11_WORK_HANDOFF.md`, `docs/ARCHITECTURE.md`, and the newest relevant `docs/V2_STATUS.md` sections before changing behavior.
+1. `docs/CURRENT_STATE.md`
+2. `docs/PRODUCT_SPEC.md`
+3. `docs/ARCHITECTURE.md`
+4. `DESIGN.md`
+5. `docs/QA_CHECKLIST.md`
+6. `docs/ROADMAP.md`
+7. `design-references/README.md` for visual/reference work
 
-The root one-shot prompt and `docs/PRODUCT_SPEC.md` are historical V1 baseline documents. When they conflict with current code/tests or an approved V1.11 decision, they do not win.
+Current code/tests outrank documentation when describing what is already implemented. Update docs when architecture/product behavior changes.
 
 ## Hard constraints
 
-- **No spend** — no paid APIs/SaaS/fonts/hosting dependency.
-- **Local-first** — persistence remains Dexie/IndexedDB; no backend, auth, SSR, queues, websockets, analytics or server DB without a new explicit decision.
-- **No runtime AI** in Hearth.
-- **Public-repo safe** — never commit secrets, keys, credentials or personal data.
-- **Preserve the working app** — V1.11 is not a ground-up rewrite.
-- **No fake completion** — runtime changes require fresh build/test/browser/visual evidence.
+- No paid runtime dependencies/services required.
+- Dexie/IndexedDB remains the only persistent store; no backend/auth/SSR/websockets/analytics/server DB without an explicit new product decision.
+- No runtime AI.
+- No secrets/personal data in the repository.
+- Preserve backward-compatible data migrations/backup validation.
+- Do not rebuild the application from visual references.
+- The document, shell and Home remain viewport-bound; apps/embeds own bounded internal scrolling.
+- Do not claim completion without fresh verification evidence.
+
+## Architecture invariants
+
+- UI/components -> features -> repositories -> Dexie.
+- Components do not access DB tables directly.
+- `src/state/ui.ts` is immediate presentation state; durable state stays in Dexie.
+- Dexie v4 includes `windowStates`; window persistence runs through its repository.
+- Shared geometry is used for seeded/add/migration/edit/backup placement and must remain collision-free/bounded.
+- Shared design tokens/materials/glyphs remain centralized.
+
+## Active visual direction
+
+The shipped app uses CSS materials. Selective `ybouane/liquidglass` WebGL refraction, improved dock proximity motion and reviewed Figma app artwork are approved **next-pass** work, not current runtime facts. Keep CSS/solid fallbacks, Reduced Effects and performance limits first-class.
 
 ## Commands
 
 ```sh
 npm run dev
-npm run typecheck
 npm run lint
+npm run typecheck
 npm run test
 npm run build
 npm run check
 npm run test:e2e
 ```
 
-Playwright exercises the production preview; rebuild before judging E2E behavior.
-
-## Current architectural invariants
-
-- UI → feature/components → repositories → Dexie. Components do not call the DB as an ad-hoc persistence path.
-- Persistent state = Dexie. Ephemeral/shared UI state = Zustand. Derived values are derived rather than duplicated.
-- Shared domain types and registries are contracts; inspect migration/backward-compatibility implications before edits.
-- Desktop Home uses the current freeform geometry/lattice system. Mobile uses its intentional compact/paged model. Do not restore the obsolete strict ordered-grid-only rule.
-- Mini-apps fill their host and own internal scrolling. The outer shell should stay viewport-bound.
-- Shared visual primitives flow through `styles/tokens.css` and existing CSS/module patterns; do not bypass the system with unrelated styling islands.
-
-## Current baseline to preserve
-
-The completed overhaul includes freeform desktop layout/backfill, responsive mobile sheets, bounded embed/window content, Calculator mini-app/widget with offline currency rates, Reduced Effects, accessibility/performance coverage, PWA/offline verification and reference-led visual polish. See `docs/CURRENT_STATE.md` and `docs/V2_STATUS.md` for evidence.
-
-## V1.11 material rule
-
-The previous blanket rule **"never WebGL/refraction"** is superseded for V1.11.
-
-V1.11 may integrate `ybouane/liquidglass` **selectively**, behind a central material boundary with CSS/solid fallback, Reduced Effects, unsupported-WebGL behavior and performance safeguards. Do not create one WebGL instance per widget or mark broad dynamic DOM as continuously recaptured. The package is not currently a dependency; do not claim WebGL Liquid Glass is implemented until it actually is.
-
-## Reference safety
-
-- `design-references/` is non-runtime research/reference material.
-- Use the supplied Figma frame for reviewed app-icon exports where licensing permits.
-- Use the HTML prototype for motion/proportion/material ideas only. Do not copy its hand-drawn app SVGs, hard-coded layout, demo wallpaper or architecture into Hearth.
-
-## Pitfalls
-
-- Verify current code before trusting old docs or old commit-specific prompts.
-- PWA tests must run against a fresh production build.
-- Reduced Effects and `prefers-reduced-motion` are accessibility behavior, not optional polish.
-- Changes to geometry, backup/import, Dexie schema, dock behavior or responsive hosts can have migration/E2E consequences; add discriminating tests for actual behavioral changes.
+Use a fresh production build for Playwright. For visual/shell changes also inspect desktop and phone states manually.

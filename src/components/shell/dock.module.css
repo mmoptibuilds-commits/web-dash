@@ -335,3 +335,52 @@
     z-index: calc(var(--z-window) + 1);
   }
 }
+
+/* Hearth OS v1.1 dock: a measured shelf with quiet optical lift. */
+.dock {
+  padding-inline: max(var(--sp-2), var(--safe-left)) max(var(--sp-2), var(--safe-right));
+}
+.bar {
+  max-width: calc(100vw - var(--sp-4));
+  overflow: visible;
+  gap: 5px;
+  padding: 8px 9px 9px;
+  border-radius: 16px;
+  background: rgb(var(--glass-1) / var(--glass-a-1));
+  border-color: rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
+  box-shadow: var(--shadow-2), var(--shadow-inset-1);
+}
+.tile {
+  width: 48px;
+  height: 48px;
+  transition: transform var(--dur-fast) var(--ease-out), filter var(--dur-fast) var(--ease-out);
+}
+.tile:hover {
+  transform: translateY(-4px) scale(1.06);
+}
+.dock[data-dock-style='shelf'] .bar {
+  background: rgb(var(--glass-3) / 0.74);
+  border-radius: 12px;
+}
+.dock[data-dock-magnify='false'] .tile:hover {
+  transform: translateY(-2px);
+}
+.dock[data-dock-indicators='false'] .indicator {
+  display: none;
+}
+.dock[data-dock-size='small'] .tile { width: 40px; height: 40px; }
+.dock[data-dock-size='large'] .tile { width: 56px; height: 56px; }
+.dock[data-dock-size='small'] .addChip,
+.dock[data-dock-size='large'] .addChip { width: auto; aspect-ratio: 1; height: auto; }
+.dock[data-dock-size='small'] .addChip { min-width: 40px; }
+.dock[data-dock-size='large'] .addChip { min-width: 56px; }
+.dock .glyphShell,
+.dock .glyphShell img,
+.dock .glyphShell span { border-radius: var(--icon-radius, var(--r-squircle)); }
+@media (pointer: coarse) {
+  .tile:hover { transform: none; }
+}
+@media (max-width: 639px) {
+  .bar { max-width: calc(100vw - var(--sp-4)); padding-inline: 7px; }
+  .tile { width: 42px; height: 42px; }
+}

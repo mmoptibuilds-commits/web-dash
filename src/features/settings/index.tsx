@@ -6,7 +6,13 @@ import { settingsRepo } from '@/data/repositories'
 import { useSettings } from '@/hooks/data'
 import type {
   AppSettings,
+  AppearanceProfile,
+  DockStyle,
   GlassPreset,
+  HomeDensity,
+  IconFamily,
+  IconShape,
+  IconTreatment,
   IconSizePreset,
   SearchEngineId,
   ThemePreference,
@@ -26,7 +32,7 @@ type Mode = 'simple' | 'advanced'
  * file, so this mirrors package.json manually. Keep it in sync on bump.
  */
 const APP_NAME = 'Hearth'
-const APP_VERSION = '1.0.0'
+const APP_VERSION = '1.1.0'
 
 const MODE_OPTIONS: ReadonlyArray<{ value: Mode; label: string }> = [
   { value: 'simple', label: 'Simple' },
@@ -68,6 +74,37 @@ const GLASS_DESCRIPTION: Record<GlassPreset, string> = {
   standard: 'The balanced, tuned default.',
   vibrant: 'Rich color and a deep, smooth blur.',
 }
+
+const PROFILE_OPTIONS: ReadonlyArray<{ value: AppearanceProfile; label: string }> = [
+  { value: 'auto', label: 'Auto' },
+  { value: 'desktop', label: 'Desktop' },
+  { value: 'mobile', label: 'Mobile' },
+]
+const ICON_FAMILY_OPTIONS: ReadonlyArray<{ value: IconFamily; label: string }> = [
+  { value: 'system', label: 'System' },
+  { value: 'monochrome', label: 'Mono' },
+  { value: 'tinted', label: 'Tinted' },
+]
+const ICON_SHAPE_OPTIONS: ReadonlyArray<{ value: IconShape; label: string }> = [
+  { value: 'squircle', label: 'Squircle' },
+  { value: 'rounded', label: 'Rounded' },
+  { value: 'circle', label: 'Circle' },
+  { value: 'plain', label: 'Plain' },
+]
+const ICON_TREATMENT_OPTIONS: ReadonlyArray<{ value: IconTreatment; label: string }> = [
+  { value: 'material', label: 'Material' },
+  { value: 'flat', label: 'Flat' },
+  { value: 'contrast', label: 'Contrast' },
+]
+const DOCK_STYLE_OPTIONS: ReadonlyArray<{ value: DockStyle; label: string }> = [
+  { value: 'glass', label: 'Glass' },
+  { value: 'shelf', label: 'Shelf' },
+]
+const DENSITY_OPTIONS: ReadonlyArray<{ value: HomeDensity; label: string }> = [
+  { value: 'comfortable', label: 'Comfortable' },
+  { value: 'balanced', label: 'Balanced' },
+  { value: 'compact', label: 'Compact' },
+]
 
 /**
  * Glass preset picker with a live sample. The sample is a real translucent
@@ -166,6 +203,7 @@ function SimpleSettings({ settings, persist }: { settings: AppSettings; persist:
   return (
     <>
       <Section title="Appearance">
+        <ChoiceSetting title="Appearance profile" description="Adjusts shell proportions for the current device." value={settings.appearanceProfile ?? 'auto'} options={PROFILE_OPTIONS} onChange={(appearanceProfile) => persist({ appearanceProfile })} />
         <ChoiceSetting
           title="Theme"
           description="Auto follows your system appearance."
@@ -179,6 +217,13 @@ function SimpleSettings({ settings, persist }: { settings: AppSettings; persist:
           onChange={(glass) => persist({ glass })}
           onTranslucency={(glassTranslucency) => persist({ glassTranslucency })}
         />
+        <div className={styles.settingBlock}>
+          <div className={styles.settingText}>
+            <span className={styles.settingTitle}>Wallpaper dimming</span>
+            <span className={styles.settingDesc}>Adds a gentle system scrim so icons and windows stay legible.</span>
+          </div>
+          <input className={styles.range} type="range" min={0} max={0.5} step={0.01} value={settings.wallpaperDimming ?? 0.12} aria-label="Wallpaper dimming" onChange={(event) => persist({ wallpaperDimming: Number(event.currentTarget.value) })} />
+        </div>
         <ToggleSetting
           title="Reduced effects"
           description="Disables blur and heavy translucency."
@@ -222,6 +267,32 @@ function SimpleSettings({ settings, persist }: { settings: AppSettings; persist:
   )
 }
 
+function NumberSetting({
+  title,
+  description,
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  title: string
+  description?: string
+  value: number
+  min: number
+  max: number
+  onChange: (value: number) => void
+}) {
+  return (
+    <div className={styles.settingBlock}>
+      <div className={styles.settingText}>
+        <span className={styles.settingTitle}>{title}</span>
+        {description ? <span className={styles.settingDesc}>{description}</span> : null}
+      </div>
+      <input className={styles.numberInput} type="number" value={value} min={min} max={max} onChange={(event) => onChange(Number(event.currentTarget.value))} aria-label={title} />
+    </div>
+  )
+}
+
 function AboutBlock() {
   return (
     <>
@@ -241,9 +312,34 @@ function AboutBlock() {
   )
 }
 
-function AdvancedSettings() {
+function AdvancedSettings({ settings, persist }: { settings: AppSettings; persist: PersistFn }) {
   return (
     <>
+      <Section title="Icons">
+        <ChoiceSetting title="Icon family" value={settings.iconFamily ?? 'system'} options={ICON_FAMILY_OPTIONS} onChange={(iconFamily) => persist({ iconFamily })} />
+        <ChoiceSetting title="Icon shape" value={settings.iconShape ?? 'squircle'} options={ICON_SHAPE_OPTIONS} onChange={(iconShape) => persist({ iconShape })} />
+        <ChoiceSetting title="Icon treatment" value={settings.iconTreatment ?? 'material'} options={ICON_TREATMENT_OPTIONS} onChange={(iconTreatment) => persist({ iconTreatment })} />
+      </Section>
+      <Section title="Dock">
+        <ChoiceSetting title="Dock style" value={settings.dockStyle ?? 'glass'} options={DOCK_STYLE_OPTIONS} onChange={(dockStyle) => persist({ dockStyle })} />
+        <ChoiceSetting title="Dock size" value={settings.dockSize ?? 'regular'} options={SIZE_OPTIONS} onChange={(dockSize) => persist({ dockSize })} />
+        <ToggleSetting title="Pointer magnification" description="Lift icons slightly when using a mouse or trackpad." checked={settings.dockMagnification !== false} onChange={(dockMagnification) => persist({ dockMagnification })} />
+        <ToggleSetting title="Running indicators" checked={settings.showDockIndicators !== false} onChange={(showDockIndicators) => persist({ showDockIndicators })} />
+      </Section>
+      <Section title="Home layout">
+        <ChoiceSetting title="Density" value={settings.homeDensity ?? 'balanced'} options={DENSITY_OPTIONS} onChange={(homeDensity) => persist({ homeDensity })} />
+        <NumberSetting title="Canvas width" description="Maximum desktop canvas width in pixels." value={settings.canvasMaxWidth} min={720} max={1600} onChange={(canvasMaxWidth) => persist({ canvasMaxWidth })} />
+        <NumberSetting title="Grid snap" description="Movement increment in pixels." value={settings.gridSnap} min={1} max={32} onChange={(gridSnap) => persist({ gridSnap })} />
+      </Section>
+      <Section title="Windows and embeds">
+        <ToggleSetting title="Restore windows on reload" description="Reopen windows that were open when Hearth was last closed." checked={settings.restoreWindowsOnReload} onChange={(restoreWindowsOnReload) => persist({ restoreWindowsOnReload })} />
+        <ToggleSetting title="Embed toolbar" checked={settings.embedToolbar !== false} onChange={(embedToolbar) => persist({ embedToolbar })} />
+        <ToggleSetting title="Allow embed fullscreen" checked={settings.embedFullscreen !== false} onChange={(embedFullscreen) => persist({ embedFullscreen })} />
+      </Section>
+      <Section title="Motion and contrast">
+        <ToggleSetting title="Reduced transparency" description="Use clearer, more solid system surfaces." checked={settings.reducedTransparency} onChange={(reducedTransparency) => persist({ reducedTransparency })} />
+        <ToggleSetting title="Higher contrast" checked={settings.highContrast} onChange={(highContrast) => persist({ highContrast })} />
+      </Section>
       <Section title="Data">
         <BackupControls />
       </Section>
@@ -307,7 +403,7 @@ export function SettingsMiniApp() {
             }}
           />
         ) : (
-          <AdvancedSettings />
+          <AdvancedSettings settings={settings} persist={persist} />
         )}
       </div>
     </div>

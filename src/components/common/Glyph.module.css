@@ -5,8 +5,71 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  border-radius: var(--r-squircle);
+  border-radius: var(--icon-radius, var(--r-squircle));
+  background: var(--icon-fill, rgb(var(--glass-3) / 0.78));
   box-shadow: var(--shadow-glyph);
+}
+
+.appSurface {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  overflow: hidden;
+  border-radius: var(--icon-radius, var(--r-squircle));
+  color: var(--icon-ink, rgb(var(--glyph-ink)));
+  background: var(--icon-fill, rgb(var(--glass-3) / 0.78));
+  border: 1px solid rgb(255 255 255 / 0.18);
+  box-shadow: var(--shadow-glyph);
+  transition: transform var(--dur-fast) var(--ease-out), filter var(--dur-fast) var(--ease-out);
+}
+
+.appSurface::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(145deg, rgb(255 255 255 / 0.32), transparent 46%);
+  pointer-events: none;
+}
+
+:global(:root[data-icon-family='monochrome']) .appSurface {
+  --icon-fill: rgb(var(--glass-3) / 0.78);
+  --icon-ink: rgb(var(--ink-1));
+}
+:global(:root[data-icon-family='monochrome']) .surface {
+  --icon-fill: rgb(var(--glass-3) / 0.78);
+  --icon-ink: rgb(var(--ink-1));
+}
+:global(:root[data-icon-family='tinted']) .appSurface {
+  --icon-fill: color-mix(in srgb, var(--accent) 22%, rgb(var(--glass-2)));
+  --icon-ink: var(--accent-strong);
+}
+:global(:root[data-icon-family='tinted']) .surface {
+  --icon-fill: color-mix(in srgb, var(--accent) 22%, rgb(var(--glass-2)));
+  --icon-ink: var(--accent-strong);
+}
+:global(:root[data-icon-shape='rounded']) .appSurface,
+:global(:root[data-icon-shape='rounded']) .surface { --icon-radius: var(--r-md); }
+:global(:root[data-icon-shape='circle']) .appSurface,
+:global(:root[data-icon-shape='circle']) .surface { --icon-radius: 50%; }
+:global(:root[data-icon-shape='plain']) .appSurface,
+:global(:root[data-icon-shape='plain']) .surface {
+  --icon-radius: var(--r-sm);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+:global(:root[data-icon-treatment='flat']) .appSurface,
+:global(:root[data-icon-treatment='flat']) .surface {
+  box-shadow: none;
+  border-color: transparent;
+}
+:global(:root[data-icon-treatment='contrast']) .appSurface,
+:global(:root[data-icon-treatment='contrast']) .surface {
+  --icon-fill: rgb(var(--ink-1));
+  --icon-ink: rgb(var(--glass-1));
+  border-color: transparent;
 }
 
 .surface::after {
@@ -23,6 +86,7 @@
   font-size: 1.6em;
   line-height: 1;
   user-select: none;
+  color: var(--icon-ink, rgb(var(--glyph-ink)));
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.22);
 }
 
@@ -31,7 +95,7 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  border-radius: var(--r-squircle);
+  border-radius: var(--icon-radius, var(--r-squircle));
   user-select: none;
   -webkit-user-drag: none;
 }
@@ -49,7 +113,7 @@
 }
 
 .mono {
-  color: rgb(var(--glyph-ink));
+  color: var(--icon-ink, rgb(var(--glyph-ink)));
   font-weight: var(--fw-bold);
   font-size: 1.05em;
   line-height: 1;

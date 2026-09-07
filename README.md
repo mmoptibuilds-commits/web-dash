@@ -1,102 +1,76 @@
-# Hearth — Personal Dashboard
+# Hearth OS
 
-Hearth is a local-first, installable PWA that doubles as a browser start page and lightweight personal web OS. Desktop uses a macOS-inspired freeform environment; phone widths switch to an intentionally iOS-inspired paged/sheet experience rather than squeezing desktop UI.
+Hearth is a local-first, installable personal desktop for the browser. **Home is the desktop**: wallpaper, shortcuts, folders, widgets, Apps/Launchpad, status bar and dock stay mounted while apps open over them.
 
-No account. No backend. No ads. No analytics. Persistent user data lives in the browser's IndexedDB through Dexie unless the user explicitly exports a backup.
+Current package version: **1.1.0**.
 
-## Current status
+Hearth has no account, backend, ads, analytics or runtime AI. Persistent data lives in IndexedDB through Dexie for the current browser origin.
 
-The original V1 is complete and a substantial V2-era overhaul is already merged on the default branch, including freeform desktop geometry, mobile sheets/bounded embeds, Calculator app/widget, Reduced Effects, accessibility/performance hardening and reference-led visual polish.
+## Current v1.1 experience
 
-Latest recorded runtime verification in `docs/V2_STATUS.md`:
+- Permanent Home workspace; Apps opens an overlay instead of navigating away.
+- Desktop apps use floating windows with focus/z-order, traffic lights, minimize/restore, maximize, resize and viewport bounds.
+- Narrow screens use safe-area-aware iOS-style sheets while Home remains underneath.
+- Window geometry/lifecycle state persists through Dexie v4; reload restoration is opt-in.
+- Desktop Home uses bounded, collision-free freeform geometry; narrow layouts use compact responsive placement.
+- Widgets and embeds own their scrolling inside bounded surfaces. The document, shell and Home do not become website-like vertical scroll containers.
+- Settings controls theme/material appearance, icon presentation, dock behavior, Home density/canvas behavior, transparency, contrast, motion, window restoration and embed chrome.
+- Notes, Tasks, Calendar, Links, Calculator and Settings are built-in apps; Home includes the existing typed widget set.
+- PWA/offline behavior, backup/restore, safe URL handling and local-first persistence remain intact.
 
-- `npm run check` — lint + typecheck + **126/126 Vitest tests** + PWA build passed.
-- `npm run test:e2e` — **81 passed / 23 skipped / 0 failed** against a production build.
+## Active visual refinement
 
-**V1.11 is the active next milestone and is not yet implemented by the 2026-09-07 repo-preparation commit.** The repo is now prepared with current source-of-truth docs and design references for that work.
+The next approved visual pass should **refine the existing v1.1 app, not rebuild it**:
 
-See [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) and [`docs/V1_11_WORK_HANDOFF.md`](docs/V1_11_WORK_HANDOFF.md).
+- selective WebGL Liquid Glass using `ybouane/liquidglass` only on high-value shell surfaces, behind CSS/solid fallbacks;
+- smoother proximity-based dock magnification inspired by the committed HTML reference;
+- reviewed Figma app-icon artwork where licensing permits, while keeping system/control glyphs separate;
+- restrained widget geometry, typography, radii and optical spacing;
+- continued desktop/mobile responsiveness, Reduced Effects and performance safeguards.
 
-## Features
+See [`DESIGN.md`](DESIGN.md), [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) and [`design-references/README.md`](design-references/README.md).
 
-- **Home** — multiple pages, shortcuts, folders, configurable dock, widgets, wallpapers and Edit Mode. Desktop placement uses the current freeform geometry/grid-lattice system; mobile remains compact/paged/touch-first.
-- **Dashboard** — Notes, Tasks, Calendar, Links and Calculator mini-apps in floating desktop windows or mobile sheets.
-- **Widgets** — search/clock/date, notes, tasks, calendar, links/bookmarks, photo/embed plus Calculator and other current registry items.
-- **Search / omnibox** — URLs navigate same-tab; queries use the selected search engine; suggestions come from local dashboard history.
-- **Wallpapers** — built-in gradients and locally stored image/animated/video backgrounds with size/fallback/reduced-motion behavior.
-- **Settings** — appearance, layout, wallpaper/search, Reduced Effects and versioned JSON backup/import; only real behavior should be surfaced.
-- **PWA** — installable and offline-capable after the initial production load.
+## Run locally
 
-## V1.11 direction
-
-The approved visual/UX overhaul will preserve existing functionality while targeting:
-
-- stronger macOS-like desktop and iOS-like mobile visual language;
-- a viewport-bound outer shell with scrolling contained inside apps/embeds;
-- selective true WebGL Liquid Glass through `ybouane/liquidglass`, with CSS/solid fallback and performance safeguards;
-- proximity/spring-style dock magnification based on the committed motion reference;
-- reviewed/exported Figma app icons instead of hand-drawn/AI-looking approximations;
-- restrained widget shapes, spacing, typography and reduced pill/card clutter.
-
-Read [`DESIGN.md`](DESIGN.md) before implementing any of this.
-
-## Requirements
-
-- Node.js ≥ 20
-- npm
-- Microsoft Edge for the configured Playwright system-channel E2E path
-
-## Development
+Requirements: Node.js 20+ and npm.
 
 ```sh
 npm install
 npm run dev
 ```
 
-## Production build and verification
+## Verify
 
 ```sh
-npm run check
+npm run lint
+npm run typecheck
+npm run test
 npm run build
-npx playwright test --project=desktop --project=mobile
+npm run check
+npm run test:e2e
 ```
 
-Playwright runs against the production preview. Rebuild after source changes before using E2E results as evidence.
+Playwright uses a production build/preview, so rebuild after changing `src/`.
 
-## Data and backups
-
-Persistent app data is per-origin/per-browser in IndexedDB. Clearing site data removes it. Settings can export/import a versioned JSON backup; large wallpaper/media blobs may be excluded by design.
-
-## Project layout
+## Code layout
 
 ```text
-src/
-  components/   shared UI + shell chrome
-  features/     Home, mini-apps, widgets, search, settings
-  data/         Dexie schema/seed + repositories
-  hooks/        reactive data hooks
-  lib/          navigation/search/geometry/helpers
-  state/        ephemeral Zustand UI state
-  styles/       design tokens, global material/motion rules
-
-docs/            architecture, current state, QA, roadmap, ledgers
-public/          shipped static/PWA assets
-design-references/  non-runtime visual/motion/UI-kit references
+src/components/     shell chrome, launcher, windows, shared glyphs
+src/features/       Home, mini-apps, widgets, search, Settings
+src/data/           Dexie schema/migrations, repositories, geometry
+src/state/          immediate UI state; durable state stays in Dexie
+src/styles/         tokens, materials, global primitives, motion
+design-references/  non-runtime visual/motion references
 ```
 
-## Design references
+## Maintained documentation
 
-`design-references/` is deliberately separate from runtime assets. It contains the existing local UI-kit/screenshots plus the supplied macOS/LiquidGlass HTML motion reference. See [`design-references/README.md`](design-references/README.md) for rules and external Figma/LiquidGlass links.
-
-## Documentation map
-
-- [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) — short current implementation/status source
-- [`DESIGN.md`](DESIGN.md) — active V1.11 visual/material direction
-- [`docs/V1_11_WORK_HANDOFF.md`](docs/V1_11_WORK_HANDOFF.md) — implementation handoff for Work/Codex/Claude
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — current architecture and seams
-- [`docs/V2_STATUS.md`](docs/V2_STATUS.md) — detailed historical implementation/evidence ledger
-- [`docs/QA_CHECKLIST.md`](docs/QA_CHECKLIST.md) — baseline evidence + pending V1.11 acceptance gates
-- [`docs/ROADMAP.md`](docs/ROADMAP.md) — current roadmap
-- [`CHANGELOG.md`](CHANGELOG.md) — notable changes
-- [`docs/PRODUCT_SPEC.md`](docs/PRODUCT_SPEC.md) — **historical frozen V1 baseline**, not the active V1.11 visual contract
-- `Web-dashboard-One-Shot-Claude-Code-Prompt.md` — **historical V1 build prompt**
+- [`DESIGN.md`](DESIGN.md) — current visual/material rules and next refinement
+- [`CLAUDE.md`](CLAUDE.md) — current engineering contract for Claude/agent work
+- [`AGENTS.md`](AGENTS.md) — shared contributor/agent rules
+- [`docs/PRODUCT_SPEC.md`](docs/PRODUCT_SPEC.md) — current product behavior
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — current architecture
+- [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) — concise status/source of truth
+- [`docs/QA_CHECKLIST.md`](docs/QA_CHECKLIST.md) — verification requirements/record
+- [`docs/ROADMAP.md`](docs/ROADMAP.md) — next/deferred work
+- [`CHANGELOG.md`](CHANGELOG.md) — release history

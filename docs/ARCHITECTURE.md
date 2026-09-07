@@ -1,84 +1,43 @@
-# ARCHITECTURE — Hearth current baseline
+# Hearth OS architecture
 
 ## Stack
 
-Vite 8 + React 19 + TypeScript 5.9 (strict), plain CSS/CSS modules with design tokens, Dexie 4 + dexie-react-hooks, Zustand 5 for ephemeral UI, dnd-kit for Home/dock interactions, lucide-react for current system/control glyphs, vite-plugin-pwa, Vitest/RTL and Playwright.
+Vite + React 19 + TypeScript, Dexie/IndexedDB persistence, Zustand for immediate UI state, CSS/CSS Modules with shared tokens/materials, dnd-kit for layout interaction, Vitest and Playwright, vite-plugin-pwa.
 
-## Layering and data flow
+## Layers
 
 ```text
-UI (features/*, components/*)
-   │ reactive hooks / repositories
-   ▼
-Repositories (data/repositories/*) — canonical persistence boundary
-   ▼
-Dexie schema (data/db/*) → IndexedDB
+UI/components -> feature components -> repositories -> Dexie IndexedDB
 ```
 
-Persistent state stays in Dexie. Ephemeral window/mode/edit/overlay state stays in Zustand. Derived values should not become a second persistent store.
+Components do not access DB tables directly. Durable state belongs in Dexie; immediate presentation state belongs in Zustand.
 
-## Database evolution
+## Shell composition
 
-The original V1 docs described DB v1. The shipped code has since evolved through **v3**, including the single-row offline `currencyRates` store used by Calculator/Currency plus migration/backfill work needed by the freeform layout overhaul. Treat the code/migrations/tests as authoritative for exact schema/index details.
+`App` mounts Backdrop, MenuBar, HomeMode, WindowsHost, MobileSheetHost, FolderView, AppLauncher, Dock and SearchOverlay. Home stays mounted while apps open above it. The legacy Dashboard identifier remains only where compatibility requires it; it is not the main workspace.
 
-Core domains include settings, pages/layout items, shortcuts, folders, widgets, notes, tasks, history, wallpapers, dock items and current later-added data such as currency rates.
+WindowsHost owns desktop frame behavior, focus/z-order, traffic lights, drag/resize/maximize and viewport clamping. Mobile sheets reuse the app-content resolver inside safe-area-aware bounded presentation.
 
-## Home layout contract
+## Persistence
 
-The original V1 used dense row-major ordering only. The current desktop implementation now supports **freeform geometry/grid-lattice behavior**. Older/imported V1 layout rows are backfilled through the current geometry planning/migration path (`planFreeformGeometry` is recorded in the implementation ledger).
+Database name: `hearth`. Dexie schema v4 adds `windowStates` keyed by app ID. Window state stores only Hearth-owned geometry/lifecycle values. Repository functions own normalization/read/write/clear behavior.
 
-Mobile intentionally keeps a compact/paged presentation rather than becoming a tiny freeform desktop. Both views operate over the same domain data; do not create separate desktop/mobile data stores.
+Settings hold appearance/behavior preferences. Backup import/export includes supported persistent tables and accepts older rows through defaults/migrations; large wallpaper media blobs may be excluded.
 
-When changing geometry, inspect current types/repositories/tests before assuming field shapes from historical docs.
+## Home geometry
 
-## Widget/mini-app contract
+`src/data/layout/geometry.ts` is the shared pure geometry contract for seed/add/migration/edit/backup placement. It owns canonical boxes, canvas/height clamping, minimum sizes, snapping, guides, collision checks and nearest valid placement. Failed bounded placement leaves the prior valid box unchanged.
 
-- Widget instances are stable typed registry entries with persisted settings/layout data.
-- Mini-apps fill the shell-provided host, provide their own inner layout/scrolling, and do not duplicate window/sheet chrome.
-- The shell maps built-in app ids to mini-app content for desktop windows/mobile sheets.
+## Scrolling contract
 
-## Shell responsibilities
+The document, app shell and Home surface are viewport-bound. Mini-apps, lists and embeds own their internal scrolling. Cross-origin iframe document state is not observable/persistable by Hearth.
 
-- wallpaper/media backdrop beneath all surfaces;
-- desktop menu/status bar and dock;
-- Home pages/freeform desktop canvas + mobile paged model/Edit Mode;
-- desktop windows with focus/drag/resize/close/maximize behavior supported by the current implementation;
-- mobile full-screen/sheet host and safe-area behavior;
-- Control Center/search/folder/settings overlays;
-- viewport containment: the outer shell should not become page-scrollable; long app/embed content scrolls inside bounded hosts.
+## Visual system
 
-## Navigation
+`src/styles/tokens.css` defines spacing, radii, surfaces, motion, safe areas and z-index. Shared CSS material behavior and `src/app/theme.ts` apply appearance attributes. `Glyph.tsx` is the shared symbol presentation layer.
 
-External URL/search navigation remains same-tab through the existing navigation/planning helpers and records only local dashboard history. Do not force sites into embeds when they block framing.
+Current runtime material is CSS/DOM based. If `ybouane/liquidglass` is adopted, add one centralized material adapter/boundary; do not scatter raw instances through widgets. Preserve CSS/solid fallbacks, Reduced Effects and device/performance gating. Do not create one WebGL context per surface.
 
-## Material architecture
+## PWA/testing
 
-### Current
-
-The shipped baseline uses shared CSS glass/tokens with Reduced Effects and reduced-motion support.
-
-### V1.11 planned seam
-
-V1.11 may introduce selective `ybouane/liquidglass` WebGL refraction behind a centralized material/glass abstraction. This is a **planned seam, not currently shipped behavior**.
-
-Requirements for that seam:
-- CSS glass remains a fallback and inexpensive tier;
-- no per-widget WebGL-instance explosion;
-- high-value shell surfaces get priority;
-- dynamic DOM capture is minimized;
-- Reduced Effects/unsupported WebGL/constrained-device fallbacks are explicit;
-- settings map to real renderer behavior rather than decorative toggles.
-
-Do not import from `design-references/` into runtime. Promote reviewed assets to a runtime location deliberately.
-
-## PWA
-
-`vite-plugin-pwa` generates the manifest/service worker. Uploaded media lives in IndexedDB and is not precached. Verify service-worker/offline behavior from a fresh production build.
-
-## Testing
-
-Vitest/RTL/fake-indexeddb cover logic/components/data. Playwright covers production desktop/mobile behavior, responsiveness, accessibility, motion, PWA/offline and performance journeys. Source changes require a fresh production build before E2E.
-
-## Path alias
-
-`@/*` maps to `src/*`. Follow existing barrels/boundaries and do not import Dexie directly from random UI components.
+`vite-plugin-pwa` builds the production service worker. Playwright targets a production build/preview. Runtime changes should pass lint, typecheck, Vitest, build and the desktop/mobile browser suite when the environment is available.

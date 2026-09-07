@@ -308,6 +308,67 @@
   pointer-events: none;
 }
 
+/* The host owns the chrome; the external document gets a bounded scrolling
+   viewport below it. Keeping the toolbar out of the iframe prevents resize
+   and fullscreen states from hiding the first rows of the embedded app. */
+.embed {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.embedBody {
+  order: 2;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: #fff;
+}
+.embedFrame {
+  position: static;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+.embedTop {
+  position: static;
+  order: 1;
+  flex: none;
+  flex-wrap: wrap;
+  min-height: 38px;
+  padding: 5px var(--sp-2);
+  background: rgb(var(--glass-1) / var(--glass-a-1));
+  color: rgb(var(--ink-1));
+  border-bottom: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+}
+.embedHost { color: rgb(var(--ink-2)); text-shadow: none; }
+.embedOpenBtn { color: rgb(var(--ink-2)); background: rgb(var(--glass-3) / 0.68); }
+.embedOpenBtn:hover { color: rgb(var(--ink-1)); background: rgb(var(--glass-3)); }
+.embedNote {
+  position: static;
+  order: 3;
+  flex: none;
+  align-self: flex-end;
+  margin: 0 6px 6px;
+  color: rgb(var(--ink-3));
+  background: transparent;
+  padding: 0;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.embed:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+}
+@container (max-width: 360px) {
+  .embedTop { align-items: flex-start; }
+  .embedActions { width: 100%; }
+  .embedOpenBtn { flex: 1; justify-content: center; }
+}
+
 /* ---------- Embed configure ---------- */
 .embedForm {
   flex: 1;

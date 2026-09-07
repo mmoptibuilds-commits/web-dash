@@ -37,6 +37,7 @@ async function boot() {
     settings?.reducedEffects ?? false,
     settings?.glass ?? 'standard',
     settings?.glassTranslucency ?? 0.5,
+    settings,
   )
 
   // PWA service worker (autoUpdate; no-op in dev).

@@ -93,7 +93,7 @@ export function itemBox(
 
 /* ------------------------- Placement helpers ------------------------ */
 
-function overlaps(a: Box, b: Box): boolean {
+export function boxesOverlap(a: Box, b: Box): boolean {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
 }
 
@@ -102,18 +102,22 @@ function overlaps(a: Box, b: Box): boolean {
  * left-to-right / top-to-bottom, that does not overlap any existing box.
  * Bounded by the canonical canvas width; rows may extend below without limit.
  */
-export function findFreeSpot(existing: Box[], w: number, h: number): { x: number; y: number } {
+export function findFreeSpot(existing: Box[], w: number, h: number): { x: number; y: number }
+export function findFreeSpot(existing: Box[], w: number, h: number, maxHeight: number): { x: number; y: number } | null
+export function findFreeSpot(existing: Box[], w: number, h: number, maxHeight?: number): { x: number; y: number } | null {
   const maxX = FREE_CANVAS_W - w
   for (let row = 0; row < 400; row++) {
     const y = row * ROW_PITCH
+    if (maxHeight !== undefined && y + h > maxHeight) break
     for (let col = 0; col < FREE_COLS; col++) {
       const x = Math.max(0, col * COL_PITCH)
       if (x > maxX) break
       const probe: Box = { x, y, w, h }
-      if (!existing.some((b) => overlaps(b, probe))) return { x, y }
+      if (!existing.some((b) => boxesOverlap(b, probe))) return { x, y }
     }
   }
   // Extremely dense canvas: fall back to a position below everything.
+  if (maxHeight !== undefined && Number.isFinite(maxHeight)) return null
   const bottom = existing.reduce((m, b) => Math.max(m, b.y + b.h), 0)
   return { x: 0, y: bottom + ROW_PITCH }
 }
@@ -214,6 +218,48 @@ export function clampBoxX(box: Box, width: number): Box {
   return x === box.x ? box : { ...box, x }
 }
 
+/** Clamp a box to the complete usable canvas when a height is known. */
+export function clampBox(box: Box, width: number, height = Number.POSITIVE_INFINITY): Box {
+  const w = Math.min(box.w, Math.max(0, width))
+  const h = Math.min(box.h, Math.max(0, height))
+  return {
+    ...box,
+    x: Math.max(0, Math.min(box.x, Math.max(0, width - w))),
+    y: Math.max(0, Math.min(box.y, Math.max(0, height - h))),
+    w,
+    h,
+  }
+}
+
+function validPosition(candidate: Box, others: Box[], width: number, height: number): boolean {
+  return candidate.x >= 0 && candidate.y >= 0 && candidate.x + candidate.w <= width + 0.001 &&
+    candidate.y + candidate.h <= height + 0.001 && !others.some((other) => boxesOverlap(candidate, other))
+}
+
+/** Find the closest non-overlapping position around the proposed box. */
+function nearestValidPosition(proposed: Box, others: Box[], width: number, height: number): Box | null {
+  const base = clampBox(proposed, width, height)
+  if (validPosition(base, others, width, height)) return base
+  const candidates: Box[] = []
+  for (const other of others) {
+    candidates.push(
+      { ...base, x: other.x - base.w - FREE_GAP },
+      { ...base, x: other.x + other.w + FREE_GAP },
+      { ...base, y: other.y - base.h - FREE_GAP },
+      { ...base, y: other.y + other.h + FREE_GAP },
+      { ...base, x: other.x - base.w - FREE_GAP, y: other.y - base.h - FREE_GAP },
+      { ...base, x: other.x + other.w + FREE_GAP, y: other.y + other.h + FREE_GAP },
+    )
+  }
+  const valid = candidates
+    .map((candidate) => clampBox(candidate, width, height))
+    .filter((candidate) => validPosition(candidate, others, width, height))
+    .sort((a, b) => Math.hypot(a.x - proposed.x, a.y - proposed.y) - Math.hypot(b.x - proposed.x, b.y - proposed.y))
+  if (valid[0]) return valid[0]
+  const fallback = findFreeSpot(others, base.w, base.h, height)
+  return fallback ? { ...base, x: fallback.x, y: fallback.y } : null
+}
+
 /**
  * Resolve a proposed move: first try to snap to the closest matching alignment
  * guide against the OTHER tiles (moving left/centre/right onto their
@@ -225,7 +271,9 @@ export function resolveMove(
   proposed: Box,
   others: Box[],
   canvasW: number,
-): { box: Box; guides: Array<{ axis: 'x' | 'y'; at: number }> } {
+  canvasH = Number.POSITIVE_INFINITY,
+  snapStep = SNAP,
+): { box: Box; guides: Array<{ axis: 'x' | 'y'; at: number }>; valid: boolean } {
   const guides: Array<{ axis: 'x' | 'y'; at: number }> = []
   const { w, h } = proposed
   let x = proposed.x
@@ -246,7 +294,7 @@ export function resolveMove(
     x += xBest.dx
     guides.push({ axis: 'x', at: xBest.at })
   } else {
-    x = snapTo(x)
+    x = snapTo(x, snapStep)
   }
 
   // y: same over top/middle/bottom.
@@ -263,11 +311,12 @@ export function resolveMove(
     y += yBest.dy
     guides.push({ axis: 'y', at: yBest.at })
   } else {
-    y = snapTo(y)
+    y = snapTo(y, snapStep)
   }
 
-  const box = clampBoxX({ ...proposed, x, y: Math.max(0, y) }, canvasW)
-  return { box, guides }
+  const snapped = clampBox({ ...proposed, x, y: Math.max(0, y) }, canvasW, canvasH)
+  const box = nearestValidPosition(snapped, others, canvasW, canvasH)
+  return { box: box ?? clampBoxX(snapped, canvasW), guides, valid: box !== null }
 }
 
 /**
@@ -284,9 +333,12 @@ export function resolveResize(
   proposed: Box,
   min: { w: number; h: number },
   canvasW: number,
+  canvasH = Number.POSITIVE_INFINITY,
+  snapStep = SNAP,
 ): Box {
   const maxW = Math.max(min.w, canvasW - proposed.x)
-  const w = Math.max(min.w, Math.min(snapTo(proposed.w), maxW))
-  const h = Math.max(min.h, snapTo(proposed.h))
-  return { x: proposed.x, y: proposed.y, w, h }
+  const w = Math.max(min.w, Math.min(snapTo(proposed.w, snapStep), maxW))
+  const maxH = Math.max(min.h, canvasH - proposed.y)
+  const h = Math.max(min.h, Math.min(snapTo(proposed.h, snapStep), maxH))
+  return { x: Math.max(0, proposed.x), y: Math.max(0, proposed.y), w, h }
 }

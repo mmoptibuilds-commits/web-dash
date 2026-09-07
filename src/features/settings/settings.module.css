@@ -122,6 +122,18 @@
   min-width: 0;
 }
 
+.numberInput {
+  flex: none;
+  width: 88px;
+  height: var(--field-h);
+  padding: 0 var(--sp-2);
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  border-radius: var(--control-radius);
+  background: rgb(var(--glass-3) / 0.76);
+  color: rgb(var(--ink-1));
+  font-variant-numeric: tabular-nums;
+}
+
 .settingTitle {
   font-size: var(--fs-md);
   font-weight: var(--fw-semibold);

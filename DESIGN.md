@@ -1,102 +1,70 @@
-# DESIGN.md — Hearth V1.11 visual language
+# Hearth OS design rules
 
 ## North star
 
-Hearth should feel like a polished personal desktop environment on desktop and a deliberately iOS-like home/workspace on phone — **not a website wearing rounded cards**. The design is Apple-inspired in interaction discipline, proportion, hierarchy and material behavior while remaining a web application with its own product identity.
+Hearth is a personal desktop surface, not a scrolling website. Desktop should read as a coherent macOS-like environment and phone widths as an intentionally iOS-like home/workspace, while remaining Hearth rather than an Apple clone.
 
-## Current baseline vs V1.11 target
+Home owns the viewport. Wallpaper, status bar, pages, windows, folders, Launchpad and dock are layered surfaces. Content-heavy apps, lists and embeds may scroll only inside their bounded bodies.
 
-**Already implemented:** tokenized CSS glass/backdrop blur, responsive desktop/mobile shells, Reduced Effects, freeform desktop Home geometry, mobile sheets, reference-led radius/spacing polish.
+## Shipped v1.1 visual system
 
-**V1.11 target:** Adaptive Liquid Glass, improved app icon artwork, proximity-based dock motion, tighter widget geometry/typography, and full structural responsiveness. Do not describe these target pieces as shipped until implementation and verification exist.
+- system/SF-like font stack;
+- 4/8px spacing rhythm;
+- restrained 14–20px major surface radii and smaller control radii;
+- hairline edges, shallow layered shadows and wallpaper-aware contrast;
+- shared tokens in `src/styles/tokens.css`;
+- CSS/DOM glass/material behavior and theme attributes through `src/app/theme.ts`;
+- shared `Glyph` presentation layer for system/app symbols;
+- Settings-driven icon family/shape/treatment, dock presentation, transparency, contrast and motion;
+- Reduced Effects/reduced-motion paths.
 
-## Material hierarchy — Adaptive Liquid Glass
+Avoid oversized pills, random per-app gradients, nested SaaS cards, excessive blur, tiny low-contrast text and inconsistent spacing.
 
-Glass is selective and has three tiers:
+## Shell
 
-1. **Full Liquid Glass** — preferred for high-value shell surfaces: dock, menu/status bar, Control Center, desktop windows/mobile sheets and important popovers. V1.11 may use `ybouane/liquidglass` here for real refraction.
-2. **Lightweight CSS glass** — ordinary widgets and secondary surfaces where WebGL cost is not justified.
-3. **Solid/reduced fallback** — Reduced Effects, unsupported WebGL, constrained devices or any scene where the refractive path cannot stay smooth/readable.
+The status bar is compact system chrome. Apps opens Launchpad without replacing Home. The dock is a measured shelf with running indicators and configurable size/style/magnification.
 
-The previous blanket V1 ban on WebGL/refraction is no longer an active V1.11 rule. That does **not** mean every translucent surface should use a shader.
+Desktop windows use traffic lights, focus-based z-order, direct drag/resize and maximize/restore. Narrow devices use safe-area-aware sheets. Outer shell scrolling is forbidden; internal app scrolling is intentional.
 
-### Glass settings target
+## Layout
 
-A real Settings surface may expose **Off / Performance / Balanced / High / Custom** only when each preset is wired to real rendering behavior and persistence. Custom controls can map to supported parameters such as blur, refraction, chromatic aberration, edge highlight, specular, Fresnel, distortion, opacity/tint/saturation/brightness, bevel depth and shadow. Keep unsafe/extreme ranges clamped and keep fallbacks functional.
+Desktop Home uses persisted freeform geometry inside hard width/height bounds. Moves snap softly, show alignment guides and commit only collision-free positions. Resize respects per-kind minimums and all viewport edges. Narrow layouts use a compact responsive layout.
 
-## Dock
+## Icons
 
-Use the committed HTML reference as an interaction study, not as production code. Its cosine proximity curve is a good baseline because neighboring icons react continuously rather than each icon performing a disconnected hover zoom.
+App artwork and system/control glyphs are separate systems.
 
-V1.11 dock goals:
-- proximity-based magnification with restrained maximum scale;
-- smooth spring-like interpolation and subtle neighboring displacement if performance permits;
-- bottom-anchored optical motion;
-- app label/tooltip behavior that does not jitter;
-- click/tap feedback, running/active state where meaningful;
-- keyboard focus and edit/reorder behavior preserved;
-- touch-safe alternative on mobile — no hover-only functionality;
-- narrow phones remain overflow-free.
+- Existing Hearth glyphs remain the safe runtime baseline.
+- The approved Figma frame in `design-references/README.md` may supply reviewed/exported **app artwork** where licensing permits.
+- Do not use the reference HTML's hand-drawn SVG app approximations when better reviewed artwork is available.
+- Normalize optical size/alignment rather than forcing identical visual mass.
 
-## Widgets and surfaces
+## Active material refinement — selective Liquid Glass
 
-- Use varied aspect ratios and purposeful shapes; not every widget should be an equal SaaS card.
-- Keep radii restrained and proportional to component size. Avoid `9999px` unless the control is truly capsule-shaped.
-- Use hairline edges and small internal highlights before heavy shadows.
-- Let content hierarchy create structure; avoid nested card-inside-card stacks.
-- Widget content must adapt/reflow; do not merely scale the desktop version down.
+The current v1.1 implementation uses CSS materials. The next visual pass may add **selective WebGL refraction** using `ybouane/liquidglass`; this is approved direction, not a shipped claim.
 
-## Typography and rhythm
+Use three tiers:
 
-- Use the existing system/SF-like stack; no paid font dependency.
-- Prefer calmer weights and optical alignment over excessive bold text.
-- Maintain the existing 4/8 spacing rhythm; use negative space intentionally.
-- Keep small labels readable; avoid tiny low-contrast explanatory text.
-- Align icon visual mass, baselines and hit targets independently — optical size matters more than identical bounding boxes.
+1. **Full Liquid Glass** — high-value shell surfaces only: dock, status/menu bar, Control Center, important popovers and selected windows/sheets where performance remains stable.
+2. **CSS glass** — ordinary widgets and secondary surfaces.
+3. **Solid/reduced fallback** — Reduced Effects, unsupported WebGL, constrained devices or performance fallback.
 
-## Icon systems
+Do not create one WebGL context per widget. Centralize the integration behind a material boundary and preserve existing CSS tokens/fallbacks.
 
-**App artwork** and **UI/control glyphs** are separate systems.
+If Settings exposes Liquid Glass controls, every control must map to real renderer behavior and persistence. Reasonable presets: Off, Performance, Balanced, High, Custom. Custom controls may cover only safely clamped parameters actually supported by the integration.
 
-- App artwork: use reviewed/exported assets from the approved Figma source where licensing permits, storing exact required assets locally in runtime locations.
-- UI/control glyphs: keep one consistent system-icon family/visual language for back, close, search, settings, chevrons, toggles and other controls.
-- Do not use the hand-drawn SVG app approximations from the HTML reference when better source artwork exists.
+## Dock motion refinement
 
-## Desktop, mobile and scrolling
+Use the committed HTML reference as an interaction study. Its proximity/cosine falloff is a better starting point than disconnected per-icon hover zoom.
 
-### Desktop
-- Viewport-bound desktop shell; the page itself should not scroll.
-- Menu/status bar, freeform Home canvas, dock and floating windows should read as one environment.
-- Windows/apps may contain their own scroll regions.
-
-### Mobile
-- Automatically switch to an intentionally iOS-like interaction model.
-- Use sheets/full-screen app experiences, safe areas, touch-first controls and paged Home behavior.
-- Do not squeeze desktop windows or depend on hover.
-
-### Embedded apps/content
-
-Embeds and long content may scroll inside **bounded containers**. Scroll chaining/overscroll must not turn the outer dashboard into a web page.
+Target:
+- restrained proximity magnification with neighbor response;
+- bottom-anchored optical lift;
+- smooth spring-like interpolation only if it remains performant;
+- stable labels/tooltips and click/tap feedback;
+- preserved keyboard focus, edit/reorder behavior and narrow-phone fit;
+- touch/coarse-pointer behavior that never depends on hover.
 
 ## Motion
 
-- Purposeful, short and physically coherent.
-- Prefer transform/opacity and spring-like response; avoid constant ambient motion.
-- Preserve `prefers-reduced-motion`; Reduced Effects must remove expensive/ornamental material behavior as well as blur where appropriate.
-- Motion must communicate state/space, not decorate everything.
-
-## Performance guardrails for Liquid Glass
-
-- Centralize integration; do not initialize a separate WebGL context for every widget.
-- Keep capture roots shallow and stable.
-- Use always-dynamic capture sparingly; invalidate one-shot visual changes instead of rerasterizing every frame where possible.
-- Test idle and dynamic scenes, video wallpapers, resize, dock motion and stacked glass.
-- Fall back before sacrificing interaction smoothness or readability.
-
-## Anti-patterns
-
-Avoid purple-blue SaaS gradients, excessive pills, random radii, heavy shadows, endless cards, generic AI iconography, fake complexity, page-level scrolling, hover-only mobile behavior, blanket WebGL, and visual changes that bypass the token/material system.
-
-## Reference index
-
-See [`design-references/README.md`](design-references/README.md), the Figma app-icon frame `401:3`, and `https://github.com/ybouane/liquidglass`. The existing application remains the functionality/architecture source of truth.
+Motion stays short, interruptible and purposeful. Reduced motion removes large transforms/springs. Reading content does not continuously animate.

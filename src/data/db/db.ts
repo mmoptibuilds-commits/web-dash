@@ -12,6 +12,7 @@ import type {
   TaskItem,
   Wallpaper,
   WidgetInstance,
+  AppWindowState,
 } from '@/types/domain'
 
 /**
@@ -23,7 +24,7 @@ import type {
  */
 
 /** Current schema version. Bump + add an upgrade block for any change. */
-export const DB_VERSION = 3
+export const DB_VERSION = 4
 
 class HearthDatabase extends Dexie {
   settings!: EntityTable<AppSettings, 'id'>
@@ -38,6 +39,7 @@ class HearthDatabase extends Dexie {
   wallpapers!: EntityTable<Wallpaper, 'id'>
   dockItems!: EntityTable<DockItem, 'id'>
   currencyRates!: EntityTable<CurrencyRates, 'id'>
+  windowStates!: EntityTable<AppWindowState, 'appId'>
 
   constructor() {
     super('hearth')
@@ -94,6 +96,25 @@ class HearthDatabase extends Dexie {
       currencyRates: 'id',
     })
 
+    // v4 persists Hearth-owned window geometry and reload preference. Existing
+    // installs intentionally receive an empty table: a schema migration must
+    // never invent visible windows the user did not open.
+    this.version(4).stores({
+      settings: 'id',
+      homePages: 'id,index',
+      layoutItems: 'id,pageId,order,refId',
+      shortcuts: 'id',
+      folders: 'id',
+      widgetInstances: 'id,type',
+      notes: 'id,updatedAt',
+      tasks: 'id,updatedAt,done',
+      history: 'id,kind,lastUsedAt',
+      wallpapers: 'id,kind',
+      dockItems: 'id,order,appId,shortcutId',
+      currencyRates: 'id',
+      windowStates: 'appId,open,updatedAt',
+    })
+
     // Fail loudly (surfaced by callers as a recoverable message) rather than
     // leaving the app half-initialized.
     this.on('populate', () => {
@@ -118,3 +139,4 @@ export type HearthTableName =
   | 'wallpapers'
   | 'dockItems'
   | 'currencyRates'
+  | 'windowStates'

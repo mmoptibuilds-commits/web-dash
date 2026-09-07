@@ -1,24 +1,40 @@
 import { useState } from 'react'
+import type { ComponentType } from 'react'
+import type { LucideProps } from 'lucide-react'
 import type { ShortcutIcon } from '@/types/domain'
 import { faviconUrlFor } from '@/lib/url'
 import styles from './Glyph.module.css'
 
-/** Deterministic two-tone hue for letter monograms. */
-export function hueFor(text: string): number {
-  let h = 0
-  for (const ch of text) h = (h * 31 + ch.codePointAt(0)!) % 360
-  return h
+/** Shared presentation for Hearth-owned app symbols. Parent controls supply the accessible name. */
+export function SystemGlyph({
+  icon: Icon,
+  label,
+  size = 44,
+}: {
+  icon: ComponentType<LucideProps>
+  label: string
+  size?: number
+}) {
+  return (
+    <span
+      className={styles.appSurface}
+      data-icon-family="system"
+      data-icon-shape="squircle"
+      data-icon-treatment="material"
+      aria-hidden
+      title={label}
+      style={{ width: size, height: size }}
+    >
+      <Icon size={Math.round(size * 0.48)} strokeWidth={1.8} />
+    </span>
+  )
 }
 
 function Monogram({ label }: { label: string }) {
-  const h = hueFor(label || '?')
   return (
     <span
       className={`${styles.surface} ${styles.mono}`}
       data-testid="shortcut-monogram"
-      style={{
-        backgroundImage: `linear-gradient(145deg, hsl(${h} 58% 46%), hsl(${(h + 38) % 360} 60% 34%))`,
-      }}
       aria-hidden
     >
       {(label || '?').slice(0, 1).toUpperCase()}
@@ -40,14 +56,10 @@ export function ShortcutGlyph({
   url?: string
 }) {
   if (icon.type === 'emoji') {
-    const h = hueFor(icon.emoji)
     return (
       <span
         className={`${styles.surface} ${styles.emoji}`}
         data-testid="shortcut-glyph-surface"
-        style={{
-          backgroundImage: `linear-gradient(145deg, hsl(${h} 54% 56%), hsl(${(h + 38) % 360} 58% 38%))`,
-        }}
         aria-hidden
       >
         {icon.emoji}

@@ -10,7 +10,8 @@ import { listDock } from '@/data/repositories/dock'
 import { listWallpapers } from '@/data/repositories/wallpapers'
 import { listItemsForPage } from '@/data/repositories/layout'
 import { getCurrencyRates } from '@/data/repositories/currencyRates'
-import type { AppSettings, CurrencyRates, HomePage, Note, TaskItem } from '@/types/domain'
+import { listWindowStates } from '@/data/repositories/windowStates'
+import type { AppSettings, AppWindowState, CurrencyRates, HomePage, Note, TaskItem } from '@/types/domain'
 
 /** Reactive settings (read after ensureBootData has run). */
 export function useSettings(): AppSettings | undefined {
@@ -60,6 +61,11 @@ export function usePageItems(pageId: string) {
 /** Reactive Calculator currency rates (single offline row, self-seeding). */
 export function useCurrencyRates(): CurrencyRates | undefined {
   return useLiveQuery(() => getCurrencyRates(), [])
+}
+
+/** Reactive window records used by the shell's durable-state adapter. */
+export function useWindowStates(): AppWindowState[] | undefined {
+  return useLiveQuery(() => listWindowStates(), [])
 }
 
 /** Raw lookup of arbitrary rows (used by item renderers). */

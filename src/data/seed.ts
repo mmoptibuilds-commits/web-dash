@@ -93,6 +93,7 @@ export async function wipeAllData(): Promise<void> {
       db.wallpapers,
       db.dockItems,
       db.currencyRates,
+      db.windowStates,
     ],
     async () => {
       await Promise.all([
@@ -108,6 +109,7 @@ export async function wipeAllData(): Promise<void> {
         db.wallpapers.clear(),
         db.dockItems.clear(),
         db.currencyRates.clear(),
+        db.windowStates.clear(),
       ])
     },
   )

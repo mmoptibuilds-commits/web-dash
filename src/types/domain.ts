@@ -24,6 +24,14 @@ export type IconSizePreset = 'small' | 'regular' | 'large'
  */
 export type GlassPreset = 'subtle' | 'standard' | 'vibrant'
 
+/** Overall platform proportions used by the shell and app surfaces. */
+export type AppearanceProfile = 'auto' | 'desktop' | 'mobile'
+export type IconFamily = 'system' | 'monochrome' | 'tinted'
+export type IconShape = 'squircle' | 'rounded' | 'circle' | 'plain'
+export type IconTreatment = 'flat' | 'material' | 'contrast'
+export type DockStyle = 'glass' | 'shelf'
+export type HomeDensity = 'comfortable' | 'balanced' | 'compact'
+
 /**
  * Reference to whichever wallpaper is active for the current surface.
  * `builtin` points at a preset shipped in code (gradients); `user` points at
@@ -37,6 +45,8 @@ export interface AppSettings {
   id: 'main'
   /** Light / dark / auto. 'auto' follows the OS (default). */
   theme: ThemePreference
+  /** Platform proportion preference. Auto follows the current viewport. */
+  appearanceProfile: AppearanceProfile
   /** Reduced Effects — disables blur, heavy translucency. */
   reducedEffects: boolean
   /** Glass material preset (see GlassPreset). 'standard' is the tuned default. */
@@ -48,10 +58,29 @@ export interface AppSettings {
    * Effects overrides it with a solid surface.
    */
   glassTranslucency: number
+  /** Additional wallpaper dimming used to protect system chrome contrast. */
+  wallpaperDimming: number
   defaultSearchEngine: SearchEngineId
   iconSize: IconSizePreset
+  iconFamily: IconFamily
+  iconShape: IconShape
+  iconTreatment: IconTreatment
   /** Whether shortcut labels render on home pages. */
   showLabels: boolean
+  dockStyle: DockStyle
+  dockSize: IconSizePreset
+  dockMagnification: boolean
+  showDockIndicators: boolean
+  homeDensity: HomeDensity
+  canvasMaxWidth: number
+  gridSnap: number
+  restoreWindowsOnReload: boolean
+  defaultWindowWidth: number
+  defaultWindowHeight: number
+  embedFullscreen: boolean
+  embedToolbar: boolean
+  reducedTransparency: boolean
+  highContrast: boolean
   wallpaper: WallpaperRef
   createdAt: number
   updatedAt: number
@@ -158,6 +187,24 @@ export interface WidgetInstance {
   size: WidgetSizeId
   settings: WidgetSettings
   createdAt: number
+  updatedAt: number
+}
+
+/* ------------------------------------------------------------------ */
+/* Windows                                                            */
+/* ------------------------------------------------------------------ */
+
+/** Hearth-owned window state. Cross-origin iframe internals are not stored. */
+export interface AppWindowState {
+  appId: BuiltinAppId
+  x: number
+  y: number
+  w: number
+  h: number
+  maximized: boolean
+  minimized: boolean
+  open: boolean
+  lastOpenedAt: number
   updatedAt: number
 }
 
