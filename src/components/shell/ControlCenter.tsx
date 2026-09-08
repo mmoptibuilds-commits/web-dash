@@ -114,6 +114,7 @@ export function ControlCenterMenu({ onClose }: { onClose: () => void }) {
       <div
         ref={panelRef}
         className={`${styles.ccPanel} anim-rise ${closing ? styles.closing : ''}`}
+        data-glass-role="control-center"
         role="dialog"
         aria-label="Control Center"
         tabIndex={-1}

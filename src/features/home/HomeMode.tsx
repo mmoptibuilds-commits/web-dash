@@ -47,8 +47,8 @@ import {
   boxesOverlap,
   itemBox,
   MIN_BOX,
+  resolveCollisionFreeResize,
   resolveMove,
-  resolveResize,
   type Box,
 } from '@/data/layout/geometry'
 import { ConfirmDialog } from '@/components/common/Modal'
@@ -132,7 +132,7 @@ function payloadNode(
       return {
         isWidget: true,
         node: (
-          <div className={styles.widgetHost}>
+          <div className={styles.widgetHost} data-glass-role="widget">
             <Comp instance={ctx.widget} editMode={ctx.interactive} />
           </div>
         ),
@@ -545,9 +545,15 @@ function PagePane(props: PageProps) {
         h: g.base.h + dy,
       }
       const min = MIN_BOX[g.kind]
-      const resized = resolveResize(proposed, min, cw, ch, snapStep)
-      const others = (items ?? []).filter((i) => i.id !== g.id).map((i) => boxOf(i))
-      const box = others.some((other) => boxesOverlap(resized, other)) ? g.base : resized
+      const { box } = resolveCollisionFreeResize(
+        proposed,
+        g.base,
+        min,
+        g.others,
+        cw,
+        ch,
+        snapStep,
+      )
       setLive({ id: g.id, mode: 'resize', box })
     }
   }
@@ -601,7 +607,9 @@ function PagePane(props: PageProps) {
       originCX: e.clientX - rect.left,
       originCY: e.clientY - rect.top,
       base,
-      others: [],
+      others: (items ?? [])
+        .filter((candidate) => candidate.id !== item.id)
+        .map((candidate) => boxOf(candidate)),
       maxZ,
       moved: true,
     }
@@ -613,10 +621,20 @@ function PagePane(props: PageProps) {
   const applyPreset = (item: LayoutItem, s: WidgetSizeId) => {
     const box = boxOf(item)
     const { w, h } = canonicalBoxForWidget(s)
-    const resized = resolveResize({ x: box.x, y: box.y, w, h }, MIN_BOX.widget, cw, ch, snapStep)
     const others = (items ?? []).filter((i) => i.id !== item.id).map((i) => boxOf(i))
-    if (!others.some((other) => boxesOverlap(resized, other))) void setItemBox(item.id, resized)
-    void updateWidgetInstance(item.refId, { size: s })
+    const resized = resolveCollisionFreeResize(
+      { x: box.x, y: box.y, w, h },
+      box,
+      MIN_BOX.widget,
+      others,
+      cw,
+      ch,
+      snapStep,
+    )
+    if (resized.valid) {
+      void setItemBox(item.id, resized.box)
+      void updateWidgetInstance(item.refId, { size: s })
+    }
   }
 
   const keyAction = (e: ReactKeyboardEvent, item: LayoutItem) => {
@@ -646,7 +664,19 @@ function PagePane(props: PageProps) {
         const maxH = Math.max(min.h, ch - box.y)
         const w = isX ? Math.max(min.w, Math.min(box.w + delta, maxW)) : box.w
         const h = isY ? Math.max(min.h, Math.min(box.h + delta, maxH)) : box.h
-        void setItemBox(item.id, { x: box.x, y: box.y, w, h })
+        const others = (items ?? [])
+          .filter((candidate) => candidate.id !== item.id)
+          .map((candidate) => boxOf(candidate))
+        const resized = resolveCollisionFreeResize(
+          { x: box.x, y: box.y, w, h },
+          box,
+          min,
+          others,
+          cw,
+          ch,
+          1,
+        )
+        if (resized.valid) void setItemBox(item.id, resized.box)
         return
       }
       const next: Box = {
@@ -655,7 +685,11 @@ function PagePane(props: PageProps) {
         w: isX ? box.w + delta : box.w,
         h: isY ? box.h + delta : box.h,
       }
-      void setItemBox(item.id, resolveResize(next, min, cw, ch, snapStep))
+      const others = (items ?? [])
+        .filter((candidate) => candidate.id !== item.id)
+        .map((candidate) => boxOf(candidate))
+      const resized = resolveCollisionFreeResize(next, box, min, others, cw, ch, snapStep)
+      if (resized.valid) void setItemBox(item.id, resized.box)
       return
     }
     // Precise nudges deliberately bypass the magnetic grid/guides (a 1px push

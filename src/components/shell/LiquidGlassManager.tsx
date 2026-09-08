@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useSettings } from '@/hooks/data'
 import { liquidGlassConfig, resolveLiquidGlassTier, supportsWebGL } from '@/lib/liquidGlass'
+import { selectLiquidGlassSurfaces } from '@/lib/liquidGlassDom'
 
 /** Owns the single selective ybouane renderer and all graceful fallbacks. */
 export function LiquidGlassManager() {
@@ -23,12 +24,12 @@ export function LiquidGlassManager() {
     document.documentElement.dataset.materialTier = tier
 
     if (tier !== 'webgl') return
-    const root = document.getElementById('root')
-    const elements = root?.querySelectorAll<HTMLElement>(':scope > [data-liquid-glass]')
-    if (!root || !elements?.length) {
+    const surfaces = selectLiquidGlassSurfaces(document)
+    if (!surfaces) {
       document.documentElement.dataset.materialTier = 'css'
       return
     }
+    const { root, elements } = surfaces
 
     const start = async () => {
       try {
@@ -39,6 +40,23 @@ export function LiquidGlassManager() {
           refraction: settings.liquidGlassRefraction,
           chromatic: settings.liquidGlassChromatic,
         })
+        for (const element of elements) {
+          const role = element.dataset.glassRole
+          element.dataset.config = JSON.stringify({
+            cornerRadius: role === 'dock' ? 18 : 0,
+            zRadius: role === 'dock' ? 16 : 4,
+            blurAmount: Math.min(1, chosen.blur / 10),
+            refraction: chosen.refraction,
+            chromAberration: chosen.chromaticAberration,
+            edgeHighlight: role === 'dock' ? 0.06 : 0.025,
+            specular: role === 'dock' ? 0.025 : 0.01,
+            fresnel: role === 'dock' ? 0.2 : 0.1,
+            opacity: role === 'dock' ? 0.92 : 0.82,
+            shadowOpacity: role === 'dock' ? 0.16 : 0.06,
+            floating: false,
+            button: false,
+          })
+        }
         instance = await LiquidGlass.init({
           root,
           glassElements: elements,

@@ -36,6 +36,13 @@ body {
   isolation: isolate;
 }
 
+/* The selective Liquid Glass capture root must have a real viewport-sized box;
+   all of its approved glass surfaces are fixed direct children. */
+[data-hearth-shell] {
+  position: fixed;
+  inset: 0;
+}
+
 img,
 svg,
 video,

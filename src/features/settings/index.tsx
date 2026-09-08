@@ -365,9 +365,9 @@ function AdvancedSettings({ settings, persist }: { settings: AppSettings; persis
         <ChoiceSetting title="Liquid Glass renderer" description="Applies real-time refraction only to the menu bar and Dock, with automatic CSS and solid fallbacks." value={settings.liquidGlassMode ?? 'balanced'} options={LIQUID_GLASS_OPTIONS} onChange={(liquidGlassMode) => persist({ liquidGlassMode })} />
         {settings.liquidGlassMode === 'custom' ? (
           <div className={styles.settingBlock}>
-            <label className={styles.settingText}>Refraction <input className={styles.range} type="range" min={0} max={0.08} step={0.001} value={settings.liquidGlassRefraction} onChange={(event) => persist({ liquidGlassRefraction: Number(event.currentTarget.value) })} /></label>
+            <label className={styles.settingText}>Refraction <input className={styles.range} type="range" min={0} max={1} step={0.01} value={settings.liquidGlassRefraction} onChange={(event) => persist({ liquidGlassRefraction: Number(event.currentTarget.value) })} /></label>
             <label className={styles.settingText}>Blur <input className={styles.range} type="range" min={0} max={10} step={0.25} value={settings.liquidGlassBlur} onChange={(event) => persist({ liquidGlassBlur: Number(event.currentTarget.value) })} /></label>
-            <label className={styles.settingText}>Chromatic edge <input className={styles.range} type="range" min={0} max={0.012} step={0.001} value={settings.liquidGlassChromatic} onChange={(event) => persist({ liquidGlassChromatic: Number(event.currentTarget.value) })} /></label>
+            <label className={styles.settingText}>Chromatic edge <input className={styles.range} type="range" min={0} max={0.12} step={0.005} value={settings.liquidGlassChromatic} onChange={(event) => persist({ liquidGlassChromatic: Number(event.currentTarget.value) })} /></label>
           </div>
         ) : null}
         <ToggleSetting title="Reduced transparency" description="Use clearer, more solid system surfaces." checked={settings.reducedTransparency} onChange={(reducedTransparency) => persist({ reducedTransparency })} />

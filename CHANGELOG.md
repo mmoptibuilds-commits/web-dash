@@ -9,19 +9,21 @@ All notable Hearth OS changes are recorded here.
 ### Changed
 - Fixed right-edge Home widget folding by gating the persisted 1120px freeform coordinate model on both viewport and configured canvas capacity.
 - Replaced duplicated/dead top-bar navigation with a compact `mmoptibuilds` status bar and hardened Control Center dismissal/focus behavior.
-- Added persisted left/right, four-corner and maximize window snapping with floating-geometry restoration and drag-edge discovery.
-- Made built-in app layouts container-responsive, removed shortcut double boxing and expanded the full-viewport Launchpad to use the shared user-link repository.
+- Added persisted left/right, four-corner and maximize window snapping with floating-geometry restoration, drag-edge discovery and restrained preview zones; corrected maximize safe-area geometry.
+- Made built-in app layouts container-responsive, removed shortcut double boxing, added Hearth-owned app color fields, and expanded full-viewport Launchpad with in-place shared-link add/edit/delete.
 - Made folders appearance-customizable and limited add/remove/delete operations to Edit Mode; removed folder counts and added outside/Escape dismissal.
-- Added one lazy, selective `@ybouane/liquidglass` renderer for the menu bar and Dock, settings presets/custom controls, accessibility/device/FPS fallbacks, and cosine dock magnification.
+- Added semantic material roles plus one lazy, selective `@ybouane/liquidglass` renderer for the direct-child menu bar and measured Dock inside a viewport-sized capture root, package-correct preset/custom ranges, accessibility/device/FPS fallbacks, and animation-frame-batched cosine dock magnification.
+- Unified pointer, keyboard and preset widget resizing behind collision-safe geometry, kept rejected presets from mutating widget-size metadata, and made snapped windows recompute safe-area bounds after viewport changes.
+- Corrected Launchpad title and touch-action contrast without leaking its wallpaper-independent ink palette into child dialogs.
 
 ### Compatibility and assets
 - Older settings, backup and window rows remain accepted through default merging and optional-field validation.
 - No Figma community artwork ships in v1.2 because production-use licensing metadata was not available.
 
 ### Verification
-- Clean-install ESLint, TypeScript, **26 Vitest files / 143 tests**, production build/PWA generation, aggregate `npm run check` and `git diff --check` passed.
-- Fresh production Playwright: **106 discovered; 82 passed, 24 intentionally project-inapplicable skips, 0 failed** across desktop/mobile projects. PWA/offline, viewport overflow and clean console/page-error journeys passed.
-- Desktop/phone light/dark, Settings, Control Center and Launchpad captures were reviewed against all readable v1.2 references and the live HTML motion study. Supplied references 01–03 are truncated in both the checkout and canonical Git blob and could not be decoded; dimensions/README guidance were still checked.
+- Clean-install ESLint, TypeScript, **27 Vitest files / 149 tests**, production build/PWA generation, aggregate `npm run check` and `git diff --check` passed.
+- The expanded **118-case** Playwright suite parses and a fresh production build completes. Final browser execution was environment-blocked: no browser binary was installed and the Chromium download endpoint timed out. The preceding candidate run recorded **114 discovered; 87 passed, 27 intentionally project-inapplicable skips, 0 failed** before the final WebGL-root, resize-collision, snap-resize and Launchpad-contrast corrections.
+- Available desktop/phone light/dark, Settings, Control Center and Launchpad captures were reviewed side by side against all readable v1.2 references and the rendered HTML motion study. The pass strengthened Launchpad contrast/touch controls and app-icon differentiation; a fresh post-correction recapture was blocked by the same browser limitation. Supplied references 01–03 are truncated in both the checkout and canonical Git blob and could not be decoded; their dimensions/README guidance were still checked.
 
 ### Repository consolidation — 2026-09-07
 - Consolidated the v1.1 UI/runtime branch and the newer reference/documentation branch into one maintained history.

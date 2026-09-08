@@ -9,6 +9,7 @@ import {
   itemBox,
   planFreeformGeometry,
   resolveMove,
+  resolveCollisionFreeResize,
   resolveResize,
   snapTo,
   type Box,
@@ -260,5 +261,25 @@ describe('resolveResize', () => {
   it('caps height at the bottom edge', () => {
     const r = resolveResize(box(0, 420, 220, 220), min, 400, 520)
     expect(r.y + r.h).toBeLessThanOrEqual(520)
+  })
+})
+
+describe('resolveCollisionFreeResize', () => {
+  const min = { w: 120, h: 84 }
+
+  it('returns a bounded resize when the proposed box stays clear', () => {
+    const previous = box(0, 0, 120, 84)
+    expect(resolveCollisionFreeResize(box(0, 0, 176, 96), previous, min, [], 400, 300)).toEqual({
+      box: box(0, 0, 176, 96),
+      valid: true,
+    })
+  })
+
+  it('preserves the prior valid box when pointer or keyboard growth would overlap', () => {
+    const previous = box(0, 0, 120, 84)
+    const occupied = box(128, 0, 120, 84)
+    expect(
+      resolveCollisionFreeResize(box(0, 0, 160, 84), previous, min, [occupied], 400, 300),
+    ).toEqual({ box: previous, valid: false })
   })
 })

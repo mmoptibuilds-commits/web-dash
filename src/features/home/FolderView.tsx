@@ -75,6 +75,7 @@ export function FolderView() {
     <div
       ref={overlayRef}
       className={styles.folderOverlay}
+      data-glass-role="popover"
       role="dialog"
       aria-modal="true"
       aria-label={`Folder ${folder.name}`}

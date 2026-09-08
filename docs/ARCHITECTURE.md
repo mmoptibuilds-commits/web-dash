@@ -16,7 +16,7 @@ Components do not access DB tables directly. Durable state belongs in Dexie; imm
 
 `App` mounts Backdrop, MenuBar, HomeMode, WindowsHost, MobileSheetHost, FolderView, AppLauncher, Dock and SearchOverlay. Home stays mounted while apps open above it. The legacy Dashboard identifier remains only where compatibility requires it; it is not the main workspace.
 
-WindowsHost owns desktop frame behavior, focus/z-order, traffic lights, drag/resize, edge/corner snapping, floating-bound restoration and viewport clamping. Mobile sheets reuse the app-content resolver inside safe-area-aware bounded presentation.
+WindowsHost owns desktop frame behavior, focus/z-order, traffic lights, drag/resize, edge/corner preview/snapping, floating-bound restoration and viewport clamping. Mobile sheets reuse the app-content resolver inside safe-area-aware bounded presentation.
 
 Window content and mobile sheet bodies establish inline-size containers. Built-in apps, led by Settings' searchable desktop sidebar and narrow single-column detail stack, respond to their allocated surface rather than assuming viewport width. While a modal mobile sheet is open, the mounted desktop stage is inert and hidden from assistive technology.
 
@@ -28,7 +28,7 @@ Settings hold appearance/behavior preferences. Backup import/export includes sup
 
 ## Home geometry
 
-`src/data/layout/geometry.ts` is the shared pure geometry contract for seed/add/migration/edit/backup placement. It owns canonical boxes, canvas/height clamping, minimum sizes, snapping, guides, collision checks and nearest valid placement. Failed bounded placement leaves the prior valid box unchanged.
+`src/data/layout/geometry.ts` is the shared pure geometry contract for seed/add/migration/edit/backup placement. It owns canonical boxes, canvas/height clamping, minimum sizes, snapping, guides, collision checks and nearest valid placement. Pointer, keyboard and preset resizes all use its collision-safe commit helper; failed bounded placement leaves the prior valid box and widget-size metadata unchanged.
 
 ## Scrolling contract
 
@@ -38,8 +38,10 @@ The document, app shell and Home surface are viewport-bound. Mini-apps, lists an
 
 `src/styles/tokens.css` defines spacing, radii, surfaces, motion, safe areas and z-index. Shared CSS material behavior and `src/app/theme.ts` apply appearance attributes. `Glyph.tsx` is the shared symbol presentation layer.
 
-`LiquidGlassManager` owns one lazy `@ybouane/liquidglass` instance for direct-root high-value shell surfaces. Pure policy/config functions select WebGL, CSS or solid tiers using settings, capabilities, memory and sampled FPS. Widgets do not create WebGL contexts.
+Components declare `data-glass-role` semantics. `LiquidGlassManager` owns one lazy `@ybouane/liquidglass` instance on the viewport-sized `#hearth-shell` capture root and per-role configuration for its direct-child status bar and Dock. Presets use the upstream renderer's documented 0..1 refraction scale. Pure policy/config functions select WebGL, CSS or solid tiers using settings, capabilities, memory and sampled FPS; nested windows/popovers/widgets stay on CSS glass and never create extra contexts.
+
+Launchpad reads and mutates the existing shortcut repository directly; there is no application-launcher link table. Repository deletion cascades remove stale folder, Home and Dock references.
 
 ## PWA/testing
 
-`vite-plugin-pwa` builds the production service worker. Playwright targets a production build/preview and supports an explicit `PLAYWRIGHT_EXECUTABLE_PATH` for compatible system/headless Chromium installations. Runtime changes pass lint, typecheck, Vitest, build and the desktop/mobile browser suite.
+`vite-plugin-pwa` builds the production service worker. Playwright targets a production build/preview and supports an explicit `PLAYWRIGHT_EXECUTABLE_PATH` for compatible standalone Chromium installations. Runtime changes pass lint, typecheck, Vitest, build and the desktop/mobile browser suite; the performance project includes asset budgets, clean-error journeys and a 4× CPU-throttled phone proxy.

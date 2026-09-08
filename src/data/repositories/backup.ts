@@ -200,10 +200,10 @@ const ROW_VALIDATORS: Record<string, (row: unknown) => string | null> = {
       return 'liquidGlassMode is invalid'
     if (row.liquidGlassBlur !== undefined && !(isFin(row.liquidGlassBlur) && row.liquidGlassBlur >= 0 && row.liquidGlassBlur <= 10))
       return 'liquidGlassBlur is not a number in 0..10'
-    if (row.liquidGlassRefraction !== undefined && !(isFin(row.liquidGlassRefraction) && row.liquidGlassRefraction >= 0 && row.liquidGlassRefraction <= 0.08))
-      return 'liquidGlassRefraction is not a number in 0..0.08'
-    if (row.liquidGlassChromatic !== undefined && !(isFin(row.liquidGlassChromatic) && row.liquidGlassChromatic >= 0 && row.liquidGlassChromatic <= 0.012))
-      return 'liquidGlassChromatic is not a number in 0..0.012'
+    if (row.liquidGlassRefraction !== undefined && !(isFin(row.liquidGlassRefraction) && row.liquidGlassRefraction >= 0 && row.liquidGlassRefraction <= 1))
+      return 'liquidGlassRefraction is not a number in 0..1'
+    if (row.liquidGlassChromatic !== undefined && !(isFin(row.liquidGlassChromatic) && row.liquidGlassChromatic >= 0 && row.liquidGlassChromatic <= 0.12))
+      return 'liquidGlassChromatic is not a number in 0..0.12'
     // Optional: older backups lack glassTranslucency; when present it must be a
     // number in [0,1] (0 solid … 1 most see-through).
     if (

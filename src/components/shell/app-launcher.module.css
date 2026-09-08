@@ -4,10 +4,16 @@
   z-index: var(--z-command);
   display: grid;
   place-items: stretch;
-  background: rgb(var(--overlay) / 0.38);
-  -webkit-backdrop-filter: blur(22px) saturate(1.25);
-  backdrop-filter: blur(22px) saturate(1.25);
+  background: rgb(var(--overlay) / 0.56);
+  -webkit-backdrop-filter: blur(30px) saturate(1.18);
+  backdrop-filter: blur(30px) saturate(1.18);
   animation: launcher-in 180ms var(--ease-out) both;
+  /* Launchpad sits directly over arbitrary wallpaper. Keep its chrome legible
+     independently of the document's light/dark content theme. */
+  --launcher-ink-1: 248 250 252;
+  --launcher-ink-2: 224 230 238;
+  --launcher-ink-3: 184 195 208;
+  color: rgb(var(--launcher-ink-1));
 }
 .panel {
   width: 100%;
@@ -25,9 +31,15 @@
   gap: var(--sp-4);
   margin-bottom: var(--sp-6);
 }
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.headerActions button { color: rgb(var(--launcher-ink-2)); }
 .eyebrow {
   margin-bottom: 3px;
-  color: rgb(var(--ink-3));
+  color: rgb(var(--launcher-ink-3));
   font-size: var(--fs-2xs);
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
@@ -35,13 +47,14 @@
 .title {
   font-size: var(--fs-2xl);
   letter-spacing: var(--tracking-tighter);
+  color: rgb(var(--launcher-ink-1));
 }
 .sectionTitle {
   margin: var(--sp-6) 0 var(--sp-3);
   font-size: var(--fs-sm);
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
-  color: rgb(var(--ink-2));
+  color: rgb(var(--launcher-ink-2));
 }
 .grid {
   display: grid;
@@ -55,9 +68,81 @@
   min-width: 0;
   padding: 14px 8px 13px;
   border-radius: var(--r-lg);
-  color: rgb(var(--ink-1));
+  color: rgb(var(--launcher-ink-1));
   text-align: center;
   transition: background var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+.linkApp {
+  position: relative;
+  padding: 0;
+}
+.linkLaunch {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  padding: 14px 8px 32px;
+  color: inherit;
+}
+.linkActions {
+  position: absolute;
+  left: 50%;
+  bottom: 7px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transform: translateX(-50%) translateY(2px);
+  transition: opacity var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+.linkApp:hover .linkActions,
+.linkApp:focus-within .linkActions {
+  opacity: 1;
+  transform: translateX(-50%);
+}
+.linkAction {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  color: rgb(var(--launcher-ink-2));
+  background: rgb(var(--overlay) / 0.7);
+  border: 1px solid rgb(255 255 255 / 0.14);
+}
+.linkAction:hover,
+.linkAction:focus-visible {
+  color: rgb(var(--launcher-ink-1));
+  background: rgb(var(--overlay) / 0.9);
+}
+.shortcutForm {
+  display: grid;
+  gap: var(--sp-4);
+}
+.field {
+  display: grid;
+  gap: var(--sp-1);
+  color: rgb(var(--ink-2));
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+}
+.field input {
+  min-width: 0;
+  height: 38px;
+  padding: 0 var(--sp-3);
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  border-radius: var(--r-sm);
+  background: rgb(var(--glass-3) / 0.64);
+  color: rgb(var(--ink-1));
+}
+.formError {
+  color: var(--danger-strong);
+  font-size: var(--fs-sm);
+}
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
 }
 .app:hover,
 .app:focus-visible {
@@ -72,7 +157,7 @@
 }
 .description {
   min-height: 2.4em;
-  color: rgb(var(--ink-3));
+  color: rgb(var(--launcher-ink-3));
   font-size: var(--fs-2xs);
   line-height: var(--lh-snug);
 }
@@ -83,7 +168,7 @@
 }
 .empty {
   padding: var(--sp-4);
-  color: rgb(var(--ink-3));
+  color: rgb(var(--launcher-ink-3));
   font-size: var(--fs-sm);
 }
 @keyframes launcher-in {
@@ -104,4 +189,8 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .description { display: none; }
+  .headerActions .btn { width: var(--ctrl-h); padding: 0; font-size: 0; }
+  .linkLaunch { padding-bottom: 50px; }
+  .linkActions { opacity: 1; transform: translateX(-50%); }
+  .linkAction { width: 40px; height: 40px; }
 }

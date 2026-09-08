@@ -137,6 +137,11 @@ export function Dock() {
   const barRef = useRef<HTMLDivElement>(null)
   const popRef = useRef<HTMLDivElement>(null)
   const addChipRef = useRef<HTMLButtonElement>(null)
+  const motionFrame = useRef<number | null>(null)
+
+  useEffect(() => () => {
+    if (motionFrame.current !== null) cancelAnimationFrame(motionFrame.current)
+  }, [])
 
   /** Close the "Add to dock" popover, optionally restoring keyboard focus to
    *  the + trigger (rows/Escape leave focus inside the popover; the disclosure
@@ -273,6 +278,8 @@ export function Dock() {
   const nothingToAdd = addableApps.length === 0 && addableShortcuts.length === 0
 
   const resetMagnification = () => {
+    if (motionFrame.current !== null) cancelAnimationFrame(motionFrame.current)
+    motionFrame.current = null
     barRef.current?.querySelectorAll<HTMLElement>('[data-dock-tile]').forEach((tile) => {
       tile.style.removeProperty('--dock-scale')
       tile.style.removeProperty('--dock-lift')
@@ -285,16 +292,28 @@ export function Dock() {
       editMode ||
       window.matchMedia('(hover: none), (pointer: coarse), (prefers-reduced-motion: reduce)').matches
     ) return
-    event.currentTarget.querySelectorAll<HTMLElement>('[data-dock-tile]').forEach((tile) => {
-      const rect = tile.getBoundingClientRect()
-      const { scale, lift } = dockMagnification(Math.abs(event.clientX - (rect.left + rect.width / 2)))
-      tile.style.setProperty('--dock-scale', String(scale))
-      tile.style.setProperty('--dock-lift', `${-lift}px`)
+    const pointerX = event.clientX
+    const bar = event.currentTarget
+    if (motionFrame.current !== null) cancelAnimationFrame(motionFrame.current)
+    motionFrame.current = requestAnimationFrame(() => {
+      motionFrame.current = null
+      const tiles = Array.from(bar.querySelectorAll<HTMLElement>('[data-dock-tile]'))
+      // Batch all layout reads before style writes to avoid per-icon forced
+      // reflow during high-frequency pointer movement.
+      const centers = tiles.map((tile) => {
+        const rect = tile.getBoundingClientRect()
+        return rect.left + rect.width / 2
+      })
+      tiles.forEach((tile, index) => {
+        const { scale, lift } = dockMagnification(Math.abs(pointerX - centers[index]))
+        tile.style.setProperty('--dock-scale', String(scale))
+        tile.style.setProperty('--dock-lift', `${-lift}px`)
+      })
     })
   }
 
   return (
-    <nav className={styles.dock} aria-label="Dock" data-liquid-glass data-dock-style={settings?.dockStyle ?? 'glass'} data-dock-size={settings?.dockSize ?? 'regular'} data-dock-magnify={settings?.dockMagnification !== false} data-dock-indicators={settings?.showDockIndicators !== false}>
+    <nav className={styles.dock} aria-label="Dock" data-liquid-glass data-glass-role="dock" data-dock-style={settings?.dockStyle ?? 'glass'} data-dock-size={settings?.dockSize ?? 'regular'} data-dock-magnify={settings?.dockMagnification !== false} data-dock-indicators={settings?.showDockIndicators !== false}>
       <div ref={barRef} className={styles.stack}>
         {open && (
           <div

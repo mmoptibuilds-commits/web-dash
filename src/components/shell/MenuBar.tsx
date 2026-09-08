@@ -26,7 +26,7 @@ export function MenuBar() {
   const context = front ? BUILTIN_APPS[front]?.name : 'Home'
 
   return (
-    <header className={styles.bar} data-mode="home" data-liquid-glass>
+    <header className={styles.bar} data-mode="home" data-liquid-glass data-glass-role="statusbar">
       <div className={styles.left}>
         <button type="button" className={styles.brand} onClick={goHome} aria-label="mmoptibuilds home">
           <span className={styles.brandDot} aria-hidden />

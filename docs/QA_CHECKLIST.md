@@ -6,20 +6,22 @@ From the v1.2 implementation workspace:
 
 - [x] `npm run lint`
 - [x] `npm run typecheck`
-- [x] Vitest — **26 files / 143 tests**
+- [x] Vitest — **27 files / 149 tests**
 - [x] `npm run build` + PWA service-worker generation
 - [x] `npm run check`
 - [x] `git diff --check`
-- [x] desktop/mobile Playwright — **106 discovered; 82 passed, 24 intentional skips, 0 failed**
-- [x] fresh production screenshots: desktop/phone, light/dark, Settings, Control Center and Launchpad
-- [x] side-by-side review against readable references 04–06 and rendered Liquid Glass motion HTML
+- [x] Playwright discovery — **118 cases** parse successfully
+- [ ] fresh desktop/mobile Playwright execution after the final corrections — blocked because no browser binary was installed and the Chromium download endpoint timed out; the preceding candidate run recorded **114 discovered; 87 passed, 27 intentional skips, 0 failed**
+- [ ] fresh production screenshots after the final corrections — blocked by the same missing-browser limitation; the existing desktop/phone, light/dark, Settings, Control Center and Launchpad captures remain available
+- [x] side-by-side review of existing captures against readable references 04–06 and rendered Liquid Glass motion HTML; this review drove final Launchpad title/touch-action contrast corrections
 
-References 01–03 are truncated in both the checkout and canonical Git blob (RIFF payloads end early), so no decoder can render them. Their documented dimensions and `design-references/v1.2/README.md` guidance were inspected; the final menu/Control Center/full-desktop states were captured independently.
+References 01–03 are truncated in both the checkout and canonical Git blob (RIFF payloads end early), so no decoder can render them. Their documented dimensions and `design-references/v1.2/README.md` guidance were inspected; menu/Control Center/full-desktop states were captured in the preceding candidate pass.
 
 ## Core behavior to preserve
 
 - [x] Home remains visible beneath opened apps.
 - [x] Full-viewport Launchpad opens/dismisses without replacing Home and shows the shared user Links source.
+- [x] Launchpad add/edit/delete writes only the shared shortcut repository and cascades safely.
 - [x] Multiple desktop windows remain visible/focusable; minimize/restore/snap/resize stay bounded.
 - [x] Mobile sheets close through their supported Back/Escape/handle interactions.
 - [x] Freeform placement rejects overlap and remains within measured bounds.
@@ -38,8 +40,10 @@ The document, shell and Home must not gain page-level scrollbars. App/widget/emb
 ## Material-pass checks
 
 - WebGL unsupported/reduced/performance fallbacks;
+- snap preview plus all half/corner/maximize safe-area bounds;
 - idle and dynamic frame behavior on desktop and phone-class hardware;
 - no proliferation of WebGL contexts;
 - settings presets/controls persist and map to real renderer behavior;
 - dock proximity animation remains keyboard/touch safe and narrow-phone overflow-free;
 - no console/page errors or accessibility regressions.
+- 4× browser CPU-throttled 390px phone flow (proxy only, not a real-device claim).

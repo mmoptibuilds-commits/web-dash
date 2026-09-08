@@ -6,7 +6,7 @@ import type { LayoutItemKind, WidgetSizeId } from '@/types/domain'
  * Desktop Home (>= 1024px, matching the shell's window/sheet breakpoint) is a
  * genuine freeform canvas: every layout item has an explicit x/y/w/h/z stored
  * on the LayoutItem row, tiles are absolutely positioned, neighbours never
- * auto-reflow, and overlap is allowed with bring-to-front.
+ * auto-reflow, and every committed move or resize remains collision-free.
  *
  * Compact widths (< 1024px) keep the ordered grid and ignore these fields, so
  * desktop arrangements and phone arrangements never corrupt one another.
@@ -341,4 +341,21 @@ export function resolveResize(
   const maxH = Math.max(min.h, canvasH - proposed.y)
   const h = Math.max(min.h, Math.min(snapTo(proposed.h, snapStep), maxH))
   return { x: Math.max(0, proposed.x), y: Math.max(0, proposed.y), w, h }
+}
+
+/** Keep the prior valid box when a bounded resize would collide. */
+export function resolveCollisionFreeResize(
+  proposed: Box,
+  previous: Box,
+  min: { w: number; h: number },
+  others: Box[],
+  canvasW: number,
+  canvasH = Number.POSITIVE_INFINITY,
+  snapStep = SNAP,
+): { box: Box; valid: boolean } {
+  const resized = resolveResize(proposed, min, canvasW, canvasH, snapStep)
+  if (others.some((other) => boxesOverlap(resized, other))) {
+    return { box: previous, valid: false }
+  }
+  return { box: resized, valid: true }
 }

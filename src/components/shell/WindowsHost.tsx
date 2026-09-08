@@ -7,7 +7,7 @@ import type { PointerEvent as ReactPointerEvent } from 'react'
 import type { BuiltinAppId } from '@/types/domain'
 import { useIsDesktop } from '@/hooks/useMedia'
 import { clampWindowState } from '@/data/repositories/windowStates'
-import { resolveSnapMode } from '@/lib/windowSnap'
+import { resolveSnapMode, snapBounds } from '@/lib/windowSnap'
 import type { WindowSnapMode } from '@/types/domain'
 import styles from './windows.module.css'
 
@@ -52,7 +52,7 @@ const SNAP_CHOICES: ReadonlyArray<{ mode: WindowSnapMode; label: string }> = [
 ]
 
 /** Floating desktop app window with traffic-light chrome + drag to move. */
-function WindowFrame({ appId }: { appId: BuiltinAppId }) {
+function WindowFrame({ appId, onSnapPreview }: { appId: BuiltinAppId; onSnapPreview: (mode: WindowSnapMode | null) => void }) {
   const win = useUi((s) => s.windows[appId])
   const focusOrder = useUi((s) => s.focusOrder)
   const focusApp = useUi((s) => s.focusApp)
@@ -116,13 +116,22 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
   const maximized = win.maximized
   const viewH = window.innerHeight
   const viewW = window.innerWidth
+  const safeArea = workArea()
+  const snapped = win.snapMode ? snapBounds(win.snapMode, safeArea) : null
 
-  const geometry = maximized
+  const geometry = snapped
     ? {
-        left: 8,
-        top: MENU_BOTTOM + 4,
-        width: viewW - 16,
-        height: viewH - MENU_BOTTOM - DOCK_RESERVE - 6,
+        left: snapped.x,
+        top: snapped.y,
+        width: snapped.w,
+        height: snapped.h,
+      }
+    : maximized
+    ? {
+        left: safeArea.left,
+        top: safeArea.top,
+        width: safeArea.right - safeArea.left,
+        height: safeArea.bottom - safeArea.top,
       }
     : {
         left: clamp(win.x, 8 - win.w + 120, Math.max(8, viewW - 88)),
@@ -154,6 +163,7 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
       originY: origin.y,
       moved: false,
     }
+    onSnapPreview(null)
   }
 
   const onTitleMove = (e: ReactPointerEvent<HTMLElement>) => {
@@ -166,12 +176,14 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
     const x = clamp(d.originX + dx, -win.w + 120, viewW - 80)
     const y = clamp(d.originY + dy, MENU_BOTTOM, viewH - 60)
     moveWindow(appId, x, y)
+    onSnapPreview(resolveSnapMode({ x: e.clientX, y: e.clientY }, workArea()))
   }
 
   const endDrag = (e: ReactPointerEvent<HTMLElement>) => {
     const d = drag.current
     if (d && d.pointerId === e.pointerId) {
       drag.current = null
+      onSnapPreview(null)
       if (d.moved) {
         const mode = resolveSnapMode({ x: e.clientX, y: e.clientY }, workArea())
         if (mode) snapWindow(appId, mode, workArea())
@@ -213,6 +225,7 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
       tabIndex={-1}
       style={{ ...geometry, zIndex }}
       data-front={focusOrder[focusOrder.length - 1] === appId}
+      data-glass-role="window"
       onFocus={raiseIfBehind}
       onPointerDown={raiseIfBehind}
     >
@@ -221,6 +234,7 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
         onPointerDown={onTitleDown}
         onPointerMove={onTitleMove}
         onPointerUp={endDrag}
+        onPointerCancel={endDrag}
         onDoubleClick={(e) => {
           if ((e.target as HTMLElement).closest('button')) return
           toggleMaximize(appId)
@@ -319,6 +333,7 @@ export function WindowsHost() {
   const windows = useUi((s) => s.windows)
   const moveWindow = useUi((s) => s.moveWindow)
   const resizeWindow = useUi((s) => s.resizeWindow)
+  const [snapPreview, setSnapPreview] = useState<WindowSnapMode | null>(null)
   useEffect(() => {
     if (!desktop) return
     const clampOpenWindows = () => {
@@ -340,8 +355,19 @@ export function WindowsHost() {
   if (!desktop) return null
   return (
     <div className={styles.stage}>
+      {snapPreview ? (
+        <div
+          className={styles.snapPreview}
+          data-snap-preview={snapPreview}
+          aria-hidden="true"
+          style={(() => {
+            const bounds = snapBounds(snapPreview, workArea())
+            return { left: bounds.x, top: bounds.y, width: bounds.w, height: bounds.h }
+          })()}
+        />
+      ) : null}
       {focusOrder.map((id) => (
-        <WindowFrame key={id} appId={id} />
+        <WindowFrame key={id} appId={id} onSnapPreview={setSnapPreview} />
       ))}
     </div>
   )

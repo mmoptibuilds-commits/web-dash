@@ -33,6 +33,17 @@
   pointer-events: none;
 }
 
+/* Hearth-authored app color fields. The glyph and its single squircle are the
+   complete artwork; Dock/Launchpad never wrap them in a second icon box. */
+.appSurface[data-app-artwork='apps'] { --icon-fill: linear-gradient(155deg, #68b8ff, #3578dc); }
+.appSurface[data-app-artwork='notes'] { --icon-fill: linear-gradient(155deg, #ffd968, #e9aa24); }
+.appSurface[data-app-artwork='tasks'] { --icon-fill: linear-gradient(155deg, #71b6ff, #3f78df); }
+.appSurface[data-app-artwork='calendar'] { --icon-fill: linear-gradient(155deg, #ff8178, #dc4d51); }
+.appSurface[data-app-artwork='links'] { --icon-fill: linear-gradient(155deg, #b986f1, #7550c8); }
+.appSurface[data-app-artwork='calculator'] { --icon-fill: linear-gradient(155deg, #ffb058, #e6752e); }
+.appSurface[data-app-artwork='settings'] { --icon-fill: linear-gradient(155deg, #9eabba, #647183); }
+.appSurface[data-app-artwork='home'] { --icon-fill: linear-gradient(155deg, #70c997, #348865); }
+
 :global(:root[data-icon-family='monochrome']) .appSurface {
   --icon-fill: rgb(var(--glass-3) / 0.78);
   --icon-ink: rgb(var(--ink-1));

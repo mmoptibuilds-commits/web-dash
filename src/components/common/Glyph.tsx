@@ -21,6 +21,7 @@ export function SystemGlyph({
       data-icon-family="system"
       data-icon-shape="squircle"
       data-icon-treatment="material"
+      data-app-artwork={label.toLowerCase()}
       aria-hidden
       title={label}
       style={{ width: size, height: size }}

@@ -127,3 +127,36 @@ test('perf: a scripted interactive journey logs no console or page errors', asyn
     resizeWarnings.join('\n') || 'no ResizeObserver loop warnings were logged',
   ).toEqual([])
 })
+
+test('perf: phone flow remains usable under 4x CPU throttling proxy', async ({
+  page,
+  context,
+  isMobile,
+  browserName,
+}) => {
+  test.skip(!isMobile || browserName !== 'chromium', 'Phone CPU proxy runs once in Chromium')
+  const session = await context.newCDPSession(page)
+  await session.send('Emulation.setCPUThrottlingRate', { rate: 4 })
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  page.on('console', (message) => {
+    if (message.type() === 'error') errors.push(message.text())
+  })
+
+  const started = Date.now()
+  await boot(page)
+  await openApp(page, 'Settings')
+  await expect(page.getByRole('dialog', { name: 'Settings sheet' })).toBeVisible()
+  await page.getByRole('button', { name: 'Back to Home' }).click()
+  await page.getByRole('button', { name: 'Open Apps' }).click()
+  await expect(page.getByRole('dialog', { name: 'Apps and links' })).toBeVisible()
+  await page.keyboard.press('Escape')
+
+  const overflow = await page.evaluate(() => ({
+    x: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    y: document.documentElement.scrollHeight - document.documentElement.clientHeight,
+  }))
+  expect(overflow).toEqual({ x: 0, y: 0 })
+  expect(errors).toEqual([])
+  expect(Date.now() - started, '4x-throttled phone journey should remain interactive').toBeLessThan(20_000)
+})

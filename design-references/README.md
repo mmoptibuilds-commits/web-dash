@@ -31,7 +31,7 @@ Use reviewed/exported app artwork only where licensing permits. App artwork and 
 ### Liquid Glass implementation reference
 `https://github.com/ybouane/liquidglass`
 
-This is the preferred reference for the next selective WebGL/refraction material pass. It is **not currently vendored or installed** in Hearth. If adopted, wrap it behind a central material boundary with CSS/solid fallbacks, Reduced Effects handling, WebGL/context limits and performance testing.
+This is the implementation reference for the shipped selective WebGL/refraction material pass. Hearth installs the package from npm and wraps it behind a central material boundary with CSS/solid fallbacks, Reduced Effects handling, a single-context limit and performance testing; this reference directory does not vendor the upstream source.
 
 ## Rule of precedence
 

@@ -122,3 +122,32 @@ test('29c. Transparency scales the glass fill alphas, persists, and Reduced Effe
   expect(await inlineVar(page, '--glass-a-1')).toBe('')
   expect(Number(await cssVar(page, '--glass-a-1'))).toBeGreaterThanOrEqual(0.9)
 })
+
+test('29d. the desktop shell mounts one real WebGL renderer on only the status bar and Dock', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'Balanced mode intentionally uses the CSS tier on coarse pointers')
+  await boot(page)
+
+  await expect(page.locator('html')).toHaveAttribute('data-material-tier', 'webgl', {
+    timeout: 10_000,
+  })
+  const surfaces = page.locator(
+    '#hearth-shell > [data-glass-role="statusbar"], #hearth-shell > [data-glass-role="dock"]',
+  )
+  await expect(surfaces).toHaveCount(2)
+  await expect(surfaces.nth(0).locator(':scope > canvas')).toHaveCount(1)
+  await expect(surfaces.nth(1).locator(':scope > canvas')).toHaveCount(1)
+  await expect(page.locator('#hearth-shell > [data-glass-role="window"]')).toHaveCount(0)
+
+  const capture = await page.locator('#hearth-shell').boundingBox()
+  expect(capture).not.toBeNull()
+  expect(capture?.width).toBe(1440)
+  expect(capture?.height).toBe(900)
+
+  const configs = await surfaces.evaluateAll((elements) =>
+    elements.map((element) => JSON.parse((element as HTMLElement).dataset.config ?? '{}')),
+  )
+  expect(configs.every((config) => config.refraction >= 0.3)).toBe(true)
+})

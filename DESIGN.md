@@ -22,9 +22,9 @@ Avoid oversized pills, random per-app gradients, nested SaaS cards, excessive bl
 
 ## Shell
 
-The status bar is compact system chrome with `mmoptibuilds` identity and no duplicate launch controls. The Dock opens a full-viewport Launchpad without replacing Home. The dock is a measured shelf with running indicators and configurable size/style/magnification.
+The status bar is compact system chrome with `mmoptibuilds` identity and no duplicate launch controls. The Dock opens a high-contrast full-viewport Launchpad without replacing Home; Launchpad manages shared user shortcuts in place. The dock is a measured shelf with running indicators and configurable size/style/magnification.
 
-Desktop windows use traffic lights, focus-based z-order, direct drag/resize and half/corner/maximize snap/restore. Narrow devices use safe-area-aware sheets. Outer shell scrolling is forbidden; internal app scrolling is intentional.
+Desktop windows use traffic lights, focus-based z-order, direct drag/resize and previewed half/corner/maximize snap/restore. Narrow devices use safe-area-aware sheets. Outer shell scrolling is forbidden; internal app scrolling is intentional.
 
 Settings is the reference native-app layout: desktop windows use a compact searchable sidebar and bounded detail pane; container-sized narrow windows and phone sheets collapse to a single touch-friendly detail stack with explicit sheet Back navigation.
 
@@ -36,19 +36,19 @@ Desktop Home uses persisted freeform geometry only where the canonical 1120px co
 
 App artwork and system/control glyphs are separate systems.
 
-- Existing Hearth glyphs remain the safe runtime baseline.
+- Hearth-owned glyphs use one app-specific color field as their complete artwork; Dock/Launchpad do not add a second icon box.
 - The approved Figma frame in `design-references/README.md` may supply reviewed/exported **app artwork** where licensing permits.
 - Do not use the reference HTML's hand-drawn SVG app approximations when better reviewed artwork is available.
 - Normalize optical size/alignment rather than forcing identical visual mass.
 
 ## Selective Liquid Glass
 
-The v1.2 implementation adds selective WebGL refraction using the MIT-licensed `@ybouane/liquidglass` package.
+The v1.2 implementation adds selective WebGL refraction using the MIT-licensed `@ybouane/liquidglass` package and its documented 0..1 refraction scale.
 
 Use three tiers:
 
-1. **Full Liquid Glass** — menu/status bar and Dock only, using one centralized lazy renderer.
-2. **CSS glass** — ordinary widgets and secondary surfaces.
+1. **Full Liquid Glass** — the direct-child status bar and measured Dock inside one viewport-sized capture root, using one centralized lazy renderer and semantic per-role configuration.
+2. **CSS glass** — windows, popovers, Control Center, ordinary widgets and other nested/secondary surfaces.
 3. **Solid/reduced fallback** — Reduced Effects, unsupported WebGL, constrained devices or performance fallback.
 
 Do not create one WebGL context per widget. Centralize the integration behind a material boundary and preserve existing CSS tokens/fallbacks.
@@ -63,6 +63,7 @@ The shipped cosine falloff targets:
 - restrained proximity magnification with neighbor response;
 - bottom-anchored optical lift;
 - smooth spring-like interpolation only if it remains performant;
+- one animation-frame batch of icon geometry reads followed by style writes;
 - stable labels/tooltips and click/tap feedback;
 - preserved keyboard focus, edit/reorder behavior and narrow-phone fit;
 - touch/coarse-pointer behavior that never depends on hover.

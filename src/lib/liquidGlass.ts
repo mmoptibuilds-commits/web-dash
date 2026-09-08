@@ -23,18 +23,18 @@ export function resolveLiquidGlassTier(input: PolicyInput): LiquidGlassTier {
 
 export function liquidGlassConfig(
   mode: LiquidGlassMode,
-  custom: { blur: number; refraction: number; chromatic: number } = { blur: 5, refraction: 0.022, chromatic: 0.002 },
+  custom: { blur: number; refraction: number; chromatic: number } = { blur: 5, refraction: 0.58, chromatic: 0.025 },
 ) {
   if (mode === 'custom') {
     return {
       blur: Math.max(0, Math.min(10, custom.blur)),
-      refraction: Math.max(0, Math.min(0.08, custom.refraction)),
-      chromaticAberration: Math.max(0, Math.min(0.012, custom.chromatic)),
+      refraction: Math.max(0, Math.min(1, custom.refraction)),
+      chromaticAberration: Math.max(0, Math.min(0.12, custom.chromatic)),
     }
   }
-  if (mode === 'performance') return { blur: 2, refraction: 0.012, chromaticAberration: 0 }
-  if (mode === 'high') return { blur: 8, refraction: 0.034, chromaticAberration: 0.004 }
-  return { blur: 5, refraction: 0.022, chromaticAberration: 0.002 }
+  if (mode === 'performance') return { blur: 2, refraction: 0.36, chromaticAberration: 0 }
+  if (mode === 'high') return { blur: 8, refraction: 0.78, chromaticAberration: 0.055 }
+  return { blur: 5, refraction: 0.58, chromaticAberration: 0.025 }
 }
 
 export function supportsWebGL(): boolean {

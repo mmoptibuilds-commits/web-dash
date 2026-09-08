@@ -68,7 +68,7 @@ export default function App() {
     <>
       <ThemeSync />
       <LiquidGlassManager />
-      <div aria-hidden={mobileAppId ? 'true' : undefined} inert={mobileAppId ? true : undefined}>
+      <div id="hearth-shell" data-hearth-shell aria-hidden={mobileAppId ? 'true' : undefined} inert={mobileAppId ? true : undefined}>
         <Backdrop />
         <MenuBar />
         <HomeMode />

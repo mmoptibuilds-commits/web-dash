@@ -14,7 +14,14 @@ describe('Liquid Glass policy', () => {
   })
 
   it('maps presets and custom controls to renderer configuration', () => {
-    expect(liquidGlassConfig('performance')).toMatchObject({ blur: 2, refraction: 0.012 })
-    expect(liquidGlassConfig('custom', { blur: 7, refraction: 0.031, chromatic: 0.004 })).toMatchObject({ blur: 7, refraction: 0.031, chromaticAberration: 0.004 })
+    expect(liquidGlassConfig('performance')).toMatchObject({ blur: 2, refraction: 0.36 })
+    expect(liquidGlassConfig('balanced')).toMatchObject({ blur: 5, refraction: 0.58 })
+    expect(liquidGlassConfig('high')).toMatchObject({ blur: 8, refraction: 0.78 })
+    expect(liquidGlassConfig('custom', { blur: 7, refraction: 0.7, chromatic: 0.08 })).toMatchObject({ blur: 7, refraction: 0.7, chromaticAberration: 0.08 })
+    expect(liquidGlassConfig('custom', { blur: 99, refraction: 2, chromatic: 1 })).toEqual({
+      blur: 10,
+      refraction: 1,
+      chromaticAberration: 0.12,
+    })
   })
 })

@@ -12,8 +12,10 @@
 - local-first PWA architecture.
 - canonical-canvas responsive fallback and right-edge widget fix;
 - half/corner/maximize window snapping and restoration;
-- full-screen Apps + Links Launchpad, compact status bar and customizable edit-safe folders;
-- single-context selective Liquid Glass with adaptive fallbacks and cosine Dock magnification.
+- snap preview and corrected maximize safe-area geometry;
+- full-screen Apps + Links Launchpad with shared shortcut CRUD, compact status bar and customizable edit-safe folders;
+- single-surface Hearth app color fields without double boxing;
+- semantic material roles, single-context selective Liquid Glass with adaptive fallbacks and animation-frame-batched cosine Dock magnification.
 
 ## Next
 

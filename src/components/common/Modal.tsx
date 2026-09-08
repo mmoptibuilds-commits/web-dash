@@ -74,6 +74,7 @@ export function Modal({ open, onClose, title, width = 400, children }: ModalProp
       <div
         ref={cardRef}
         className={`${styles.card} anim-pop`}
+        data-glass-role="popover"
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

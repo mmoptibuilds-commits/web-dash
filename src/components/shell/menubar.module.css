@@ -411,6 +411,11 @@
   border-bottom-color: rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
   box-shadow: 0 1px 0 rgb(0 0 0 / 0.08);
 }
+:global(html[data-material-tier='webgl']) .bar {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
 .brandDot {
   width: 16px;
   height: 16px;
