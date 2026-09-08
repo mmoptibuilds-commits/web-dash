@@ -1,7 +1,7 @@
 # Hearth OS current state
 
 **Updated:** 2026-09-08
-**Canonical branch:** `build/v1-one-shot`
+**Canonical branch:** `main`
 **Package version:** `1.2.0`
 
 ## Implemented
