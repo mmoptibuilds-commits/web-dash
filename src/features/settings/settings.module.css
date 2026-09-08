@@ -4,10 +4,12 @@
    ============================================================ */
 
 .root {
+  container-type: inline-size;
   height: 100%;
   width: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 188px minmax(0, 1fr);
   color: rgb(var(--ink-1));
   font-size: var(--fs-md);
   line-height: var(--lh-snug);
@@ -15,8 +17,92 @@
   overscroll-behavior: contain;
 }
 
+.sidebar {
+  min-width: 0;
+  padding: var(--sp-3) var(--sp-2);
+  background: rgb(var(--glass-3) / 0.42);
+  border-right: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  overflow-y: auto;
+}
+
+.sidebarSearch {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  margin-bottom: var(--sp-2);
+  border-radius: var(--r-sm);
+  color: rgb(var(--ink-3));
+  background: rgb(var(--glass-1) / 0.58);
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  box-shadow: var(--shadow-inset-1);
+}
+
+.sidebarSearch input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: rgb(var(--ink-1));
+  font: inherit;
+  font-size: var(--fs-xs);
+}
+
+.sidebarSearch input::placeholder { color: rgb(var(--ink-3)); }
+.sidebarNav { display: flex; flex-direction: column; gap: 2px; }
+.sidebarItem {
+  width: 100%;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 0 7px;
+  border-radius: 7px;
+  color: rgb(var(--ink-2));
+  font-size: var(--fs-xs);
+  text-align: left;
+}
+.sidebarItem:hover { background: rgb(var(--glass-3) / 0.65); color: rgb(var(--ink-1)); }
+.sidebarItemActive,
+.sidebarItemActive:hover { background: var(--accent); color: var(--on-accent); }
+.sidebarIcon {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: 5px;
+  background: rgb(255 255 255 / 0.22);
+}
+.scroll {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+}
+
+:global(html[data-effects='reduced']) .scroll {
+  scroll-behavior: auto;
+}
+
+@container (max-width: 520px) {
+  .root { display: block; overflow-y: auto; }
+  .sidebar { display: none; }
+  .scroll { overflow: visible; }
+  .inner { padding: var(--sp-3) var(--sp-3) var(--sp-8); gap: var(--sp-4); }
+  .toggleRow { align-items: flex-start; }
+  .transControl { grid-template-columns: 1fr auto; }
+  .transEndpoint { display: none; }
+  .segmented { width: 100%; }
+  .segOption { flex: 1; }
+}
+
 .inner {
-  max-width: 640px;
+  max-width: 680px;
   margin-inline: auto;
   padding: var(--sp-5) var(--sp-5) var(--sp-9);
   display: flex;
@@ -655,4 +741,3 @@
   outline: none;
   box-shadow: var(--focus-ring);
 }
-

@@ -56,7 +56,7 @@ const GLASS_ALPHA_TOKENS = ['--glass-a-1', '--glass-a-2', '--glass-a-3', '--glas
  * The per-theme defaults already live in tokens.css, so we read each token's
  * computed base after the data attributes are set (never duplicate the numbers)
  * and scale it about the baseline: slider 0 (solid) → 0.95, 0.5 (tuned
- * default) → theme baseline, 1 (most see-through) → 0.18.
+ * default) → theme baseline, 1 (most see-through) → 0.30.
  * invisible or fully opaque. At the baseline we write nothing — CSS owns the
  * exact tuned value. Reduced Effects never gets inline alphas; its
  * `[data-effects='reduced']` block forces the solid fills instead.
@@ -68,7 +68,7 @@ function applyGlassAlpha(root: HTMLElement, reducedEffects: boolean, translucenc
   const computed = getComputedStyle(root)
   const value = Math.min(1, Math.max(0, translucency))
   const solidAlpha = 0.95
-  const clearAlpha = 0.18
+  const clearAlpha = 0.3
   for (const prop of GLASS_ALPHA_TOKENS) {
     const base = Number.parseFloat(computed.getPropertyValue(prop))
     if (!Number.isFinite(base)) continue

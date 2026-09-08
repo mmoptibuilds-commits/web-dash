@@ -207,6 +207,7 @@
 }
 
 .sheetBody {
+  container-type: inline-size;
   flex: 1;
   min-height: 0;
   display: flex;

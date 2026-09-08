@@ -116,6 +116,8 @@
 
 .action {
   flex: none;
+  width: 30px;
+  height: 30px;
 }
 
 .actionLabel {
@@ -403,7 +405,7 @@
   }
 }
 
-/* Hearth OS v1.1: a quieter system bar with a real context control. */
+/* A quiet, compact workspace status bar. */
 .bar {
   background: rgb(var(--glass-1) / var(--glass-a-1));
   border-bottom-color: rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
@@ -416,22 +418,6 @@
   background: var(--accent);
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), var(--shadow-1);
 }
-.appsButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: var(--touch-min);
-  padding: 0 9px;
-  border-radius: var(--r-sm);
-  color: rgb(var(--ink-2));
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-medium);
-}
-.appsButton:hover,
-.appsButton[aria-expanded='true'] {
-  color: rgb(var(--ink-1));
-  background: rgb(var(--glass-3) / 0.68);
-}
 .context {
   min-width: 0;
   max-width: 180px;
@@ -443,7 +429,13 @@
 }
 @media (max-width: 520px) {
   .context { display: none; }
-  .appsButton span { display: none; }
-  .appsButton { width: var(--touch-min); justify-content: center; padding: 0; }
-  .clockDate { display: none; }
+  .action {
+    width: var(--ctrl-h);
+    height: var(--ctrl-h);
+  }
+  /* Phone chrome follows an iOS-like action strip instead of squeezing the
+     desktop clock cluster into the viewport. The system clock remains a
+     desktop menubar affordance. */
+  .clock,
+  .divider { display: none; }
 }

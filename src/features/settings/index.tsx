@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Monitor, Moon, Sun } from 'lucide-react'
+import { CircleHelp, Database, Dock, Home, Image, Monitor, Moon, Palette, Search, Settings2, Sun } from 'lucide-react'
 import styles from './settings.module.css'
 import { settingsRepo } from '@/data/repositories'
 import { useSettings } from '@/hooks/data'
@@ -14,6 +14,7 @@ import type {
   IconShape,
   IconTreatment,
   IconSizePreset,
+  LiquidGlassMode,
   SearchEngineId,
   ThemePreference,
 } from '@/types/domain'
@@ -26,13 +27,30 @@ import { usePrefersDark } from '@/hooks/useMedia'
 
 type Mode = 'simple' | 'advanced'
 
+const SIMPLE_NAV = [
+  { id: 'appearance', label: 'Appearance', icon: Palette },
+  { id: 'search', label: 'Search', icon: Search },
+  { id: 'home', label: 'Home', icon: Home },
+  { id: 'wallpaper', label: 'Wallpaper', icon: Image },
+] as const
+
+const ADVANCED_NAV = [
+  { id: 'icons', label: 'Icons', icon: Palette },
+  { id: 'dock', label: 'Dock', icon: Dock },
+  { id: 'home-layout', label: 'Home layout', icon: Home },
+  { id: 'windows-and-embeds', label: 'Windows & embeds', icon: Settings2 },
+  { id: 'motion-and-contrast', label: 'Motion & contrast', icon: Monitor },
+  { id: 'data', label: 'Data', icon: Database },
+  { id: 'about', label: 'About', icon: CircleHelp },
+] as const
+
 /**
  * App identity for the About pane. package.json is not JSON-importable under
  * the repo's tsconfig (no resolveJsonModule) and the coordinator owns that
  * file, so this mirrors package.json manually. Keep it in sync on bump.
  */
-const APP_NAME = 'Hearth'
-const APP_VERSION = '1.1.0'
+const APP_NAME = 'mmoptibuilds'
+const APP_VERSION = '1.2.0'
 
 const MODE_OPTIONS: ReadonlyArray<{ value: Mode; label: string }> = [
   { value: 'simple', label: 'Simple' },
@@ -67,6 +85,13 @@ const GLASS_OPTIONS: ReadonlyArray<{ value: GlassPreset; label: string }> = [
   { value: 'subtle', label: 'Subtle' },
   { value: 'standard', label: 'Standard' },
   { value: 'vibrant', label: 'Vibrant' },
+]
+const LIQUID_GLASS_OPTIONS: ReadonlyArray<{ value: LiquidGlassMode; label: string }> = [
+  { value: 'off', label: 'Off' },
+  { value: 'performance', label: 'Performance' },
+  { value: 'balanced', label: 'Balanced' },
+  { value: 'high', label: 'High' },
+  { value: 'custom', label: 'Custom' },
 ]
 
 const GLASS_DESCRIPTION: Record<GlassPreset, string> = {
@@ -332,11 +357,19 @@ function AdvancedSettings({ settings, persist }: { settings: AppSettings; persis
         <NumberSetting title="Grid snap" description="Movement increment in pixels." value={settings.gridSnap} min={1} max={32} onChange={(gridSnap) => persist({ gridSnap })} />
       </Section>
       <Section title="Windows and embeds">
-        <ToggleSetting title="Restore windows on reload" description="Reopen windows that were open when Hearth was last closed." checked={settings.restoreWindowsOnReload} onChange={(restoreWindowsOnReload) => persist({ restoreWindowsOnReload })} />
+        <ToggleSetting title="Restore windows on reload" description="Reopen windows that were open when mmoptibuilds was last closed." checked={settings.restoreWindowsOnReload} onChange={(restoreWindowsOnReload) => persist({ restoreWindowsOnReload })} />
         <ToggleSetting title="Embed toolbar" checked={settings.embedToolbar !== false} onChange={(embedToolbar) => persist({ embedToolbar })} />
         <ToggleSetting title="Allow embed fullscreen" checked={settings.embedFullscreen !== false} onChange={(embedFullscreen) => persist({ embedFullscreen })} />
       </Section>
       <Section title="Motion and contrast">
+        <ChoiceSetting title="Liquid Glass renderer" description="Applies real-time refraction only to the menu bar and Dock, with automatic CSS and solid fallbacks." value={settings.liquidGlassMode ?? 'balanced'} options={LIQUID_GLASS_OPTIONS} onChange={(liquidGlassMode) => persist({ liquidGlassMode })} />
+        {settings.liquidGlassMode === 'custom' ? (
+          <div className={styles.settingBlock}>
+            <label className={styles.settingText}>Refraction <input className={styles.range} type="range" min={0} max={0.08} step={0.001} value={settings.liquidGlassRefraction} onChange={(event) => persist({ liquidGlassRefraction: Number(event.currentTarget.value) })} /></label>
+            <label className={styles.settingText}>Blur <input className={styles.range} type="range" min={0} max={10} step={0.25} value={settings.liquidGlassBlur} onChange={(event) => persist({ liquidGlassBlur: Number(event.currentTarget.value) })} /></label>
+            <label className={styles.settingText}>Chromatic edge <input className={styles.range} type="range" min={0} max={0.012} step={0.001} value={settings.liquidGlassChromatic} onChange={(event) => persist({ liquidGlassChromatic: Number(event.currentTarget.value) })} /></label>
+          </div>
+        ) : null}
         <ToggleSetting title="Reduced transparency" description="Use clearer, more solid system surfaces." checked={settings.reducedTransparency} onChange={(reducedTransparency) => persist({ reducedTransparency })} />
         <ToggleSetting title="Higher contrast" checked={settings.highContrast} onChange={(highContrast) => persist({ highContrast })} />
       </Section>
@@ -354,7 +387,16 @@ export function SettingsMiniApp() {
   const settings = useSettings()
   const [mode, setMode] = useState<Mode>('simple')
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [navQuery, setNavQuery] = useState('')
+  const [activeSection, setActiveSection] = useState('appearance')
+  const scrollRef = useRef<HTMLDivElement>(null)
   const prefersDark = usePrefersDark()
+
+  const navItems = mode === 'simple' ? SIMPLE_NAV : ADVANCED_NAV
+  const visibleNavItems = useMemo(() => {
+    const query = navQuery.trim().toLowerCase()
+    return query ? navItems.filter((item) => item.label.toLowerCase().includes(query)) : navItems
+  }, [navItems, navQuery])
 
   if (!settings) {
     return <div className={styles.root} aria-busy="true" />
@@ -382,8 +424,53 @@ export function SettingsMiniApp() {
 
   return (
     <div className={styles.root}>
-      <div className={styles.inner}>
-        <Segmented label="Settings level" value={mode} options={MODE_OPTIONS} onChange={setMode} />
+      <aside className={styles.sidebar} data-testid="settings-sidebar" aria-label="Settings sections">
+        <label className={styles.sidebarSearch}>
+          <Search size={13} aria-hidden />
+          <input
+            type="search"
+            value={navQuery}
+            placeholder="Search"
+            aria-label="Search settings sections"
+            onChange={(event) => setNavQuery(event.currentTarget.value)}
+          />
+        </label>
+        <nav className={styles.sidebarNav}>
+          {visibleNavItems.map((item) => {
+            const Icon = item.icon
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className={activeSection === item.id ? `${styles.sidebarItem} ${styles.sidebarItemActive}` : styles.sidebarItem}
+                aria-label={`Show ${item.label} settings`}
+                aria-current={activeSection === item.id ? 'page' : undefined}
+                onClick={() => {
+                  setActiveSection(item.id)
+                  const section = scrollRef.current?.querySelector<HTMLElement>(`[data-settings-section="${item.id}"]`)
+                  if (section && scrollRef.current) scrollRef.current.scrollTo({ top: Math.max(0, section.offsetTop - 18) })
+                }}
+              >
+                <span className={styles.sidebarIcon} aria-hidden><Icon size={14} /></span>
+                <span>{item.label}</span>
+              </button>
+            )
+          })}
+        </nav>
+      </aside>
+      <div className={styles.scroll} ref={scrollRef}>
+        <div className={styles.inner}>
+        <Segmented
+          label="Settings level"
+          value={mode}
+          options={MODE_OPTIONS}
+          onChange={(nextMode) => {
+            setMode(nextMode)
+            setActiveSection(nextMode === 'simple' ? SIMPLE_NAV[0].id : ADVANCED_NAV[0].id)
+            setNavQuery('')
+            scrollRef.current?.scrollTo({ top: 0 })
+          }}
+        />
 
         {saveError ? (
           <p className={styles.errorText} role="alert">
@@ -405,6 +492,7 @@ export function SettingsMiniApp() {
         ) : (
           <AdvancedSettings settings={settings} persist={persist} />
         )}
+        </div>
       </div>
     </div>
   )

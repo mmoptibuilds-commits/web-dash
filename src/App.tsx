@@ -12,6 +12,7 @@ import { WindowsHost } from '@/components/shell/WindowsHost'
 import { MobileSheetHost } from '@/features/dashboard/DashboardMode'
 import { AppLauncher } from '@/components/shell/AppLauncher'
 import { SearchOverlay } from '@/features/search/SearchOverlay'
+import { LiquidGlassManager } from '@/components/shell/LiquidGlassManager'
 
 function ThemeSync() {
   const settings = useSettings()
@@ -57,6 +58,7 @@ export default function App() {
   const launcherOpen = useUi((s) => s.launcherOpen)
   const openFolderId = useUi((s) => s.openFolderId)
   const searchOpen = useUi((s) => s.searchOpen)
+  const mobileAppId = useUi((s) => s.mobileAppId)
   const hydrateWindows = useUi((s) => s.hydrateWindows)
   useGlobalKeys()
 
@@ -65,14 +67,17 @@ export default function App() {
   return (
     <>
       <ThemeSync />
-      <Backdrop />
-      <MenuBar />
-      <HomeMode />
-      <WindowsHost />
+      <LiquidGlassManager />
+      <div aria-hidden={mobileAppId ? 'true' : undefined} inert={mobileAppId ? true : undefined}>
+        <Backdrop />
+        <MenuBar />
+        <HomeMode />
+        <WindowsHost />
+        <Dock />
+      </div>
       <MobileSheetHost />
       {openFolderId && <FolderView />}
       {launcherOpen && <AppLauncher />}
-      <Dock />
       {searchOpen && <SearchOverlay />}
     </>
   )

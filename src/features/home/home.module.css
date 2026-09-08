@@ -210,6 +210,11 @@
   transition: transform var(--dur-base) var(--ease-spring);
   filter: drop-shadow(0 4px 8px rgb(0 0 0 / 0.18));
 }
+.shortcutBox {
+  border: 0;
+  background: transparent !important;
+  overflow: visible;
+}
 .soft:hover .box {
   transform: scale(1.07);
 }
@@ -839,6 +844,7 @@
 .folderRename {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--sp-1);
 }
 .folderRenameInput {
@@ -851,6 +857,39 @@
   font-weight: var(--fw-semibold);
   padding: var(--sp-1) var(--sp-2);
   box-shadow: 0 0 0 1px var(--accent);
+}
+
+.folderAppearance {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.folderChoice,
+.folderChoiceOn,
+.folderTint,
+.folderTintOn {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-2));
+  background: rgb(var(--glass-3) / 0.72);
+}
+
+.folderChoiceOn,
+.folderTintOn {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.folderTint,
+.folderTintOn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
 }
 
 .folderActions {

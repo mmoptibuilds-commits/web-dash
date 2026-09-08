@@ -23,6 +23,7 @@ export type IconSizePreset = 'small' | 'regular' | 'large'
  * `reducedEffects` overrides any preset with a solid surface.
  */
 export type GlassPreset = 'subtle' | 'standard' | 'vibrant'
+export type LiquidGlassMode = 'off' | 'performance' | 'balanced' | 'high' | 'custom'
 
 /** Overall platform proportions used by the shell and app surfaces. */
 export type AppearanceProfile = 'auto' | 'desktop' | 'mobile'
@@ -58,6 +59,11 @@ export interface AppSettings {
    * Effects overrides it with a solid surface.
    */
   glassTranslucency: number
+  /** Selective WebGL material on high-value shell surfaces. */
+  liquidGlassMode: LiquidGlassMode
+  liquidGlassBlur: number
+  liquidGlassRefraction: number
+  liquidGlassChromatic: number
   /** Additional wallpaper dimming used to protect system chrome contrast. */
   wallpaperDimming: number
   defaultSearchEngine: SearchEngineId
@@ -204,8 +210,28 @@ export interface AppWindowState {
   maximized: boolean
   minimized: boolean
   open: boolean
+  /** Current snap zone. Missing/null means ordinary floating geometry. */
+  snapMode?: WindowSnapMode | null
+  /** Floating geometry restored when leaving a snap zone. */
+  restoreBounds?: WindowBounds
   lastOpenedAt: number
   updatedAt: number
+}
+
+export type WindowSnapMode =
+  | 'left'
+  | 'right'
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-right'
+  | 'maximize'
+
+export interface WindowBounds {
+  x: number
+  y: number
+  w: number
+  h: number
 }
 
 /* ------------------------------------------------------------------ */

@@ -27,25 +27,32 @@ test('C1: the status bar stays in-viewport and its controls work at phone and de
     await boot(page)
     const bar = page.locator('header[data-mode]')
     await expect(bar).toBeVisible()
-    await expect(page.getByRole('radio', { name: 'Home' })).toBeVisible()
-    await expect(page.getByRole('radio', { name: 'Dashboard' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'mmoptibuilds home' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Open Apps' })).toBeVisible()
 
-    const inViewport = await bar.locator('button').evaluateAll((buttons) =>
-      buttons.every((button) => {
+    const buttonBounds = await bar.locator('button').evaluateAll((buttons) =>
+      buttons.map((button) => {
         const box = button.getBoundingClientRect()
-        return box.left >= 0 && box.right <= window.innerWidth && box.top >= 0 && box.bottom <= window.innerHeight
+        return {
+          name: button.getAttribute('aria-label'),
+          left: box.left,
+          right: box.right,
+          top: box.top,
+          bottom: box.bottom,
+          viewportWidth: window.innerWidth,
+          viewportHeight: window.innerHeight,
+        }
       }),
     )
-    expect(inViewport).toBe(true)
+    expect(buttonBounds.filter((box) => box.left < 0 || box.right > box.viewportWidth || box.top < 0 || box.bottom > box.viewportHeight)).toEqual([])
 
-    await page.getByRole('radio', { name: 'Dashboard' }).click()
-    await expect(page.getByRole('radio', { name: 'Dashboard' })).toHaveAttribute('aria-checked', 'true')
-    await page.getByRole('radio', { name: 'Home' }).click()
-    await expect(page.getByRole('radio', { name: 'Home' })).toHaveAttribute('aria-checked', 'true')
+    await page.getByRole('button', { name: 'Open Apps' }).click()
+    await expect(page.getByRole('dialog', { name: 'Apps and links' })).toBeVisible()
+    await page.keyboard.press('Escape')
 
-    await page.getByRole('button', { name: 'Edit', exact: true }).click()
-    await expect(page.getByRole('button', { name: 'Done', exact: true })).toBeVisible()
-    await page.getByRole('button', { name: 'Done', exact: true }).click()
+    await page.getByRole('button', { name: 'Edit Home', exact: true }).click()
+    await expect(page.getByRole('button', { name: 'Done editing Home', exact: true })).toBeVisible()
+    await page.getByRole('button', { name: 'Done editing Home', exact: true }).click()
 
     await page.getByRole('button', { name: 'Search', exact: true }).click()
     await expect(page.getByRole('dialog', { name: 'Search' })).toBeVisible()

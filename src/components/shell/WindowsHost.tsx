@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
-import { Maximize2, Minus, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { LayoutPanelTop, Maximize2, Minus, X } from 'lucide-react'
 import { useUi } from '@/state/ui'
 import { BUILTIN_APPS } from '@/types/apps'
 import { AppContent } from './appContent'
@@ -7,10 +7,12 @@ import type { PointerEvent as ReactPointerEvent } from 'react'
 import type { BuiltinAppId } from '@/types/domain'
 import { useIsDesktop } from '@/hooks/useMedia'
 import { clampWindowState } from '@/data/repositories/windowStates'
+import { resolveSnapMode } from '@/lib/windowSnap'
+import type { WindowSnapMode } from '@/types/domain'
 import styles from './windows.module.css'
 
 /** Height reserved by the menu bar so windows never slide under it. */
-const MENU_BOTTOM = 48
+const MENU_BOTTOM = 36
 /** Space reserved above the dock when maximizing. */
 const DOCK_RESERVE = 96
 
@@ -35,6 +37,20 @@ function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v))
 }
 
+function workArea() {
+  return { left: 8, top: MENU_BOTTOM + 4, right: window.innerWidth - 8, bottom: window.innerHeight - DOCK_RESERVE - 6 }
+}
+
+const SNAP_CHOICES: ReadonlyArray<{ mode: WindowSnapMode; label: string }> = [
+  { mode: 'left', label: 'Left half' },
+  { mode: 'right', label: 'Right half' },
+  { mode: 'top-left', label: 'Top left' },
+  { mode: 'top-right', label: 'Top right' },
+  { mode: 'bottom-left', label: 'Bottom left' },
+  { mode: 'bottom-right', label: 'Bottom right' },
+  { mode: 'maximize', label: 'Maximize' },
+]
+
 /** Floating desktop app window with traffic-light chrome + drag to move. */
 function WindowFrame({ appId }: { appId: BuiltinAppId }) {
   const win = useUi((s) => s.windows[appId])
@@ -45,9 +61,29 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
   const toggleMaximize = useUi((s) => s.toggleMaximize)
   const moveWindow = useUi((s) => s.moveWindow)
   const resizeWindow = useUi((s) => s.resizeWindow)
+  const snapWindow = useUi((s) => s.snapWindow)
+  const restoreWindow = useUi((s) => s.restoreWindow)
   const drag = useRef<DragRef | null>(null)
   const resize = useRef<ResizeRef | null>(null)
   const frameRef = useRef<HTMLElement>(null)
+  const layoutRef = useRef<HTMLDivElement>(null)
+  const [layoutOpen, setLayoutOpen] = useState(false)
+
+  useEffect(() => {
+    if (!layoutOpen) return
+    const closeOutside = (event: PointerEvent) => {
+      if (!layoutRef.current?.contains(event.target as Node)) setLayoutOpen(false)
+    }
+    const closeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setLayoutOpen(false)
+    }
+    document.addEventListener('pointerdown', closeOutside)
+    document.addEventListener('keydown', closeKey)
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside)
+      document.removeEventListener('keydown', closeKey)
+    }
+  }, [layoutOpen])
 
   /** A freshly opened window is appended frontmost — move keyboard focus to it. */
   useEffect(() => {
@@ -108,12 +144,14 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
     } catch {
       /* ignore */
     }
+    const origin = win.snapMode && win.restoreBounds ? win.restoreBounds : win
+    if (win.snapMode) restoreWindow(appId)
     drag.current = {
       pointerId: e.pointerId,
       startX: e.clientX,
       startY: e.clientY,
-      originX: win.x,
-      originY: win.y,
+      originX: origin.x,
+      originY: origin.y,
       moved: false,
     }
   }
@@ -134,6 +172,10 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
     const d = drag.current
     if (d && d.pointerId === e.pointerId) {
       drag.current = null
+      if (d.moved) {
+        const mode = resolveSnapMode({ x: e.clientX, y: e.clientY }, workArea())
+        if (mode) snapWindow(appId, mode, workArea())
+      }
       try {
         ;(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId)
       } catch {
@@ -209,6 +251,42 @@ function WindowFrame({ appId }: { appId: BuiltinAppId }) {
           >
             <Maximize2 size={9} aria-hidden />
           </button>
+          <div className={styles.layoutControl} ref={layoutRef}>
+            <button
+              type="button"
+              className={`${styles.dot} ${styles.layoutDot}`}
+              aria-label={`Arrange ${app.name} window`}
+              aria-haspopup="menu"
+              aria-expanded={layoutOpen}
+              onClick={() => setLayoutOpen((open) => !open)}
+            >
+              <LayoutPanelTop size={9} aria-hidden />
+            </button>
+            {layoutOpen ? (
+              <div className={styles.snapMenu} role="menu" aria-label={`${app.name} window layout`}>
+                {SNAP_CHOICES.map((choice) => (
+                  <button
+                    key={choice.mode}
+                    type="button"
+                    role="menuitem"
+                    data-snap={choice.mode}
+                    onClick={() => {
+                      snapWindow(appId, choice.mode, workArea())
+                      setLayoutOpen(false)
+                    }}
+                  >
+                    <span className={styles.snapIcon} aria-hidden />
+                    {choice.label}
+                  </button>
+                ))}
+                {(win.snapMode || win.maximized) ? (
+                  <button type="button" role="menuitem" onClick={() => { restoreWindow(appId); setLayoutOpen(false) }}>
+                    Restore floating
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
         </div>
         <span className={styles.titleText}>
           <Icon size={13} aria-hidden />
@@ -246,7 +324,10 @@ export function WindowsHost() {
     const clampOpenWindows = () => {
       const viewport = { width: window.innerWidth, height: window.innerHeight, top: MENU_BOTTOM + 4, bottom: window.innerHeight - DOCK_RESERVE - 6, inset: 8 }
       for (const [appId, state] of Object.entries(windows)) {
-        if (!state || state.maximized) continue
+        // Snap geometry is already derived from the same viewport work area.
+        // Re-clamping it through the floating-window path applies the inset a
+        // second time and, via move/resizeWindow, discards restoreBounds.
+        if (!state || state.maximized || state.snapMode) continue
         const next = clampWindowState(state, viewport)
         if (next.x !== state.x || next.y !== state.y) moveWindow(appId as BuiltinAppId, next.x, next.y)
         if (next.w !== state.w || next.h !== state.h) resizeWindow(appId as BuiltinAppId, next.w, next.h)

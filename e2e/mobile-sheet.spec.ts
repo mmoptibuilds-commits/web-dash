@@ -19,9 +19,9 @@ async function openNotes(page: Page): Promise<{ sheet: Locator; handle: Locator 
   return { sheet, handle }
 }
 
-/** The Dashboard overview heading that appears once every sheet is closed. */
+/** Home content that appears once every sheet is closed. */
 function overview(page: Page): Locator {
-  return page.getByRole('heading', { name: 'Dashboard', level: 1 })
+  return page.getByRole('button', { name: 'Open Google', exact: true })
 }
 
 /** Drag the sheet's grab handle vertically by `dy` px using trusted-pointer
@@ -87,7 +87,7 @@ test('31a. the sheet grab handle and Back both close the sheet to the overview',
 
   // Re-open and use the Back control instead.
   const backed = await openNotes(page)
-  await page.getByRole('button', { name: 'Back to dashboard' }).click()
+  await page.getByRole('button', { name: 'Back to Home' }).click()
   await expect(backed.sheet).toHaveCount(0)
   await expect(overview(page)).toBeVisible()
 })

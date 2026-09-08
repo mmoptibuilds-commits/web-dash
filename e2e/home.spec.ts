@@ -53,35 +53,18 @@ test('3. add, edit and remove a shortcut on Home', async ({ page }) => {
   await expect(tile(page, 'Google')).toBeVisible()
 })
 
-test('6. create a second Home page, rename it and navigate between pages', async ({ page }) => {
+test('6. pages manager keeps existing-page controls without a dead Add page action', async ({ page }) => {
   await boot(page)
 
-  // Open the Pages manager from the page title, add a page.
+  // Existing pages remain manageable, but v1.2 removes the nonfunctional Add Pages affordance.
   await pageTitleButton(page).click()
   const pagesDialog = page.getByRole('dialog', { name: 'Pages' })
-  await pagesDialog.getByRole('button', { name: 'Add page' }).click()
-
-  // The new page is active, named "Page" by default.
-  await expect(pageTitleButton(page)).toHaveText('Page')
-  await expect(page.getByRole('button', { name: 'Next page' })).toBeDisabled()
-
-  // Rename it to "Work" via the manager (2nd name input).
-  await pageTitleButton(page).click()
-  const nameInputs = page.getByRole('dialog', { name: 'Pages' }).getByLabel('Page name')
-  await nameInputs.nth(1).fill('Work')
-  await nameInputs.nth(1).press('Enter')
+  await expect(pagesDialog.getByRole('button', { name: 'Add page' })).toHaveCount(0)
+  const nameInput = pagesDialog.getByLabel('Page name')
+  await nameInput.fill('Work')
+  await nameInput.press('Enter')
   await page.getByRole('button', { name: 'Close dialog' }).click()
-
-  // Navigate back to page 1 (Home) and forward to the renamed page via dots.
-  await page.getByRole('button', { name: 'Page 1: Home' }).click()
-  await expect(pageTitleButton(page)).toHaveText('Home')
-  await expect(page.getByRole('button', { name: 'Next page' })).toBeEnabled()
-
-  await page.getByRole('button', { name: 'Page 2: Work' }).click()
   await expect(pageTitleButton(page)).toHaveText('Work')
-
-  // The new page starts empty.
-  await expect(page.getByText('This page is empty.')).toBeVisible()
 })
 
 test('7. reposition a tile on the desktop freeform canvas and keep it after reload', async ({
@@ -97,8 +80,9 @@ test('7. reposition a tile on the desktop freeform canvas and keep it after relo
   const dB = await dst.boundingBox()
   if (!sB || !dB) throw new Error('Missing tile geometry')
 
-  // Drag src's centre onto dst's centre → identical boxes (full overlap), with
-  // src raised to the front. Freeform means no neighbour reflows to make room.
+  // Aim at the occupied far-right slot. Collision protection keeps Gmail in
+  // place and resolves Google to the nearest valid bounded position without
+  // rearranging any neighbour.
   await page.mouse.move(sB.x + sB.width / 2, sB.y + sB.height / 2)
   await page.mouse.down()
   await page.mouse.move(dB.x + dB.width / 2, dB.y + dB.height / 2, { steps: 24 })
@@ -108,8 +92,12 @@ test('7. reposition a tile on the desktop freeform canvas and keep it after relo
   const after = await src.boundingBox()
   if (!after) throw new Error('Missing tile geometry after drag')
   expect(after.x).toBeCloseTo(dB.x, 0)
-  expect(after.y).toBeCloseTo(dB.y, 0)
-  // Google now stacks above Gmail (bring-to-front on drag engage).
+  expect(after.y).not.toBeCloseTo(dB.y, 0)
+  const canvas = await page.getByTestId('freeform-canvas').boundingBox()
+  if (!canvas) throw new Error('Missing freeform canvas')
+  expect(after.x + after.width).toBeLessThanOrEqual(canvas.x + canvas.width + 1)
+  expect(after.y + after.height <= dB.y || after.y >= dB.y + dB.height).toBe(true)
+  // The engaged tile is still raised while neighbours remain fixed.
   expect(await zIndex(cellOf(src))).toBeGreaterThan(await zIndex(cellOf(dst)))
 
   // Geometry persists across reload — the freeform position is real data.
@@ -118,7 +106,7 @@ test('7. reposition a tile on the desktop freeform canvas and keep it after relo
   const persisted = await src.boundingBox()
   if (!persisted) throw new Error('Missing tile geometry after reload')
   expect(persisted.x).toBeCloseTo(dB.x, 0)
-  expect(persisted.y).toBeCloseTo(dB.y, 0)
+  expect(persisted.y).toBeCloseTo(after.y, 0)
   expect(await zIndex(cellOf(src))).toBeGreaterThan(await zIndex(cellOf(dst)))
 
   // Per-breakpoint independence: on the compact grid the same items keep their
@@ -132,7 +120,7 @@ test('7. reposition a tile on the desktop freeform canvas and keep it after relo
   const back = await src.boundingBox()
   if (!back) throw new Error('Missing tile geometry back on desktop')
   expect(back.x).toBeCloseTo(dB.x, 0)
-  expect(back.y).toBeCloseTo(dB.y, 0)
+  expect(back.y).toBeCloseTo(after.y, 0)
 })
 
 test('reorder an item on the compact grid and keep the order after reload', async ({ page }) => {
@@ -184,7 +172,8 @@ test('8. open/close a folder and open a contained shortcut from a folder', async
   await folderTile(page, 'Dev').click()
   const dev = page.getByRole('dialog', { name: 'Folder Dev' })
   await expect(dev).toBeVisible()
-  await expect(dev.getByText('2 links')).toBeVisible()
+  await expect(dev.getByText('2 links')).toHaveCount(0)
+  await expect(dev.getByRole('button', { name: 'Add link' })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Open MDN' })).toBeVisible()
   await dev.getByRole('button', { name: 'Back to pages' }).click()
   await expect(dev).toBeHidden()

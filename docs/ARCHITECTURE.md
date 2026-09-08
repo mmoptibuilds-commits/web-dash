@@ -16,7 +16,9 @@ Components do not access DB tables directly. Durable state belongs in Dexie; imm
 
 `App` mounts Backdrop, MenuBar, HomeMode, WindowsHost, MobileSheetHost, FolderView, AppLauncher, Dock and SearchOverlay. Home stays mounted while apps open above it. The legacy Dashboard identifier remains only where compatibility requires it; it is not the main workspace.
 
-WindowsHost owns desktop frame behavior, focus/z-order, traffic lights, drag/resize/maximize and viewport clamping. Mobile sheets reuse the app-content resolver inside safe-area-aware bounded presentation.
+WindowsHost owns desktop frame behavior, focus/z-order, traffic lights, drag/resize, edge/corner snapping, floating-bound restoration and viewport clamping. Mobile sheets reuse the app-content resolver inside safe-area-aware bounded presentation.
+
+Window content and mobile sheet bodies establish inline-size containers. Built-in apps, led by Settings' searchable desktop sidebar and narrow single-column detail stack, respond to their allocated surface rather than assuming viewport width. While a modal mobile sheet is open, the mounted desktop stage is inert and hidden from assistive technology.
 
 ## Persistence
 
@@ -36,8 +38,8 @@ The document, app shell and Home surface are viewport-bound. Mini-apps, lists an
 
 `src/styles/tokens.css` defines spacing, radii, surfaces, motion, safe areas and z-index. Shared CSS material behavior and `src/app/theme.ts` apply appearance attributes. `Glyph.tsx` is the shared symbol presentation layer.
 
-Current runtime material is CSS/DOM based. If `ybouane/liquidglass` is adopted, add one centralized material adapter/boundary; do not scatter raw instances through widgets. Preserve CSS/solid fallbacks, Reduced Effects and device/performance gating. Do not create one WebGL context per surface.
+`LiquidGlassManager` owns one lazy `@ybouane/liquidglass` instance for direct-root high-value shell surfaces. Pure policy/config functions select WebGL, CSS or solid tiers using settings, capabilities, memory and sampled FPS. Widgets do not create WebGL contexts.
 
 ## PWA/testing
 
-`vite-plugin-pwa` builds the production service worker. Playwright targets a production build/preview. Runtime changes should pass lint, typecheck, Vitest, build and the desktop/mobile browser suite when the environment is available.
+`vite-plugin-pwa` builds the production service worker. Playwright targets a production build/preview and supports an explicit `PLAYWRIGHT_EXECUTABLE_PATH` for compatible system/headless Chromium installations. Runtime changes pass lint, typecheck, Vitest, build and the desktop/mobile browser suite.

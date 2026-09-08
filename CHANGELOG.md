@@ -4,6 +4,25 @@ All notable Hearth OS changes are recorded here.
 
 ## [Unreleased]
 
+## [1.2.0] — Responsive shell, snapping and selective Liquid Glass
+
+### Changed
+- Fixed right-edge Home widget folding by gating the persisted 1120px freeform coordinate model on both viewport and configured canvas capacity.
+- Replaced duplicated/dead top-bar navigation with a compact `mmoptibuilds` status bar and hardened Control Center dismissal/focus behavior.
+- Added persisted left/right, four-corner and maximize window snapping with floating-geometry restoration and drag-edge discovery.
+- Made built-in app layouts container-responsive, removed shortcut double boxing and expanded the full-viewport Launchpad to use the shared user-link repository.
+- Made folders appearance-customizable and limited add/remove/delete operations to Edit Mode; removed folder counts and added outside/Escape dismissal.
+- Added one lazy, selective `@ybouane/liquidglass` renderer for the menu bar and Dock, settings presets/custom controls, accessibility/device/FPS fallbacks, and cosine dock magnification.
+
+### Compatibility and assets
+- Older settings, backup and window rows remain accepted through default merging and optional-field validation.
+- No Figma community artwork ships in v1.2 because production-use licensing metadata was not available.
+
+### Verification
+- Clean-install ESLint, TypeScript, **26 Vitest files / 143 tests**, production build/PWA generation, aggregate `npm run check` and `git diff --check` passed.
+- Fresh production Playwright: **106 discovered; 82 passed, 24 intentionally project-inapplicable skips, 0 failed** across desktop/mobile projects. PWA/offline, viewport overflow and clean console/page-error journeys passed.
+- Desktop/phone light/dark, Settings, Control Center and Launchpad captures were reviewed against all readable v1.2 references and the live HTML motion study. Supplied references 01–03 are truncated in both the checkout and canonical Git blob and could not be decoded; dimensions/README guidance were still checked.
+
 ### Repository consolidation — 2026-09-07
 - Consolidated the v1.1 UI/runtime branch and the newer reference/documentation branch into one maintained history.
 - Kept the v1.1 runtime implementation as the application source of truth.

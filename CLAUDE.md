@@ -1,6 +1,6 @@
 # Hearth OS engineering contract
 
-Hearth is a local-first Vite/React/TypeScript PWA, package version **1.1.0**. Home is the permanent viewport surface; Apps opens Launchpad; desktop apps use bounded floating windows and narrow devices use sheets.
+Hearth is a local-first Vite/React/TypeScript PWA, package version **1.2.0**. Home is the permanent viewport surface; the Dock opens Launchpad; desktop apps use bounded floating/snapped windows and narrow devices use sheets.
 
 ## Read first
 
@@ -36,7 +36,7 @@ Current code/tests outrank documentation when describing what is already impleme
 
 ## Active visual direction
 
-The shipped app uses CSS materials. Selective `ybouane/liquidglass` WebGL refraction, improved dock proximity motion and reviewed Figma app artwork are approved **next-pass** work, not current runtime facts. Keep CSS/solid fallbacks, Reduced Effects and performance limits first-class.
+The shipped app uses centralized selective `@ybouane/liquidglass` WebGL refraction on the menu bar and Dock, cosine dock proximity motion, and CSS/solid fallbacks with Reduced Effects and performance limits. No Figma community artwork is shipped without explicit production-use licensing metadata.
 
 ## Commands
 

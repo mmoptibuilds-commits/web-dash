@@ -3,7 +3,7 @@ import { useNow } from '@/hooks/useMedia'
 import { goHome } from '@/state/nav'
 import { BUILTIN_APPS } from '@/types/apps'
 import { ControlCenterMenu } from './ControlCenter'
-import { Grid2X2, Pencil, Search, SlidersHorizontal } from 'lucide-react'
+import { Pencil, Search, SlidersHorizontal } from 'lucide-react'
 import styles from './menubar.module.css'
 
 function Clock() {
@@ -13,12 +13,10 @@ function Clock() {
   return <div className={styles.clock} data-testid="menu-clock" aria-label={`${time}, ${date}`}><span className={styles.clockTime}>{time}</span><span className={styles.clockDate}>{date}</span></div>
 }
 
-/** Compact system bar: Home is the current surface, Apps opens Launchpad. */
+/** Compact status bar for workspace context and essential system controls. */
 export function MenuBar() {
   const editMode = useUi((s) => s.editMode)
   const toggleEditMode = useUi((s) => s.toggleEditMode)
-  const launcherOpen = useUi((s) => s.launcherOpen)
-  const setLauncherOpen = useUi((s) => s.setLauncherOpen)
   const controlCenterOpen = useUi((s) => s.controlCenterOpen)
   const searchOpen = useUi((s) => s.searchOpen)
   const setControlCenter = useUi((s) => s.setControlCenter)
@@ -28,15 +26,11 @@ export function MenuBar() {
   const context = front ? BUILTIN_APPS[front]?.name : 'Home'
 
   return (
-    <header className={styles.bar} data-mode="home">
+    <header className={styles.bar} data-mode="home" data-liquid-glass>
       <div className={styles.left}>
-        <button type="button" className={styles.brand} onClick={goHome} aria-label="Hearth home">
+        <button type="button" className={styles.brand} onClick={goHome} aria-label="mmoptibuilds home">
           <span className={styles.brandDot} aria-hidden />
-          <span className={styles.brandText}>Hearth</span>
-        </button>
-        <button type="button" className={styles.appsButton} aria-haspopup="dialog" aria-expanded={launcherOpen} onClick={() => setLauncherOpen(!launcherOpen)}>
-          <Grid2X2 size={14} aria-hidden />
-          <span>Apps</span>
+          <span className={styles.brandText}>mmoptibuilds</span>
         </button>
         <span className={styles.context} aria-live="polite">{context}</span>
       </div>
@@ -57,4 +51,3 @@ export function MenuBar() {
     </header>
   )
 }
-

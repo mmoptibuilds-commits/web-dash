@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronRight, Maximize2, Monitor, Moon, Settings, Sun, X } from 'lucide-react'
-import { launchApp } from '@/state/nav'
+import { ChevronRight, Maximize2, Monitor, Moon, Sun, X } from 'lucide-react'
 import { useSettings } from '@/hooks/data'
 import { updateSettings } from '@/data/repositories/settings'
 import { fullscreenSupported, toggleFullscreen } from '@/app/theme'
@@ -165,15 +164,6 @@ export function ControlCenterMenu({ onClose }: { onClose: () => void }) {
             onClick={() => void toggleFullscreen()}
           />
         )}
-        <Row
-          icon={Settings}
-          label="Settings"
-          hint="Theme, wallpaper, data"
-          onClick={() => {
-            onClose()
-            launchApp('settings')
-          }}
-        />
       </div>
     </>
   )

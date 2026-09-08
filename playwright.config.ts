@@ -5,11 +5,11 @@ import { defineConfig } from '@playwright/test'
  * suite exercises the real bundle + PWA service worker — a fresh IndexedDB
  * per test (new browser context each test) seeds first-run state.
  *
- * Browser: system Microsoft Edge (channel 'msedge') — no bundled Chromium
- * download required on this Windows host.
+ * Browser: Playwright Chromium by default for portable local/CI execution.
  */
 const PORT = 5198
 const baseURL = `http://localhost:${PORT}`
+const executablePath = process.env.PLAYWRIGHT_EXECUTABLE_PATH
 
 export default defineConfig({
   testDir: './e2e',
@@ -21,8 +21,10 @@ export default defineConfig({
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : [['list']],
   use: {
     baseURL,
-    channel: 'msedge',
     headless: true,
+    launchOptions: executablePath
+      ? { executablePath, args: ['--no-sandbox', '--disable-dev-shm-usage'] }
+      : undefined,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     actionTimeout: 10_000,

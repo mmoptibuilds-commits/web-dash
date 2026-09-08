@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { boot, cellOf, enterEdit, exitEdit, tile } from './helpers'
+import { boot, enterEdit, exitEdit, tile } from './helpers'
 
 /**
  * V2 freeform canvas (desktop >= 1024px): genuine x/y/w/h/z placement with no
@@ -18,14 +18,15 @@ test('freeform: drag-resize a tile from its handle and keep the size after reloa
   await boot(page)
   await enterEdit(page)
 
-  const google = tile(page, 'Google')
-  const wrap = cellOf(google)
-  const before = await google.boundingBox()
+  const search = page.getByRole('group', { name: 'Search tile' })
+  await search.getByRole('button', { name: 'Size Small' }).click()
+  await expect(search).toHaveCSS('width', '170px')
+  const before = await search.boundingBox()
   if (!before) throw new Error('Missing tile geometry')
 
   // Pointer-only chrome: the drag handle is aria-hidden (keyboard users resize
   // a focused tile with Alt+Arrows), so it is targeted by test id, not role.
-  const handle = wrap.getByTestId('resize-handle')
+  const handle = search.getByTestId('resize-handle')
   const hb = await handle.boundingBox()
   if (!hb) throw new Error('Missing resize handle')
 
@@ -35,7 +36,7 @@ test('freeform: drag-resize a tile from its handle and keep the size after reloa
   await page.mouse.up()
   await page.waitForTimeout(400)
 
-  const after = await google.boundingBox()
+  const after = await search.boundingBox()
   if (!after) throw new Error('Missing tile geometry after resize')
   expect(after.width).toBeGreaterThan(before.width + 20)
   expect(after.height).toBeGreaterThan(before.height + 20)
@@ -45,7 +46,7 @@ test('freeform: drag-resize a tile from its handle and keep the size after reloa
   await page.reload()
   await expect(tile(page, 'Google')).toBeVisible()
   await enterEdit(page)
-  const persisted = await google.boundingBox()
+  const persisted = await page.getByRole('group', { name: 'Search tile' }).boundingBox()
   if (!persisted) throw new Error('Missing tile geometry after reload')
   expect(persisted.width).toBeGreaterThan(before.width + 20)
   expect(persisted.height).toBeGreaterThan(before.height + 20)
@@ -61,14 +62,15 @@ test('freeform: the size preset chips resize a widget and persist', async ({ pag
   if (!before) throw new Error('Missing search widget tile')
   expect(before.width).toBeGreaterThan(0)
 
-  await search.getByRole('button', { name: 'Size Large' }).click()
+  // Shrinking is valid in the seeded layout without pushing through any
+  // neighbouring tile; occupied growth is deliberately collision-protected.
+  await search.getByRole('button', { name: 'Size Small' }).click()
   await page.waitForTimeout(400)
 
   const after = await search.boundingBox()
   if (!after) throw new Error('Missing search widget tile after preset')
-  // Search defaults to Medium (2 cols ≈ 360px); Large is the full 4-col band.
-  expect(after.width).toBeGreaterThan(before.width + 150)
-  expect(after.width).toBeGreaterThan(600)
+  expect(after.width).toBeLessThan(before.width - 150)
+  expect(after.width).toBeLessThan(200)
 
   await exitEdit(page)
   await page.reload()
@@ -76,7 +78,7 @@ test('freeform: the size preset chips resize a widget and persist', async ({ pag
   await enterEdit(page)
   const persisted = await page.getByRole('group', { name: 'Search tile' }).boundingBox()
   if (!persisted) throw new Error('Missing search widget tile after reload')
-  expect(persisted.width).toBeGreaterThan(600)
+  expect(persisted.width).toBeLessThan(200)
 })
 
 test('freeform: arrow keys nudge a focused tile and persist', async ({ page }) => {

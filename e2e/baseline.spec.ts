@@ -47,13 +47,13 @@ test('viewport sweep (baseline / after record)', async ({ page }) => {
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     )
     // 3) Edit Mode + Add-to-dock popover (the reported bug surface)
-    await page.getByRole('button', { name: 'Edit', exact: true }).click().catch(() => {})
+    await page.getByRole('button', { name: 'Edit Home', exact: true }).click().catch(() => {})
     await page.waitForTimeout(80)
     await page.getByRole('button', { name: 'Add to dock', exact: true }).click().catch(() => {})
     await page.waitForTimeout(250)
     await shoot(page, `${tag}-edit-dockadd`)
     // close the popover / exit edit to keep states clean between sizes
-    await page.getByRole('button', { name: 'Done', exact: true }).click().catch(() => {})
+    await page.getByRole('button', { name: 'Done editing Home', exact: true }).click().catch(() => {})
     await page.waitForTimeout(80)
     console.log(`BASELINE ${tag} overflowX=${overflow}`)
   }

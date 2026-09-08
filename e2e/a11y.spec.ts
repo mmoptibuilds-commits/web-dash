@@ -276,9 +276,9 @@ test('33c. no unnamed control, no focusable under aria-hidden, no dup ids', asyn
   await exitEdit(page)
 
   await goDashboard(page)
-  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
+  await expect(page.getByRole('dialog', { name: 'Apps and links' })).toBeVisible()
   const dashboard = await semanticScan(page, null)
-  assertClean(dashboard, 'Dashboard (overview)')
+  assertClean(dashboard, 'Launchpad')
 })
 
 interface ScanResult {

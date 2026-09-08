@@ -9,8 +9,9 @@ export interface ChoiceOption<T extends string> {
 
 /** A titled section in the settings column. */
 export function Section({ title, children }: { title: string; children: ReactNode }) {
+  const sectionId = title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
   return (
-    <section className={styles.section}>
+    <section className={styles.section} data-settings-section={sectionId}>
       <h2 className={styles.sectionTitle}>{title}</h2>
       <div className={styles.sectionBody}>{children}</div>
     </section>

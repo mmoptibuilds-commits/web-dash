@@ -118,7 +118,6 @@ function payloadNode(
       node: (
         <FolderTile
           folder={ctx.folder}
-          count={ctx.folder.shortcutIds.length}
           showLabel={ctx.showLabels}
           scale={ctx.iconScale}
           onClick={() => ctx.onOpenFolder(ctx.folder!.id)}
@@ -668,8 +667,10 @@ function PagePane(props: PageProps) {
       h: box.h,
     }
     const others = (items ?? []).filter((i) => i.id !== item.id).map((i) => boxOf(i))
-    const resolved = resolveMove(next, others, cw, ch, snapStep)
-    if (resolved.valid) void setItemBox(item.id, resolved.box)
+    const bounded = clampBox(next, cw, ch)
+    if (!others.some((other) => boxesOverlap(bounded, other))) {
+      void setItemBox(item.id, bounded)
+    }
   }
 
   const payloadCtxFor = (item: LayoutItem): PayloadCtx | null => {
@@ -796,6 +797,7 @@ function PagePane(props: PageProps) {
         <div
           ref={canvasRef}
           className={styles.freeCanvas}
+          data-testid="freeform-canvas"
           style={{ height: canvasH }}
           onPointerDown={(e) => {
             if (e.target === e.currentTarget) setSelectedId(null)
@@ -856,7 +858,7 @@ export function HomeMode() {
   const [dialog, setDialog] = useState<DialogState>(null)
   const [pendingRemove, setPendingRemove] = useState<LayoutItem | null>(null)
   const [removeLabel, setRemoveLabel] = useState('this item')
-  const freeform = useFreeformCanvas()
+  const freeform = useFreeformCanvas(settings?.canvasMaxWidth)
 
   const showLabels = settings?.showLabels ?? true
   const iconScale = settings?.iconSize ?? 'regular'

@@ -141,7 +141,7 @@
   --sp-10: 64px;
 
   /* ---- Layout primitives ---- */
-  --menu-h: 46px;
+  --menu-h: 34px;
   --dock-h: 76px;
   --dock-pad: 10px;
   --titlebar-h: 38px; /* floating-window title bar */
@@ -196,17 +196,26 @@
   --z-toast: 100;
 }
 
+/* Mobile keeps full touch geometry in the shell action strip. This also avoids
+   half-pixel centering above the viewport when a 34px control is placed inside
+   the bordered 34px desktop menubar. */
+@media (max-width: 520px) {
+  :root {
+    --menu-h: 40px;
+  }
+}
+
 /* A profile changes chrome proportions without pretending the browser has
    changed device class. The auto profile keeps the responsive breakpoint in
    charge; explicit profiles are useful for kiosk/tablet presentations. */
 :root[data-appearance-profile='desktop'] {
-  --menu-h: 44px;
+  --menu-h: 34px;
   --dock-h: 72px;
   --titlebar-h: 36px;
 }
 
 :root[data-appearance-profile='mobile'] {
-  --menu-h: 50px;
+  --menu-h: 40px;
   --dock-h: 82px;
   --titlebar-h: 42px;
 }

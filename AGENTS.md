@@ -4,7 +4,7 @@ Read `CLAUDE.md`, `docs/CURRENT_STATE.md`, `docs/ARCHITECTURE.md`, `docs/PRODUCT
 
 ## Rules
 
-1. Preserve the existing v1.1 application; references are not replacement architecture.
+1. Preserve the existing v1.2 application; references are not replacement architecture.
 2. Keep persistence behind repositories/Dexie and preserve migrations/backups.
 3. Use the shared Home geometry contract for every placement path; committed boxes must remain bounded and collision-free.
 4. Keep the outer document/shell/Home viewport-locked; scrolling belongs inside bounded app/widget/embed content.

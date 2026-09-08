@@ -54,13 +54,19 @@
   background: transparent;
   border-radius: var(--r-squircle);
   cursor: pointer;
-  transition: transform var(--dur-base) var(--ease-spring), filter var(--dur-fast) var(--ease-out);
+  transform: translateY(var(--dock-lift, 0)) scale(var(--dock-scale, 1));
+  transform-origin: center bottom;
+  transition: transform 110ms var(--ease-out), filter var(--dur-fast) var(--ease-out);
 }
-.tile:hover {
-  transform: translateY(calc(-1 * var(--move-1))) scale(1.1);
+.dock[data-dock-magnify='false'] .tile:hover {
+  transform: translateY(calc(-1 * var(--move-1))) scale(1.04);
 }
 .tile:active {
   transform: translateY(0) scale(0.98);
+}
+
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .tile { transform: none; transition: none; }
 }
 .tile:focus-visible {
   outline: none;

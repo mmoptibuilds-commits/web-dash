@@ -11,7 +11,7 @@ import { resolveTheme, applyThemeAttributes } from '@/app/theme'
 function FatalScreen({ reason }: { reason: string }) {
   return (
     <div style={{ maxWidth: 420, margin: '15vh auto', padding: 24, fontFamily: 'system-ui, sans-serif' }}>
-      <h1 style={{ fontSize: 20, marginBottom: 8 }}>Hearth couldn’t start</h1>
+      <h1 style={{ fontSize: 20, marginBottom: 8 }}>mmoptibuilds couldn’t start</h1>
       <p style={{ opacity: 0.75 }}>{reason}</p>
     </div>
   )

@@ -1,5 +1,7 @@
 import { create } from 'zustand'
-import type { AppWindowState, BuiltinAppId } from '@/types/domain'
+import type { AppWindowState, BuiltinAppId, WindowSnapMode } from '@/types/domain'
+import type { WorkArea } from '@/lib/windowSnap'
+import { applyWindowSnap, restoreWindowBounds } from '@/lib/windowSnap'
 import { getSettings } from '@/data/repositories/settings'
 import {
   defaultWindowState,
@@ -40,6 +42,8 @@ interface UiStore {
   closeApp: (appId: BuiltinAppId) => void
   focusApp: (appId: BuiltinAppId) => void
   toggleMaximize: (appId: BuiltinAppId) => void
+  snapWindow: (appId: BuiltinAppId, mode: WindowSnapMode, area: WorkArea) => void
+  restoreWindow: (appId: BuiltinAppId) => void
   minimizeApp: (appId: BuiltinAppId) => void
   moveWindow: (appId: BuiltinAppId, x: number, y: number) => void
   resizeWindow: (appId: BuiltinAppId, w: number, h: number) => void
@@ -187,9 +191,49 @@ export const useUi = create<UiStore>((set, get) => ({
     const state = get()
     const current = state.windows[appId]
     if (!current) return
-    const next = { ...current, maximized: !current.maximized, updatedAt: Date.now() }
+    const next = current.maximized || current.snapMode === 'maximize'
+      ? { ...current, ...restoreWindowBounds(current), maximized: false, snapMode: null, restoreBounds: undefined, updatedAt: Date.now() }
+      : { ...current, maximized: true, updatedAt: Date.now() }
     const focus = withFocus({ ...state, windows: { ...state.windows, [appId]: next } }, appId)
     set({ ...focus, windows: { ...state.windows, [appId]: next }, savedWindows: { ...state.savedWindows, [appId]: next } })
+    persistSoon(next)
+  },
+
+  snapWindow: (appId, mode, area) => {
+    const state = get()
+    const current = state.windows[appId]
+    if (!current) return
+    const next = {
+      ...applyWindowSnap(current, mode, area),
+      maximized: mode === 'maximize',
+      minimized: false,
+      updatedAt: Date.now(),
+    }
+    const focusOrder = [...state.focusOrder.filter((id) => id !== appId), appId]
+    set({
+      windows: { ...state.windows, [appId]: next },
+      savedWindows: { ...state.savedWindows, [appId]: next },
+      focusOrder,
+    })
+    persistSoon(next)
+  },
+
+  restoreWindow: (appId) => {
+    const state = get()
+    const current = state.windows[appId]
+    if (!current || (!current.snapMode && !current.maximized)) return
+    const next = {
+      ...current,
+      ...restoreWindowBounds(current),
+      maximized: false,
+      snapMode: null,
+      restoreBounds: undefined,
+      updatedAt: Date.now(),
+    }
+    set({
+      windows: { ...state.windows, [appId]: next },
+      savedWindows: { ...state.savedWindows, [appId]: next },
+    })
     persistSoon(next)
   },
 
@@ -210,7 +254,7 @@ export const useUi = create<UiStore>((set, get) => ({
     const state = get()
     const current = state.windows[appId]
     if (!current) return
-    const moved = { ...current, x: Math.round(x), y: Math.round(y), updatedAt: Date.now() }
+    const moved = { ...current, x: Math.round(x), y: Math.round(y), snapMode: null, maximized: false, restoreBounds: undefined, updatedAt: Date.now() }
     set({ windows: { ...state.windows, [appId]: moved }, savedWindows: { ...state.savedWindows, [appId]: moved } })
     persistSoon(moved)
   },
@@ -219,7 +263,7 @@ export const useUi = create<UiStore>((set, get) => ({
     const state = get()
     const current = state.windows[appId]
     if (!current) return
-    const resized = { ...current, w: Math.round(w), h: Math.round(h), updatedAt: Date.now() }
+    const resized = { ...current, w: Math.round(w), h: Math.round(h), snapMode: null, maximized: false, restoreBounds: undefined, updatedAt: Date.now() }
     set({ windows: { ...state.windows, [appId]: resized }, savedWindows: { ...state.savedWindows, [appId]: resized } })
     persistSoon(resized)
   },

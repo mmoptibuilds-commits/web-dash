@@ -8,7 +8,7 @@ import {
   createFolder,
   addShortcutToFolder,
 } from '@/data/repositories/folders'
-import { createPage, deletePage, movePage, renamePage } from '@/data/repositories/pages'
+import { deletePage, movePage, renamePage } from '@/data/repositories/pages'
 import { createWidgetInstance } from '@/data/repositories/widgets'
 import { ADDABLE_WIDGETS } from '@/features/widgets/registry'
 import { useUi } from '@/state/ui'
@@ -282,6 +282,8 @@ export function NewFolderDialog({
   onCreated: (folder: Folder) => void
 }) {
   const [name, setName] = useState('')
+  const [emoji, setEmoji] = useState('📁')
+  const [bg, setBg] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
   async function create() {
@@ -290,7 +292,7 @@ export function NewFolderDialog({
     if (!trimmed) return
     setBusy(true)
     try {
-      const folder = await createFolder(trimmed)
+      const folder = await createFolder(trimmed, { emoji, bg })
       await addItemToPage(pageId, 'folder', folder.id)
       onCreated(folder)
     } finally {
@@ -314,6 +316,20 @@ export function NewFolderDialog({
         autoFocus
         maxLength={40}
       />
+      <span className={styles.fieldLabel}>Folder icon</span>
+      <div className={styles.emojiRow}>
+        {['📁', '🧰', '📚', '💼', '🎨', '✈️', '🏠', '⭐'].map((icon) => (
+          <button key={icon} type="button" className={`${styles.emojiPick} ${icon === emoji ? styles.emojiPickOn : ''}`} aria-label={`Folder icon ${icon}`} aria-pressed={icon === emoji} onClick={() => setEmoji(icon)}>
+            {icon}
+          </button>
+        ))}
+      </div>
+      <span className={styles.fieldLabel}>Folder tint</span>
+      <div className={styles.swatches}>
+        {BG_SWATCHES.map((color) => (
+          <button key={color ?? 'none'} type="button" className={`${styles.swatch} ${bg === color ? styles.swatchOn : ''} ${color === null ? styles.swatchNone : ''}`} style={color ? { background: color } : undefined} aria-label={color ? `Tint ${color}` : 'No tint'} aria-pressed={bg === color} onClick={() => setBg(color)} />
+        ))}
+      </div>
       <div className={styles.formActions}>
         <button type="button" className="btn btn-ghost" onClick={onClose}>
           Cancel
@@ -492,21 +508,6 @@ export function PagesManagerDialog({
           </div>
         ))}
       </div>
-
-      <button
-        type="button"
-        className="btn btn-ghost"
-        onClick={() =>
-          void (async () => {
-            const page = await createPage()
-            setActivePageId(page.id)
-            onClose()
-          })()
-        }
-      >
-        <Plus size={15} aria-hidden />
-        Add page
-      </button>
     </Modal>
   )
 }

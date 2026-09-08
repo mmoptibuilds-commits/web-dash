@@ -111,15 +111,11 @@ export function hostOf(url: string): string {
   }
 }
 
-/** Best-effort public favicon lookup. Returns '' when the host can't be
- *  parsed so the caller can fall back to a letter monogram. */
-export function faviconUrlFor(url: string): string {
-  let host: string
-  try {
-    host = new URL(url).hostname
-  } catch {
-    return ''
-  }
-  if (!host) return ''
-  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=64`
+/**
+ * Hearth is local-first and its shell must not emit background third-party
+ * requests merely to paint a shortcut. Auto icons therefore use the shared
+ * local monogram fallback; uploaded/emoji artwork remains unchanged.
+ */
+export function faviconUrlFor(_url: string): string {
+  return ''
 }

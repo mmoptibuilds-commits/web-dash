@@ -169,6 +169,7 @@ const SEARCH_ENGINE_VALUES = new Set(['google', 'bing', 'duckduckgo'])
 const ICON_SIZE_VALUES = new Set(['small', 'regular', 'large'])
 const LAYOUT_KIND_VALUES = new Set(['shortcut', 'folder', 'widget'])
 const WIDGET_SIZE_VALUES = new Set(['small', 'medium', 'large'])
+const WINDOW_SNAP_VALUES = new Set(['left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right', 'maximize'])
 const HISTORY_KIND_VALUES = new Set(['query', 'launch'])
 const SHORTCUT_ICON_TYPE_VALUES = new Set(['auto', 'emoji', 'upload'])
 /** Mirrors the frozen BuiltinAppId union in types/domain.ts. */
@@ -195,6 +196,14 @@ const ROW_VALIDATORS: Record<string, (row: unknown) => string | null> = {
       return 'appearanceProfile is not auto/desktop/mobile'
     if (row.glass !== undefined && !inValues(GLASS_VALUES)(row.glass))
       return 'glass is not subtle/standard/vibrant' // optional: older backups lack it
+    if (row.liquidGlassMode !== undefined && !inValues(new Set(['off', 'performance', 'balanced', 'high', 'custom']))(row.liquidGlassMode))
+      return 'liquidGlassMode is invalid'
+    if (row.liquidGlassBlur !== undefined && !(isFin(row.liquidGlassBlur) && row.liquidGlassBlur >= 0 && row.liquidGlassBlur <= 10))
+      return 'liquidGlassBlur is not a number in 0..10'
+    if (row.liquidGlassRefraction !== undefined && !(isFin(row.liquidGlassRefraction) && row.liquidGlassRefraction >= 0 && row.liquidGlassRefraction <= 0.08))
+      return 'liquidGlassRefraction is not a number in 0..0.08'
+    if (row.liquidGlassChromatic !== undefined && !(isFin(row.liquidGlassChromatic) && row.liquidGlassChromatic >= 0 && row.liquidGlassChromatic <= 0.012))
+      return 'liquidGlassChromatic is not a number in 0..0.012'
     // Optional: older backups lack glassTranslucency; when present it must be a
     // number in [0,1] (0 solid … 1 most see-through).
     if (
@@ -333,6 +342,13 @@ const ROW_VALIDATORS: Record<string, (row: unknown) => string | null> = {
       if (!isFin(row[key])) return `${key} is not a number`
     if (isFin(row.w) && isFin(row.h) && (row.w < 300 || row.h < 220)) return 'window is below the minimum size'
     if (!isBool(row.maximized) || !isBool(row.minimized) || !isBool(row.open)) return 'window flags are invalid'
+    if (row.snapMode !== undefined && row.snapMode !== null && !inValues(WINDOW_SNAP_VALUES)(row.snapMode))
+      return 'window snap mode is invalid'
+    if (row.restoreBounds !== undefined) {
+      if (!isObj(row.restoreBounds)) return 'window restore bounds are invalid'
+      for (const key of ['x', 'y', 'w', 'h'] as const)
+        if (!isFin(row.restoreBounds[key])) return `window restore ${key} is not a number`
+    }
     return null
   },
 }

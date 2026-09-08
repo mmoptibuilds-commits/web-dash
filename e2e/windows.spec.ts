@@ -56,3 +56,26 @@ test('only the front-most window shows full chrome; closed windows leave the doc
   await expect(calendar).toHaveCount(0)
   await expect(notes).toHaveAttribute('data-front', 'true')
 })
+
+test('window layout menu snaps to a half and restores floating geometry', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Window snapping exists only on the desktop project')
+  await boot(page)
+  await openApp(page, 'Notes')
+  const win = page.getByRole('dialog', { name: 'Notes window' })
+  const floating = await win.boundingBox()
+  if (!floating) throw new Error('Missing floating Notes bounds')
+
+  await page.getByRole('button', { name: 'Arrange Notes window' }).click()
+  await page.getByRole('menuitem', { name: 'Left half' }).click()
+  const snapped = await win.boundingBox()
+  if (!snapped) throw new Error('Missing snapped Notes bounds')
+  expect(snapped.x).toBeLessThan(12)
+  expect(snapped.width).toBeGreaterThan(680)
+
+  await page.getByRole('button', { name: 'Arrange Notes window' }).click()
+  await page.getByRole('menuitem', { name: 'Restore floating' }).click()
+  const restored = await win.boundingBox()
+  if (!restored) throw new Error('Missing restored Notes bounds')
+  expect(restored.x).toBeCloseTo(floating.x, 0)
+  expect(restored.width).toBeCloseTo(floating.width, 0)
+})

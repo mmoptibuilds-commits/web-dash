@@ -29,7 +29,7 @@ test('shell stays within the viewport and never overflows at any width', async (
     await assertNoHorizontalOverflow(page, `home @${width}`)
 
     // Persistent chrome sits inside the viewport.
-    for (const label of ['Hearth home', 'Search', 'Control Center', 'Open Dashboard']) {
+    for (const label of ['mmoptibuilds home', 'Search', 'Control Center', 'Open Apps']) {
       await expectFullyInside(page.getByRole('button', { name: label, exact: true }).first(), width)
     }
     const dockTiles = page.getByRole('navigation', { name: 'Dock' }).getByRole('button')
@@ -54,16 +54,15 @@ test('shell stays within the viewport and never overflows at any width', async (
     if (width >= 1024) {
       await page.getByRole('button', { name: 'Close Notes' }).click()
     } else {
-      await page.getByRole('button', { name: 'Back to dashboard' }).click()
+      await page.getByRole('button', { name: 'Back to Home' }).click()
     }
-    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Open Google' })).toBeVisible()
 
     // Dashboard overview renders without overflow.
-    await page.getByRole('button', { name: 'Hearth home' }).click()
-    await page.getByRole('button', { name: 'Open Dashboard', exact: true }).click()
-    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
-    await assertNoHorizontalOverflow(page, `dashboard @${width}`)
-    await page.getByRole('button', { name: 'Hearth home' }).click()
+    await page.getByRole('button', { name: 'Open Apps', exact: true }).click()
+    await expect(page.getByRole('dialog', { name: 'Apps and links' })).toBeVisible()
+    await assertNoHorizontalOverflow(page, `launchpad @${width}`)
+    await page.keyboard.press('Escape')
     await expect(page.getByRole('button', { name: 'Open Google' })).toBeVisible()
   }
 })
@@ -151,7 +150,7 @@ test('32a. a data-rich Home never overflows or cuts content at any width', async
     await picker.getByRole('button', { name: new RegExp(`^${name} `) }).click()
     await expect(picker).toHaveCount(0)
   }
-  await page.getByRole('button', { name: 'Done', exact: true }).click()
+  await page.getByRole('button', { name: 'Done editing Home', exact: true }).click()
 
   const problems: string[] = []
   for (const w of WIDESWEEP) {

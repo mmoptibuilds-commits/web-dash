@@ -2,21 +2,23 @@
 
 ## Release
 
-Current package version: **1.1.0**.
+Current package version: **1.2.0**.
 
 Hearth is a local-first installable PWA that behaves like a personal desktop/home screen. It has no account, backend, analytics, ads or runtime AI.
 
 ## Workspace
 
-Home is the permanent workspace. It owns wallpaper, pages, shortcuts, folders, widgets, status bar, Launchpad, dock and open windows. Opening an app never replaces Home or hides other open windows. Apps opens Launchpad as an overlay.
+Home is the permanent workspace. It owns wallpaper, pages, shortcuts, folders, widgets, status bar, Launchpad, dock and open windows. Opening an app never replaces Home or hides other open windows. The Dock opens Launchpad as a full-viewport Apps and user Links layer.
 
-Desktop apps open as floating windows with traffic lights, focus/z-order, minimize/restore, maximize and resize. Narrow screens use safe-area-aware iOS-style sheets.
+Desktop apps open as floating windows with traffic lights, focus/z-order, minimize/restore, resize and persisted left/right/corner/maximize layouts. Edge and corner drag gestures discover the same layouts. Narrow screens use safe-area-aware iOS-style sheets.
+
+Settings uses a searchable sidebar/detail structure at desktop window sizes. At narrow container widths and on phone sheets it becomes a touch-friendly single-column stack with explicit Back-to-Home sheet navigation; the underlying workspace is inert while the modal sheet is open.
 
 The document, shell and Home do not scroll. App bodies, widget lists and embedded documents may scroll only inside bounded regions.
 
 ## Home layout
 
-Home pages remain horizontally paged. Desktop items use persisted freeform geometry inside hard canvas width/usable-height bounds. Moves use soft snapping/alignment guidance and commit only collision-free boxes. Resize respects per-kind minimums and all viewport edges. Narrow layouts use a compact responsive arrangement.
+Home pages remain horizontally paged. Desktop items use persisted freeform geometry only when the viewport and configured canvas can contain its canonical 1120px coordinate space. Moves use soft snapping/alignment guidance and commit only collision-free boxes. Resize respects per-kind minimums and all viewport edges. Other sizes use a compact responsive arrangement.
 
 ## Apps and widgets
 
@@ -28,7 +30,7 @@ Links keeps content reachable using internal scrolling at small sizes. Embed use
 
 Settings persist theme/material/glass preferences, transparency, wallpaper dimming, icon family/shape/treatment/size, labels, dock style/size/magnification/indicators, Home density/canvas/snap behavior, window restoration, embed controls, reduced transparency/effects and contrast.
 
-Current runtime materials are CSS/DOM based. Selective WebGL Liquid Glass is an approved future refinement, not a current release claim.
+The menu bar and Dock use a single centralized, lazy `@ybouane/liquidglass` renderer when WebGL and performance policy permit. Settings offer performance/balanced/high/custom/off modes. Unsupported, low-memory, reduced-effects, reduced-transparency and sustained low-FPS cases fall back to CSS or solid materials.
 
 ## Persistence and safety
 

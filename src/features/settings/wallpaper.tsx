@@ -76,7 +76,7 @@ export function WallpaperSection({
       <div className={styles.settingBlock}>
         <div className={styles.settingText}>
           <span className={styles.settingTitle}>Built-in wallpapers</span>
-          <span className={styles.settingDesc}>Gradient presets shipped with Hearth.</span>
+          <span className={styles.settingDesc}>Gradient presets shipped with mmoptibuilds.</span>
         </div>
         <div className={styles.swatchGrid} role="radiogroup" aria-label="Built-in wallpapers">
           {BUILTIN_WALLPAPERS.map((builtin) => {

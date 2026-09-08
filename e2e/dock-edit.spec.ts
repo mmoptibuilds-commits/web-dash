@@ -48,7 +48,7 @@ test('dock: add a pinned app via Edit Mode "Add to dock" and keep it after reloa
   expect(await launchers(page).count()).toBe(before + 1)
 
   // Still in Edit Mode (the click didn't dismiss the screen).
-  await expect(page.getByRole('button', { name: 'Done', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Done editing Home', exact: true })).toBeVisible()
   await exitEdit(page)
 
   // Persistence: the pinned app survives a reload.

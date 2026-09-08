@@ -1,6 +1,6 @@
 # Hearth OS roadmap
 
-## Shipped — v1.1.0
+## Shipped — v1.2.0
 
 - permanent Home desktop + Launchpad overlay;
 - concurrent desktop windows and narrow-screen sheets;
@@ -10,17 +10,15 @@
 - configurable icon/dock/material/layout/contrast/motion presentation;
 - Dexie v4 migration and backup coverage;
 - local-first PWA architecture.
+- canonical-canvas responsive fallback and right-edge widget fix;
+- half/corner/maximize window snapping and restoration;
+- full-screen Apps + Links Launchpad, compact status bar and customizable edit-safe folders;
+- single-context selective Liquid Glass with adaptive fallbacks and cosine Dock magnification.
 
-## Next — visual/material refinement
+## Next
 
-Prioritize polish without rebuilding the product:
-
-- selective `ybouane/liquidglass` WebGL refraction for high-value shell surfaces only;
-- central material adapter with CSS/solid fallbacks, Reduced Effects and performance gating;
-- refined proximity-based dock animation inspired by the committed HTML study;
-- reviewed/exported Figma app-icon artwork where licensing permits;
-- widget shape/radius/typography/optical-spacing polish;
-- full desktop/mobile Playwright + visual/performance verification after the material pass.
+- Add Hearth-authored or explicitly licensed icon artwork; the reviewed community Figma sheet was intentionally not shipped.
+- Replace the three truncated upstream v1.2 reference blobs if intact source files become available.
 
 ## Later product improvements
 

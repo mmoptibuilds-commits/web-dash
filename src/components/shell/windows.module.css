@@ -61,6 +61,58 @@
   flex: none;
 }
 
+.layoutControl {
+  position: relative;
+}
+
+.layoutDot {
+  color: rgb(var(--ink-2));
+  background: rgb(var(--glass-3) / 0.72);
+}
+
+.snapMenu {
+  position: absolute;
+  top: 20px;
+  left: -54px;
+  z-index: var(--z-command);
+  width: 170px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  padding: 6px;
+  border-radius: var(--r-md);
+  background: rgb(var(--glass-1) / 0.96);
+  border: 1px solid rgb(var(--stroke-hairline) / var(--stroke-alpha-1));
+  box-shadow: var(--shadow-3);
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  backdrop-filter: blur(var(--blur-md));
+}
+
+.snapMenu button {
+  min-height: 34px;
+  padding: 6px;
+  border-radius: var(--r-sm);
+  color: rgb(var(--ink-2));
+  font-size: var(--fs-2xs);
+  text-align: left;
+}
+
+.snapMenu button:hover,
+.snapMenu button:focus-visible {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+.snapIcon {
+  display: inline-block;
+  width: 14px;
+  height: 10px;
+  margin-right: 5px;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  vertical-align: -1px;
+}
+
 .dot {
   display: grid;
   place-items: center;
@@ -118,10 +170,11 @@
 }
 .titleSpacer {
   flex: none;
-  width: 54px;
+  width: 75px;
 }
 
 .content {
+  container-type: inline-size;
   flex: 1;
   min-height: 0;
   min-width: 0;

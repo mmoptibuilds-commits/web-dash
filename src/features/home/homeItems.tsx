@@ -30,7 +30,7 @@ export function ShortcutTile({
       aria-label={`Open ${shortcut.label}`}
     >
       <span
-        className={`${styles.box} ${SIZE_CLASS[scale]}`}
+        className={`${styles.box} ${styles.shortcutBox} ${SIZE_CLASS[scale]}`}
         style={shortcut.bg ? { background: shortcut.bg } : undefined}
       >
         <ShortcutGlyph icon={shortcut.icon} label={shortcut.label} url={shortcut.url} />
@@ -43,13 +43,11 @@ export function ShortcutTile({
 /** Folder tile showing its emoji icon and member count. */
 export function FolderTile({
   folder,
-  count,
   showLabel,
   scale,
   onClick,
 }: {
   folder: Folder
-  count: number
   showLabel: boolean
   scale: IconSizePreset
   onClick: () => void
@@ -68,9 +66,6 @@ export function FolderTile({
       >
         <span className={styles.folderIcon} aria-hidden>
           {folder.icon.emoji}
-        </span>
-        <span className={styles.badge} aria-hidden>
-          {count}
         </span>
       </span>
       {showLabel && <span className={styles.label}>{folder.name}</span>}

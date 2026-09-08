@@ -336,7 +336,7 @@
   position: static;
   order: 1;
   flex: none;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   min-height: 38px;
   padding: 5px var(--sp-2);
   background: rgb(var(--glass-1) / var(--glass-a-1));
@@ -363,7 +363,7 @@
   height: 100vh;
   border-radius: 0;
 }
-@container (max-width: 360px) {
+@container (max-width: 340px) {
   .embedTop { align-items: flex-start; }
   .embedActions { width: 100%; }
   .embedOpenBtn { flex: 1; justify-content: center; }
@@ -418,7 +418,7 @@
   color: rgb(var(--ink-3));
 }
 
-@container (max-width: 360px) {
+@container (max-width: 340px) {
   .embedTop {
     align-items: flex-start;
     flex-wrap: wrap;

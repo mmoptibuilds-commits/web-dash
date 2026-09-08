@@ -52,14 +52,14 @@ export function dockApp(page: Page, app: string): Locator {
 
 /** Enter Home Edit Mode via the menu bar. */
 export async function enterEdit(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Edit', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Done', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Edit Home', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Done editing Home', exact: true })).toBeVisible()
 }
 
 /** Leave Home Edit Mode. */
 export async function exitEdit(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Done', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Edit', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Done editing Home', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Edit Home', exact: true })).toBeVisible()
 }
 
 /** Add a shortcut to the active Home page via Edit Mode → Shortcut dialog. */
@@ -80,13 +80,12 @@ export async function addShortcut(
 
 /** Open a dock app (desktop → window; mobile → sheet). */
 export async function openApp(page: Page, app: string): Promise<void> {
-  await dockApp(page, app).click()
-}
-
-/** True on desktop widths, where the menu bar shows the Home/Dashboard tabs. */
-function isDesktopView(page: Page): boolean {
-  const vp = page.viewportSize()
-  return vp ? vp.width >= 1024 : false
+  const launcher = page.getByRole('dialog', { name: 'Apps and links' })
+  if (await launcher.isVisible().catch(() => false)) {
+    await launcher.getByRole('button', { name: `Open ${app}`, exact: true }).click()
+  } else {
+    await dockApp(page, app).click()
+  }
 }
 
 /**
@@ -95,20 +94,21 @@ function isDesktopView(page: Page): boolean {
  * 639px). Home is reached from anywhere with `goHome`.
  */
 export async function goDashboard(page: Page): Promise<void> {
-  if (isDesktopView(page)) {
-    await page.getByRole('radio', { name: 'Dashboard' }).click()
-    await expect(page.getByRole('radio', { name: 'Dashboard' })).toHaveAttribute(
-      'aria-checked',
-      'true',
-    )
-  } else {
-    await page.getByRole('button', { name: 'Open Dashboard', exact: true }).click()
-  }
+  await page.getByRole('button', { name: 'Open Apps', exact: true }).click()
+  await expect(page.getByRole('dialog', { name: 'Apps and links' })).toBeVisible()
 }
 
 /** Return Home from anywhere (the brand control is present on every surface). */
 export async function goHome(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Hearth home' }).click()
+  if (await page.getByRole('dialog', { name: 'Apps and links' }).isVisible().catch(() => false)) {
+    await page.keyboard.press('Escape')
+  }
+  const sheetBack = page.getByRole('button', { name: 'Back to Home', exact: true })
+  if (await sheetBack.isVisible().catch(() => false)) {
+    await sheetBack.click()
+    return
+  }
+  await page.getByRole('button', { name: 'mmoptibuilds home' }).click()
 }
 
 /** The Home page title button (opens the Pages manager). */

@@ -39,21 +39,20 @@ test('1. first launch seeds and shows the starter layout', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Next page' })).toBeDisabled()
 })
 
-test('2. switch between Home and Dashboard in both directions', async ({ page }) => {
+test('2. open the full-viewport Launchpad and return Home', async ({ page }) => {
   await boot(page)
 
-  // Home → Dashboard: the overview surface appears (menu-bar tab on desktop,
-  // dock launcher on mobile).
+  // Home → Launchpad: Apps and Links appear without replacing Home.
   await goDashboard(page)
-  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
-  // Window apps are offered on the overview surface.
+  const launcher = page.getByRole('dialog', { name: 'Apps and links' })
+  await expect(launcher).toBeVisible()
   for (const app of ['Notes', 'Tasks', 'Calendar', 'Links', 'Settings']) {
-    await expect(page.getByRole('button', { name: new RegExp(app) }).first()).toBeVisible()
+    await expect(launcher.getByRole('button', { name: `Open ${app}`, exact: true })).toBeVisible()
   }
 
   // Dashboard → Home returns to the launcher.
   await goHome(page)
-  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeHidden()
+  await expect(launcher).toBeHidden()
   await expect(pageTitle(page)).toHaveText('Home')
 })
 

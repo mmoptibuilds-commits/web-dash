@@ -6,6 +6,7 @@ import {
   removeShortcutFromFolder,
   renameFolder,
   deleteFolderCascade,
+  updateFolderAppearance,
 } from '@/data/repositories/folders'
 import { recordAndOpen } from '@/lib/nav'
 import { focusLayer, restoreFocus, trapTab } from '@/lib/focus'
@@ -22,6 +23,9 @@ export function FolderView() {
   const [adding, setAdding] = useState(false)
   const [renaming, setRenaming] = useState(false)
   const [name, setName] = useState('')
+  const [emoji, setEmoji] = useState('📁')
+  const [bg, setBg] = useState<string | null>(null)
+  const editMode = useUi((s) => s.editMode)
   const overlayRef = useRef<HTMLDivElement>(null)
 
   // Dialog pattern: move focus into the folder on open, trap Tab, restore on
@@ -56,6 +60,7 @@ export function FolderView() {
   const commitRename = async () => {
     const next = name.trim()
     if (next) await renameFolder(folder.id, next)
+    await updateFolderAppearance(folder.id, { emoji, bg })
     setRenaming(false)
   }
 
@@ -74,6 +79,9 @@ export function FolderView() {
       aria-modal="true"
       aria-label={`Folder ${folder.name}`}
       tabIndex={-1}
+      onPointerDown={(event) => {
+        if (event.target === event.currentTarget) setOpen(null)
+      }}
     >
       <div className={styles.folderInner}>
         <header className={styles.folderHeader}>
@@ -107,28 +115,35 @@ export function FolderView() {
                 <button type="button" className="icon-btn" aria-label="Save name" onClick={() => void commitRename()}>
                   <Check size={15} aria-hidden />
                 </button>
+                <span className={styles.folderAppearance}>
+                  {['📁', '🧰', '📚', '💼', '🎨', '✈️'].map((icon) => (
+                    <button key={icon} type="button" className={icon === emoji ? styles.folderChoiceOn : styles.folderChoice} aria-label={`Use ${icon} folder icon`} aria-pressed={icon === emoji} onClick={() => setEmoji(icon)}>{icon}</button>
+                  ))}
+                  {[null, '#e2a33b', '#2f8f5b', '#3a74c8', '#7b57b8'].map((color) => (
+                    <button key={color ?? 'none'} type="button" className={color === bg ? styles.folderTintOn : styles.folderTint} style={color ? { background: color } : undefined} aria-label={color ? `Use ${color} folder tint` : 'Use no folder tint'} aria-pressed={color === bg} onClick={() => setBg(color)} />
+                  ))}
+                </span>
               </span>
             ) : (
               <span className={styles.folderTitle}>
                 <span>{folder.name}</span>
-                <span className={styles.folderCount}>{members.length} links</span>
               </span>
             )}
           </div>
 
           <div className={styles.folderActions}>
-            {!renaming && (
-              <button type="button" className="icon-btn" aria-label="Rename folder" onClick={() => { setName(folder.name); setRenaming(true) }}>
+            {editMode && !renaming && (
+              <button type="button" className="icon-btn" aria-label="Customize folder" onClick={() => { setName(folder.name); setEmoji(folder.icon.emoji); setBg(folder.bg); setRenaming(true) }}>
                 <Pencil size={16} aria-hidden />
               </button>
             )}
-            <button type="button" className="btn btn-ghost btn-sm" onClick={() => setAdding(true)}>
+            {editMode ? <button type="button" className="btn btn-ghost btn-sm" onClick={() => setAdding(true)}>
               <Plus size={15} aria-hidden />
               Add link
-            </button>
-            <button type="button" className="icon-btn" aria-label="Delete folder" onClick={removeFolder}>
+            </button> : null}
+            {editMode ? <button type="button" className="icon-btn" aria-label="Delete folder" onClick={removeFolder}>
               <Trash2 size={16} aria-hidden />
-            </button>
+            </button> : null}
           </div>
         </header>
 
@@ -136,23 +151,23 @@ export function FolderView() {
           {members.length === 0 ? (
             <div className={styles.folderEmpty}>
               <p>No links yet.</p>
-              <button type="button" className="btn btn-ghost" onClick={() => setAdding(true)}>
+              {editMode ? <button type="button" className="btn btn-ghost" onClick={() => setAdding(true)}>
                 <Plus size={15} aria-hidden />
                 Add a link
-              </button>
+              </button> : null}
             </div>
           ) : (
             <div className={styles.folderGrid}>
               {members.map((s) => (
                 <div key={s.id} className={styles.folderItem}>
-                  <button
+                  {editMode ? <button
                     type="button"
                     className={styles.folderItemRemove}
                     aria-label={`Remove ${s.label} from folder`}
                     onClick={() => void removeShortcutFromFolder(folder.id, s.id)}
                   >
                     <X size={12} aria-hidden />
-                  </button>
+                  </button> : null}
                   <ShortcutTile shortcut={s} showLabel onClick={() => openShortcut(s)} scale="regular" />
                 </div>
               ))}
@@ -162,7 +177,7 @@ export function FolderView() {
       </div>
 
       <ShortcutDialog
-        open={adding}
+        open={adding && editMode}
         onClose={() => setAdding(false)}
         pageId=""
         folderId={folder.id}

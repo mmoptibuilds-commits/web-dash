@@ -29,6 +29,7 @@ import { launchApp } from '@/state/nav'
 import { recordAndOpen } from '@/lib/nav'
 import { hostOf } from '@/lib/url'
 import { ShortcutGlyph, SystemGlyph } from '@/components/common/Glyph'
+import { dockMagnification } from '@/lib/dockMotion'
 import type { BuiltinAppId, DockItem, Shortcut } from '@/types/domain'
 import styles from './dock.module.css'
 
@@ -75,6 +76,7 @@ function DockTile({
       <button
         type="button"
         className={styles.tile}
+        data-dock-tile
         aria-label={`Open ${label}`}
         title={label}
         data-appid={shortcut ? undefined : item.appId}
@@ -270,8 +272,29 @@ export function Dock() {
 
   const nothingToAdd = addableApps.length === 0 && addableShortcuts.length === 0
 
+  const resetMagnification = () => {
+    barRef.current?.querySelectorAll<HTMLElement>('[data-dock-tile]').forEach((tile) => {
+      tile.style.removeProperty('--dock-scale')
+      tile.style.removeProperty('--dock-lift')
+    })
+  }
+
+  const magnify = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (
+      settings?.dockMagnification === false ||
+      editMode ||
+      window.matchMedia('(hover: none), (pointer: coarse), (prefers-reduced-motion: reduce)').matches
+    ) return
+    event.currentTarget.querySelectorAll<HTMLElement>('[data-dock-tile]').forEach((tile) => {
+      const rect = tile.getBoundingClientRect()
+      const { scale, lift } = dockMagnification(Math.abs(event.clientX - (rect.left + rect.width / 2)))
+      tile.style.setProperty('--dock-scale', String(scale))
+      tile.style.setProperty('--dock-lift', `${-lift}px`)
+    })
+  }
+
   return (
-    <nav className={styles.dock} aria-label="Dock" data-dock-style={settings?.dockStyle ?? 'glass'} data-dock-size={settings?.dockSize ?? 'regular'} data-dock-magnify={settings?.dockMagnification !== false} data-dock-indicators={settings?.showDockIndicators !== false}>
+    <nav className={styles.dock} aria-label="Dock" data-liquid-glass data-dock-style={settings?.dockStyle ?? 'glass'} data-dock-size={settings?.dockSize ?? 'regular'} data-dock-magnify={settings?.dockMagnification !== false} data-dock-indicators={settings?.showDockIndicators !== false}>
       <div ref={barRef} className={styles.stack}>
         {open && (
           <div
@@ -328,7 +351,7 @@ export function Dock() {
             )}
           </div>
         )}
-        <div className={styles.bar}>
+        <div className={styles.bar} onPointerMove={magnify} onPointerLeave={resetMagnification}>
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
             <SortableContext
               items={resolved.map((r) => r.id)}
